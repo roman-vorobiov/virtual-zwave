@@ -1,0 +1,120 @@
+from ..packet_from_bytes_converter import PacketFromBytesConverter
+from ..packet_to_bytes_converter import PacketToBytesConverter
+from ..schema import (
+    PacketSchema,
+    ConstField,
+    IntField,
+    BoolField,
+    StringField,
+    ListField,
+    LengthOfField,
+    CopyOfField
+)
+
+import pytest
+
+
+@pytest.fixture
+def from_bytes_converter():
+    yield PacketFromBytesConverter()
+
+
+@pytest.fixture
+def to_bytes_converter():
+    yield PacketToBytesConverter()
+
+
+def test_const_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [ConstField(value=1)])
+    data = [0x01]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.fields == {}
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_int_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [IntField(name="hello")])
+    data = [0x11]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.hello == 0x11
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_str_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [StringField(name="hello")])
+    data = list(b'hello world\x00')
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.hello == "hello world"
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_bool_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [BoolField(name="hello"), BoolField(name="bye")])
+    data = [0x00, 0x01]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.hello is False
+    assert packet.bye is True
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_list_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [ListField(name="command")])
+    data = [0x01, 0x02, 0x03, 0x04]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.command == [0x01, 0x02, 0x03, 0x04]
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_list_field_in_the_middle(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [
+        IntField(name="head"),
+        ListField(name="command"),
+        IntField(name="tail", size=2)
+    ])
+    data = [0x01, 0x02, 0x03, 0x04, 0x05]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.head == 0x01
+    assert packet.command == [0x02, 0x03]
+    assert packet.tail == 0x0405
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_list_field_with_length(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [
+        LengthOfField(field_name="command1", offset=5),
+        ListField(name="command1"),
+        LengthOfField(field_name="command2"),
+        ListField(name="command2"),
+        LengthOfField(field_name="command3"),
+        ListField(name="command3")
+    ])
+    data = [0x07, 0x02, 0x03, 0x00, 0x03, 0x05, 0x06, 0x07]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.command1 == [0x02, 0x03]
+    assert packet.command2 == []
+    assert packet.command3 == [0x05, 0x06, 0x07]
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_copy_of_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [IntField(name="hello"), CopyOfField(field_name="hello")])
+    data = [0x01, 0x01]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.hello == 0x01
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data

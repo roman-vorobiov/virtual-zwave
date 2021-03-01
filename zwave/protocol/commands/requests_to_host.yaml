@@ -1,0 +1,67 @@
+---
+
+APPLICATION_COMMAND_HANDLER:
+  - 0x04
+  - rx_status
+  - source_node
+  - { length_of: command }
+  - command[]
+
+SEND_DATA:
+  - 0x13
+  - function_id
+  - tx_status
+
+SET_DEFAULT:
+  - 0x42
+  - function_id
+
+APPLICATION_SLAVE_UPDATE:
+  - 0x49
+  - status
+  - node_id
+  - { length_of: command_class_ids }
+  - basic
+  - generic
+  - specific
+  - command_class_ids[]
+
+ADD_NODE_TO_NETWORK:
+  - 0x4A
+  - function_id
+  - status
+  - source
+  - { length_of: command_class_ids }
+  - basic
+  - generic
+  - specific
+  - command_class_ids[]
+
+REMOVE_NODE_FROM_NETWORK:
+  - 0x4B
+  - function_id
+  - status
+  - source
+  - { length_of: command_class_ids }
+  - basic
+  - generic
+  - specific
+  - command_class_ids[]
+
+SET_LEARN_MODE:
+  - 0x50
+  - function_id
+  - status
+  - source
+  - { length_of: node_info }
+  - node_info[]
+
+ASSIGN_SUC_RETURN_ROUTE:
+  - 0x51
+  - function_id
+  - status
+
+SET_SUC_NODE_ID:
+  - 0x54
+  - function_id
+  - tx_status

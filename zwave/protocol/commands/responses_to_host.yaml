@@ -1,0 +1,52 @@
+---
+
+SEND_DATA:
+  - 0x13
+  - { name: result, type: bool }
+
+VERSION:
+  - 0x15
+  - { name: buffer, type: str }
+  - library_type
+
+MEMORY_GET_ID:
+  - 0x20
+  - { name: home_id, type: int, size: 4 }
+  - node_id
+
+NVR_GET_VALUE:
+  - 0x28
+  - data[]
+
+SET_LISTEN_BEFORE_TALK_THRESHOLD:
+  - 0x3C
+  - result
+
+GET_NODE_PROTOCOL_INFO:
+  - 0x41
+  - capabilities
+  - security
+  - reserved
+  - basic
+  - generic
+  - specific
+
+SET_LEARN_MODE:
+  - 0x50
+  - result
+
+ASSIGN_SUC_RETURN_ROUTE:
+  - 0x51
+  - result
+
+SET_SUC_NODE_ID:
+  - 0x54
+  - result
+
+GET_SUC_NODE_ID:
+  - 0x56
+  - node_id
+
+REQUEST_NODE_INFO:
+  - 0x60
+  - result

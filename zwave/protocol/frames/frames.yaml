@@ -1,0 +1,17 @@
+---
+
+ACK:
+  - 0x06
+
+NAK:
+  - 0x15
+
+CAN:
+  - 0x18
+
+Data:
+  - 0x01
+  - { length_of: command, offset: 2 }
+  - type
+  - command[]
+  - checksum

@@ -1,0 +1,76 @@
+---
+
+APPLICATION_NODE_INFORMATION:
+  - 0x03
+  - device_options
+  - generic
+  - specific
+  - command_class_ids[]
+
+SEND_DATA:
+  - 0x13
+  - node_id
+  - { length_of: data }
+  - data[]
+  - tx_options
+  - function_id
+
+VERSION:
+  - 0x15
+
+MEMORY_GET_ID:
+  - 0x20
+
+NVR_GET_VALUE:
+  - 0x28
+  - offset
+  - length
+
+SET_LISTEN_BEFORE_TALK_THRESHOLD:
+  - 0x3C
+  - channel
+  - threshold
+
+GET_NODE_PROTOCOL_INFO:
+  - 0x41
+  - node_id
+
+SET_DEFAULT:
+  - 0x42
+  - function_id
+
+ADD_NODE_TO_NETWORK:
+  - 0x4A
+  - mode
+  - function_id
+
+REMOVE_NODE_FROM_NETWORK:
+  - 0x4B
+  - mode
+  - function_id
+
+SET_LEARN_MODE:
+  - 0x50
+  - mode
+  - function_id
+
+ASSIGN_SUC_RETURN_ROUTE:
+  - 0x51
+  - node_id
+  - function_id
+  - { copy_of: function_id }
+
+SET_SUC_NODE_ID:
+  - 0x54
+  - node_id
+  - suc_state
+  - tx_option
+  - capabilities
+  - function_id
+
+GET_SUC_NODE_ID:
+  - 0x56
+
+REQUEST_NODE_INFO:
+  - 0x60
+  - node_id
