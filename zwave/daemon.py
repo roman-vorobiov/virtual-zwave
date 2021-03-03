@@ -1,25 +1,19 @@
-from .chip import ZwaveChip
-
-from tools import dump_hex
+from zwave.core import ZwaveDevice, Core
 
 import signal
 from threading import Thread
-from typing import List
 
 
-def handler(packet: List[int]):
-    print(dump_hex(packet))
-
-
-def listener(device: ZwaveChip):
+def listener(device: ZwaveDevice, handler: Core):
     for packet in device.poll():
-        handler(packet)
+        handler.process_packet(packet)
 
 
 class Daemon:
     def __init__(self, link: str):
-        self.device = ZwaveChip(link)
-        self.polling_job = Thread(target=listener, args=(self.device,))
+        self.device = ZwaveDevice(link)
+        self.handler = Core(self.device)
+        self.polling_job = Thread(target=listener, args=(self.device, self.handler))
 
     def run(self):
         self.device.initialize()

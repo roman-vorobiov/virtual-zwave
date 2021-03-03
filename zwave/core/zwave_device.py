@@ -1,11 +1,13 @@
-from .packet_builder import PacketBuilder, Bytes
+from .device import Device
+
+from zwave.protocol.packet_builder import PacketBuilder, Bytes
 
 from tools.serial_port import SerialPort
 
 from typing import Iterator
 
 
-class ZwaveChip:
+class ZwaveDevice(Device):
     def __init__(self, link: str):
         self.port = SerialPort(
             link=link,
