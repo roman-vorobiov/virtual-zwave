@@ -3,10 +3,9 @@ from .schema import PacketSchema
 from .schema_builder import PacketSchemaBuilder
 from .packet_from_bytes_converter import PacketFromBytesConverter
 from .packet_to_bytes_converter import PacketToBytesConverter
+from .exceptions import SerializationError
 
-from tools import log_error
-
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 class PacketSerializer:
@@ -22,16 +21,14 @@ class PacketSerializer:
             self.schemas_by_byte[data[0]] = schema
             self.schemas_by_name[name] = schema
 
-    def from_bytes(self, packet: List[int]) -> Optional[Packet]:
+    def from_bytes(self, packet: List[int]) -> Packet:
         if (packet_schema := self.schemas_by_byte.get(packet[0])) is not None:
             return PacketFromBytesConverter().create_packet(packet_schema, packet)
 
-        # Todo: return a generic packet
-        log_error("Unknown packet")
+        return Packet(name='unknown', data=packet)
 
     def to_bytes(self, packet: Packet) -> List[int]:
         if (packet_schema := self.schemas_by_name.get(packet.name)) is not None:
             return PacketToBytesConverter().serialize_packet(packet_schema, packet)
 
-        # Todo: raise an exception
-        log_error("Unknown packet")
+        raise SerializationError(f"Unknown packet '{packet.name}'")

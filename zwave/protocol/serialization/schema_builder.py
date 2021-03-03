@@ -8,8 +8,9 @@ from .schema import (
     LengthOfField,
     CopyOfField
 )
+from .exceptions import SerializationError
 
-from tools import Visitor, visit, log_error
+from tools import Visitor, visit
 
 import pampy
 
@@ -49,5 +50,4 @@ class PacketSchemaBuilder(Visitor):
                 'int', lambda _: IntField(name=field['name'], size=field.get('size', 1))
             )
 
-        # Todo: raise an exception
-        log_error("Invalid schema")
+        raise SerializationError(f"Invalid schema field: {field}")
