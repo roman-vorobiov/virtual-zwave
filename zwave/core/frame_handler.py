@@ -5,7 +5,7 @@ from .utils import is_valid_checksum
 from zwave.protocol import Packet, PacketVisitor
 from zwave.protocol.serialization import PacketSerializer
 
-from tools import visit
+from tools import visit, log_warning
 
 from typing import List
 
@@ -26,7 +26,7 @@ class FrameHandler(PacketVisitor):
             self.host.send_ack()
             self.command_handler.process_packet(packet.command)
         else:
-            print("Invalid checksum")
+            log_warning("Invalid checksum")
             self.host.send_nak()
 
     def visit_default(self, packet: Packet, *args, **kwargs):

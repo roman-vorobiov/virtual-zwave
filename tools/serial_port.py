@@ -1,3 +1,5 @@
+from .log_utils import log_info
+
 import os
 import signal
 from subprocess import Popen, PIPE
@@ -13,12 +15,12 @@ class SerialPort:
     def open(self):
         address = f"PTY,link={self.link},{self.options},rawer,wait-slave"
         self.proc = Popen(["socat", address, "-"], stdin=PIPE, stdout=PIPE)
-        print(f"Device created at {self.link}")
+        log_info(f"Device created at {self.link}")
 
     def close(self):
         if self.is_open:
             os.kill(self.proc.pid, signal.SIGTERM)
-            print(f"Device '{self.link}' removed")
+            log_info(f"Device '{self.link}' removed")
         self.proc = None
 
     @property

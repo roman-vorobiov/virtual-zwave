@@ -3,6 +3,8 @@ from .request_manager import RequestManager
 from zwave.protocol import Packet, PacketVisitor
 from zwave.protocol.serialization import PacketSerializer
 
+from tools import log_info
+
 from typing import List
 
 
@@ -16,4 +18,4 @@ class CommandHandler(PacketVisitor):
         self.visit(command)
 
     def visit_default(self, packet: Packet, *args, **kwargs):
-        print(packet.name, packet.fields)
+        log_info(f"{packet.name} {packet.fields}")

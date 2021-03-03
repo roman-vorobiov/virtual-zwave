@@ -1,3 +1,5 @@
+from tools import log_error
+
 from enum import IntEnum
 from typing import List, Iterator
 
@@ -39,7 +41,7 @@ class PacketBuilder:
         self.buffer = []
 
     def discard(self):
-        print("Discarded {:02x}".format(self.buffer[0]))
+        log_error("Discarded {:02x}".format(self.buffer[0]))
         self.buffer = []
 
     def process_idle(self, byte: int) -> Iterator[Bytes]:

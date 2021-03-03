@@ -9,7 +9,7 @@ from .schema import (
     CopyOfField
 )
 
-from tools import Visitor, visit
+from tools import Visitor, visit, log_error
 
 import pampy
 
@@ -49,4 +49,5 @@ class PacketSchemaBuilder(Visitor):
                 'int', lambda _: IntField(name=field['name'], size=field.get('size', 1))
             )
 
-        print("Invalid schema")
+        # Todo: raise an exception
+        log_error("Invalid schema")

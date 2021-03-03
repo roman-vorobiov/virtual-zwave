@@ -2,7 +2,7 @@ from .device import Device
 
 from zwave.protocol.packet_builder import PacketBuilder, Bytes
 
-from tools.serial_port import SerialPort
+from tools import SerialPort, log_warning, log_debug, dump_hex
 
 from typing import Iterator
 
@@ -25,17 +25,23 @@ class ZwaveDevice(Device):
         self.port.close()
 
     def poll(self) -> Iterator[Bytes]:
+        for packet in self.poll_packets():
+            log_debug(f"RX: {dump_hex(packet)}")
+            yield packet
+
+    def poll_packets(self) -> Iterator[Bytes]:
         while True:
             data = self.port.read_byte()
             if data is not None:
                 byte = int.from_bytes(data, byteorder='big')
                 yield from self.packet_builder.process(byte)
             elif self.running:
-                print("Pipe broken")
+                log_warning("Pipe broken")
                 self.packet_builder.reset()
                 self.port.open()
             else:
                 break
 
     def send_data(self, data: Bytes):
+        log_debug(f"TX: {dump_hex(data)}")
         self.port.write_bytes(bytes(data))

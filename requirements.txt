@@ -1,2 +1,3 @@
 pampy ~= 0.3.0
 PyYAML ~= 5.4.1
+termcolor ~= 1.1.0
