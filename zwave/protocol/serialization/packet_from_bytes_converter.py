@@ -7,7 +7,8 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
-    CopyOfField
+    CopyOfField,
+    MaskedField
 )
 
 from tools import Visitor, visit
@@ -70,6 +71,19 @@ class PacketFromBytesConverter(Visitor):
         end = self.get_list_end(field)
         yield field.name, self.data[begin:end]
         self.idx = end
+
+    @visit(MaskedField)
+    def visit_masked_field(self, field: MaskedField):
+        value = self.data[self.idx]
+        current_idx = self.idx
+
+        for mask, subfield in field.subfields.items():
+            self.data[self.idx] = value & mask
+            yield from self.visit(subfield)
+            self.idx = current_idx
+
+        self.data[self.idx] = value
+        self.idx += 1
 
     def get_list_end(self, field: Union[ListField, StringField]):
         # Size of the field is specified by value of another field

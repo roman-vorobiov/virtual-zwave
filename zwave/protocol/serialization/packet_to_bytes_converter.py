@@ -7,16 +7,17 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
-    CopyOfField
+    CopyOfField,
+    MaskedField
 )
 
 from tools import Visitor, visit
 
+import pampy
 from typing import List
 
 
 class PacketToBytesConverter(Visitor):
-
     def serialize_packet(self, schema: PacketSchema, packet: Packet) -> List[int]:
         return list(self.collect_bytes(schema, packet))
 
@@ -52,3 +53,13 @@ class PacketToBytesConverter(Visitor):
     @visit(CopyOfField)
     def visit_copy_of_field(self, field: CopyOfField, packet: Packet):
         yield packet[field.field_name]
+
+    @visit(MaskedField)
+    def visit_masked_field(self, field: MaskedField, packet: Packet):
+        value = 0
+        for mask, subfield in field.subfields.items():
+            value |= pampy.match(subfield,
+                                 BoolField, lambda _: packet[subfield.name] and mask,
+                                 default=packet[subfield.name])
+
+        yield value

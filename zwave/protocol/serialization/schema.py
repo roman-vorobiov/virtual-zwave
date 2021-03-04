@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 
 
 class PacketSchema:
@@ -53,3 +53,8 @@ class BoolField(NamedField):
 @dataclass
 class ListField(NamedField):
     pass
+
+
+@dataclass
+class MaskedField(Field):
+    subfields: Dict[int, NamedField]

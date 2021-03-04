@@ -8,7 +8,8 @@ from ..schema import (
     StringField,
     ListField,
     LengthOfField,
-    CopyOfField
+    CopyOfField,
+    MaskedField
 )
 
 import pytest
@@ -116,5 +117,27 @@ def test_copy_of_field(from_bytes_converter, to_bytes_converter):
 
     packet = from_bytes_converter.create_packet(schema, data)
     assert packet.hello == 0x01
+
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_masked_field(from_bytes_converter, to_bytes_converter):
+    schema = PacketSchema("", [
+        IntField(name="head"),
+        MaskedField(subfields={
+            0b00000111: IntField(name="lsb"),
+            0b00010000: BoolField(name="flag"),
+            0b11000000: IntField(name="msb")
+        }),
+        IntField(name="tail")
+    ])
+    data = [0x01, 0b00010011, 0x02]
+
+    packet = from_bytes_converter.create_packet(schema, data)
+    assert packet.head == 0x01
+    assert packet.lsb == 0x03
+    assert packet.flag is True
+    assert packet.msb == 0x00
+    assert packet.tail == 0x02
 
     assert to_bytes_converter.serialize_packet(schema, packet) == data

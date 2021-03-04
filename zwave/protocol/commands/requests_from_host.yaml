@@ -41,7 +41,8 @@ SET_DEFAULT:
 
 ADD_NODE_TO_NETWORK:
   - 0x4A
-  - mode
+  - 0b00001111: mode
+    0b11000000: options
   - function_id
 
 REMOVE_NODE_FROM_NETWORK:

@@ -6,7 +6,8 @@ from ..schema import (
     StringField,
     ListField,
     LengthOfField,
-    CopyOfField
+    CopyOfField,
+    MaskedField
 )
 
 import pytest
@@ -60,6 +61,23 @@ def test_length_of_field_with_offset(factory):
 def test_copy_of_field(factory):
     schema = factory.create_schema("", ["hello", {'copy_of': "hello"}])
     assert schema.fields == [IntField(name="hello"), CopyOfField(field_name="hello")]
+
+
+def test_masked_field(factory):
+    schema = factory.create_schema("", [
+        {
+            0b00000111: "lsb",
+            0b00010000: {'name': "flag", 'type': 'bool'},
+            0b11000000: "msb"
+        }
+    ])
+    assert schema.fields == [
+        MaskedField(subfields={
+            0b00000111: IntField(name="lsb"),
+            0b00010000: BoolField(name="flag"),
+            0b11000000: IntField(name="msb")
+        })
+    ]
 
 
 def test_multiple_fields(factory):

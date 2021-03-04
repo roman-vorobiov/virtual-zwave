@@ -20,7 +20,7 @@ NVR_GET_VALUE:
 
 SET_LISTEN_BEFORE_TALK_THRESHOLD:
   - 0x3C
-  - result
+  - { name: result, type: bool }
 
 GET_NODE_PROTOCOL_INFO:
   - 0x41
@@ -37,11 +37,11 @@ SET_LEARN_MODE:
 
 ASSIGN_SUC_RETURN_ROUTE:
   - 0x51
-  - result
+  - { name: result, type: bool }
 
 SET_SUC_NODE_ID:
   - 0x54
-  - result
+  - { name: result, type: bool }
 
 GET_SUC_NODE_ID:
   - 0x56
@@ -49,4 +49,4 @@ GET_SUC_NODE_ID:
 
 REQUEST_NODE_INFO:
   - 0x60
-  - result
+  - { name: result, type: bool }

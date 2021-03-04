@@ -6,11 +6,13 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
-    CopyOfField
+    CopyOfField,
+    MaskedField
 )
 from .exceptions import SerializationError
 
 from tools import Visitor, visit
+from typing import Dict, Any
 
 import pampy
 
@@ -34,8 +36,14 @@ class PacketSchemaBuilder(Visitor):
         else:
             return IntField(name=field)
 
+    def visit_mask(self, fields: Dict[int, Any]):
+        return MaskedField(subfields={mask: self.visit(field) for mask, field in fields.items()})
+
     @visit(dict)
     def visit_object(self, field: dict):
+        if type(next(iter(field))) is int:
+            return self.visit_mask(field)
+
         if (length_of := field.get('length_of')) is not None:
             return LengthOfField(field_name=length_of, offset=field.get('offset', 0))
 
