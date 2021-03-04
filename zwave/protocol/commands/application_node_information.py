@@ -1,0 +1,8 @@
+from enum import IntFlag
+
+
+class DeviceOptions(IntFlag):
+    LISTENING = 0x01
+    OPTIONAL_FUNCTIONALITY = 0x02
+    FREQUENTLY_LISTENING_MODE_250ms = 0x10
+    FREQUENTLY_LISTENING_MODE_1000ms = 0x20

@@ -29,5 +29,9 @@ class FrameHandler(PacketVisitor):
             log_warning("Invalid checksum")
             self.host.send_nak()
 
+    @visit('NAK')
+    def handle_nak_frame(self, packet: Packet):
+        log_warning("NAK received")
+
     def visit_default(self, packet: Packet, *args, **kwargs):
         pass

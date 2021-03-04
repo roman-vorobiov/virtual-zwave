@@ -1,6 +1,7 @@
-from .host import Host, DataFrameType
+from .host import Host
 
 from zwave.protocol import Packet
+from zwave.protocol.frames.data import FrameType
 from zwave.protocol.serialization import PacketSerializer
 
 
@@ -13,9 +14,9 @@ class RequestManager:
     def send_request(self, name: str, **kwargs):
         command = Packet(name, **kwargs)
         data = self.request_serializer.to_bytes(command)
-        self.host.send_data(DataFrameType.REQ, data)
+        self.host.send_data(FrameType.REQ, data)
 
     def send_response(self, name: str, **kwargs):
         command = Packet(name, **kwargs)
         data = self.response_serializer.to_bytes(command)
-        self.host.send_data(DataFrameType.RES, data)
+        self.host.send_data(FrameType.RES, data)

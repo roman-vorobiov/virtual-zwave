@@ -1,5 +1,6 @@
 from termcolor import cprint
 from datetime import datetime
+from enum import IntFlag
 from typing import List
 
 
@@ -29,3 +30,7 @@ def log_error(message: str):
 
 def dump_hex(data: List[int]):
     return "[{}]".format(" ".join("{:02x}".format(byte) for byte in data))
+
+
+def flags_to_names_list(enum: IntFlag) -> List[str]:
+    return [option.name for option in type(enum) if enum & option]

@@ -2,15 +2,10 @@ from .device import Device
 from .utils import calculate_checksum
 
 from zwave.protocol import Packet
+from zwave.protocol.frames.data import FrameType
 from zwave.protocol.serialization import PacketSerializer
 
-from enum import IntEnum
 from typing import List
-
-
-class DataFrameType(IntEnum):
-    REQ = 0x00
-    RES = 0x01
 
 
 class Host:
@@ -30,9 +25,9 @@ class Host:
         frame = Packet('CAN')
         self.send_frame(frame)
 
-    def send_data(self, frame_type: DataFrameType, command: List[int]):
+    def send_data(self, frame_type: FrameType, command: List[int]):
         frame = Packet('Data', type=frame_type.value, command=command, checksum=0xFF)
-        frame.checksum = calculate_checksum(frame)
+        frame['checksum'] = calculate_checksum(frame)
         self.send_frame(frame)
 
     def send_frame(self, frame: Packet):

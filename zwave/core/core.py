@@ -3,6 +3,8 @@ from .host import Host
 from .request_manager import RequestManager
 from .frame_handler import FrameHandler
 from .command_handler import CommandHandler
+from .library import Library
+from .network import Network
 
 from zwave.protocol.serialization import PacketSerializer
 
@@ -32,9 +34,14 @@ class Core:
             host=self.host
         )
 
+        self.library = Library()
+        self.network = Network()
+
         self.command_handler = CommandHandler(
             command_serializer=self.requests_from_host_serializer,
-            request_manager=self.request_manager
+            request_manager=self.request_manager,
+            library=self.library,
+            network=self.network
         )
         self.frame_handler = FrameHandler(
             frame_serializer=self.frame_serializer,
