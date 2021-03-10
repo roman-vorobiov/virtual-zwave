@@ -1,5 +1,11 @@
 ---
 
+_NodeInfo: &NodeInfo
+  - basic
+  - generic
+  - specific
+  - command_class_ids[]
+
 APPLICATION_COMMAND_HANDLER:
   - 0x04
   - rx_status
@@ -20,33 +26,24 @@ APPLICATION_SLAVE_UPDATE:
   - 0x49
   - status
   - node_id
-  - { length_of: command_class_ids }
-  - basic
-  - generic
-  - specific
-  - command_class_ids[]
+  - { length_of: node_info }
+  - { name: node_info, schema: *NodeInfo }
 
 ADD_NODE_TO_NETWORK:
   - 0x4A
   - function_id
   - status
   - source
-  - { length_of: command_class_ids }
-  - basic
-  - generic
-  - specific
-  - command_class_ids[]
+  - { length_of: node_info }
+  - { name: node_info, schema: *NodeInfo }
 
 REMOVE_NODE_FROM_NETWORK:
   - 0x4B
   - function_id
   - status
   - source
-  - { length_of: command_class_ids }
-  - basic
-  - generic
-  - specific
-  - command_class_ids[]
+  - { length_of: node_info }
+  - { name: node_info, schema: *NodeInfo }
 
 SET_LEARN_MODE:
   - 0x50
@@ -54,7 +51,7 @@ SET_LEARN_MODE:
   - status
   - source
   - { length_of: node_info }
-  - node_info[]
+  - { name: node_info, schema: *NodeInfo }
 
 ASSIGN_SUC_RETURN_ROUTE:
   - 0x51

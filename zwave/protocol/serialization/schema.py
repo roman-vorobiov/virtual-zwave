@@ -3,12 +3,6 @@ from dataclasses import dataclass
 from typing import List, Dict
 
 
-class PacketSchema:
-    def __init__(self, name: str, fields: List['Field']):
-        self.name = name
-        self.fields = fields
-
-
 @dataclass
 class Field(ABC):
     pass
@@ -57,4 +51,9 @@ class ListField(NamedField):
 
 @dataclass
 class MaskedField(Field):
-    subfields: Dict[int, NamedField]
+    fields: Dict[int, NamedField]
+
+
+@dataclass
+class PacketSchema(NamedField):
+    fields: List[Field]

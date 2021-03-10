@@ -12,10 +12,10 @@ class Packet:
         return self.name == other.name and self.fields == other.fields
 
     def __getattr__(self, field_name: str) -> Any:
-        return self.fields[field_name]
+        return self.fields.get(field_name)
 
     def __getitem__(self, field_name: str) -> Any:
-        return self.fields[field_name]
+        return self.fields.get(field_name)
 
     def __setitem__(self, field_name: str, value: Any):
         self.fields[field_name] = value
@@ -24,4 +24,3 @@ class Packet:
 class PacketVisitor(Visitor):
     def visit(self, packet: Packet, *args, **kwargs):
         return self.visit_as(packet, packet.name, *args, **kwargs)
-

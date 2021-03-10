@@ -16,6 +16,9 @@ class PacketSerializer:
         factory = PacketSchemaBuilder()
 
         for name, data in packet_data.items():
+            if name.startswith("_"):
+                continue
+
             schema = factory.create_schema(name, data)
 
             self.schemas_by_byte[data[0]] = schema

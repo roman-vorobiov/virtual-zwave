@@ -37,7 +37,7 @@ class PacketSchemaBuilder(Visitor):
             return IntField(name=field)
 
     def visit_mask(self, fields: Dict[int, Any]):
-        return MaskedField(subfields={mask: self.visit(field) for mask, field in fields.items()})
+        return MaskedField(fields={mask: self.visit(field) for mask, field in fields.items()})
 
     @visit(dict)
     def visit_object(self, field: dict):
@@ -49,6 +49,9 @@ class PacketSchemaBuilder(Visitor):
 
         if (copy_of := field.get('copy_of')) is not None:
             return CopyOfField(field_name=copy_of)
+
+        if (schema := field.get('schema')) is not None:
+            return self.create_schema(field['name'], schema)
 
         if (type_str := field.get('type')) is not None:
             return pampy.match(

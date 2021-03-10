@@ -1,5 +1,6 @@
 from ..schema_builder import PacketSchemaBuilder
 from ..schema import (
+    PacketSchema,
     ConstField,
     IntField,
     BoolField,
@@ -72,11 +73,30 @@ def test_masked_field(factory):
         }
     ])
     assert schema.fields == [
-        MaskedField(subfields={
+        MaskedField(fields={
             0b00000111: IntField(name="lsb"),
             0b00010000: BoolField(name="flag"),
             0b11000000: IntField(name="msb")
         })
+    ]
+
+
+def test_composite_field(factory):
+    schema = factory.create_schema("", [
+        "a",
+        {
+            'name': "b",
+            'schema': ["b1", "b2[]"]
+        },
+        "c"
+    ])
+    assert schema.fields == [
+        IntField(name="a"),
+        PacketSchema(name="b", fields=[
+            IntField(name="b1"),
+            ListField(name="b2")
+        ]),
+        IntField(name="c")
     ]
 
 

@@ -1,8 +1,10 @@
 ---
 
+_result: &result { name: result, type: bool }
+
 SEND_DATA:
   - 0x13
-  - { name: result, type: bool }
+  - *result
 
 VERSION:
   - 0x15
@@ -20,28 +22,28 @@ NVR_GET_VALUE:
 
 SET_LISTEN_BEFORE_TALK_THRESHOLD:
   - 0x3C
-  - { name: result, type: bool }
+  - *result
 
 GET_NODE_PROTOCOL_INFO:
   - 0x41
   - capabilities
   - security
-  - reserved
+  - 0x01
   - basic
   - generic
   - specific
 
 SET_LEARN_MODE:
   - 0x50
-  - result
+  - *result
 
 ASSIGN_SUC_RETURN_ROUTE:
   - 0x51
-  - { name: result, type: bool }
+  - *result
 
 SET_SUC_NODE_ID:
   - 0x54
-  - { name: result, type: bool }
+  - *result
 
 GET_SUC_NODE_ID:
   - 0x56
@@ -49,4 +51,4 @@ GET_SUC_NODE_ID:
 
 REQUEST_NODE_INFO:
   - 0x60
-  - { name: result, type: bool }
+  - *result
