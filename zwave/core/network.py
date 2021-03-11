@@ -14,6 +14,9 @@ class Network:
     def reset(self):
         self.home_id = random.randint(0xC0000000, 0xFFFFFFFE)
 
+    def set_suc_node_id(self, node_id: int) -> bool:
+        return node_id == self.node_id
+
     def handle_add_node_to_network_command(self, command: Packet):
         # Todo
         pass

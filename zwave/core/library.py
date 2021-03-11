@@ -1,4 +1,9 @@
+from .resources import Resources
+
+from zwave.protocol.commands.version import LibraryType
+
+
 class Library:
-    def __init__(self):
-        self.version = "Z-Wave 4.05"
-        self.library_type = 0x01
+    def __init__(self, resources: Resources):
+        self.version = resources['VERSION']
+        self.library_type = LibraryType.CONTROLLER_STATIC

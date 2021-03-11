@@ -1,7 +1,9 @@
 from .fake_device import FakeDevice
 
+from zwave.core.resources import Resources
 from zwave.core.host import Host
 from zwave.core.request_manager import RequestManager
+from zwave.core.storage import Storage
 from zwave.core.library import Library
 from zwave.core.network import Network
 
@@ -55,8 +57,18 @@ def request_manager(requests_to_host_serializer, responses_to_host_serializer, h
 
 
 @pytest.fixture
-def library():
-    yield Library()
+def resources():
+    yield Resources()
+
+
+@pytest.fixture
+def library(resources):
+    yield Library(resources)
+
+
+@pytest.fixture
+def storage(resources):
+    yield Storage(resources)
 
 
 @pytest.fixture

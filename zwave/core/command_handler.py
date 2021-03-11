@@ -1,4 +1,5 @@
 from .request_manager import RequestManager
+from .storage import Storage
 from .network import Network
 from .library import Library
 
@@ -15,11 +16,13 @@ class CommandHandler(PacketVisitor):
         self,
         command_serializer: PacketSerializer,
         request_manager: RequestManager,
+        storage: Storage,
         library: Library,
         network: Network
     ):
         self.command_serializer = command_serializer
         self.request_manager = request_manager
+        self.storage = storage
         self.library = library
         self.network = network
 
@@ -53,6 +56,12 @@ class CommandHandler(PacketVisitor):
         self.request_manager.send_response('GET_SUC_NODE_ID',
                                            node_id=self.network.suc_id)
 
+    @visit('SET_SUC_NODE_ID')
+    def handle_set_suc_node_id(self, command: Packet):
+        result = self.network.set_suc_node_id(command.node_id)
+        self.request_manager.send_response('SET_SUC_NODE_ID',
+                                           result=result)
+
     @visit('ADD_NODE_TO_NETWORK')
     def handle_add_node_to_network(self, command: Packet):
         self.network.handle_add_node_to_network_command(command)
@@ -60,6 +69,18 @@ class CommandHandler(PacketVisitor):
     @visit('REMOVE_NODE_FROM_NETWORK')
     def handle_remove_node_from_network(self, command: Packet):
         self.network.handle_remove_node_from_network_command(command)
+
+    @visit('SET_DEFAULT')
+    def handle_set_default(self, command: Packet):
+        self.network.reset()
+        self.request_manager.send_request('SET_DEFAULT',
+                                          function_id=command.function_id)
+
+    @visit('NVR_GET_VALUE')
+    def handle_nvr_get_value(self, command: Packet):
+        data = self.storage.get(command.offset, command.length)
+        self.request_manager.send_response('NVR_GET_VALUE',
+                                           data=data)
 
     def visit_default(self, packet: Packet, *args, **kwargs):
         log_warning(f"{packet.name} {packet.fields}")

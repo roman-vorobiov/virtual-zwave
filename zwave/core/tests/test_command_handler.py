@@ -9,9 +9,11 @@ from unittest.mock import Mock
 
 
 @pytest.fixture
-def command_handler(requests_from_host_serializer, request_manager, library, network):
+def command_handler(requests_from_host_serializer, request_manager, storage, library, network):
     network.handle_add_node_to_network_command = Mock()
-    yield CommandHandler(requests_from_host_serializer, request_manager, library, network)
+    network.handle_remove_node_from_network_command = Mock()
+    network.reset = Mock()
+    yield CommandHandler(requests_from_host_serializer, request_manager, storage, library, network)
 
 
 @pytest.fixture
@@ -72,9 +74,37 @@ def test_get_suc_node_id(rx, tx_req, tx_res):
     tx_res('GET_SUC_NODE_ID', node_id=1)
 
 
-def test_add_node_to_network(rx, tx_req, tx_res):
+def test_set_suc_node_id_with_own_id(rx, tx_req, tx_res):
+    rx('SET_SUC_NODE_ID', node_id=1, suc_state=0, tx_option=0, capabilities=0, function_id=0)
+    tx_res('SET_SUC_NODE_ID', result=True)
+
+
+def test_set_suc_node_id_with_foreign_id(rx, tx_req, tx_res):
+    rx('SET_SUC_NODE_ID', node_id=2, suc_state=0, tx_option=0, capabilities=0, function_id=0)
+    tx_res('SET_SUC_NODE_ID', result=False)
+
+
+def test_add_node_to_network(rx, tx_req, tx_res, network):
     rx('ADD_NODE_TO_NETWORK', mode=0, options=0, function_id=0)
+    network.handle_add_node_to_network_command.assert_called()
 
 
-def test_remove_node_from_network(rx, tx_req, tx_res):
+def test_remove_node_from_network(rx, tx_req, tx_res, network):
     rx('REMOVE_NODE_FROM_NETWORK', mode=0, options=0, function_id=0)
+    network.handle_remove_node_from_network_command.assert_called()
+
+
+def test_set_default(rx, tx_req, tx_res, network):
+    rx('SET_DEFAULT', function_id=123)
+    network.reset.assert_called()
+    tx_req('SET_DEFAULT', function_id=123)
+
+
+def test_nvm_get_value_unknown(rx, tx_req, tx_res):
+    rx('NVR_GET_VALUE', offset=0, length=3)
+    tx_res('NVR_GET_VALUE', data=[0xFF, 0xFF, 0xFF])
+
+
+def test_nvm_get_value_known(rx, tx_req, tx_res):
+    rx('NVR_GET_VALUE', offset=0x23, length=2)
+    tx_res('NVR_GET_VALUE', data=[0x92, 0x9F])
