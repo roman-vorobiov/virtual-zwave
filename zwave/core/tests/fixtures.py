@@ -43,9 +43,7 @@ def device():
 
 @pytest.fixture
 def host(frame_serializer, device):
-    obj = Host(frame_serializer, device)
-    obj.send_frame = Mock()
-    yield obj
+    yield Host(frame_serializer, device)
 
 
 @pytest.fixture

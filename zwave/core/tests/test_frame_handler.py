@@ -24,19 +24,18 @@ def rx(frame_handler, frame_serializer):
 
 
 @pytest.fixture
-def tx(host, frame_handler, frame_serializer):
+def tx(host, frame_handler, frame_serializer, device):
     def inner(name: str, **kwargs):
         frame = Packet(name, **kwargs)
-        host.send_frame.assert_called_with(frame)
-        host.send_frame.reset_mock()
+        assert device.free_buffer() == [frame_serializer.to_bytes(frame)]
 
     yield inner
 
 
 @pytest.fixture(autouse=True)
-def check_communication(host):
+def check_communication(device):
     yield
-    host.send_frame.assert_not_called()
+    assert len(device.tx_buffer) == 0
 
 
 def test_ack_frame(rx, tx):
