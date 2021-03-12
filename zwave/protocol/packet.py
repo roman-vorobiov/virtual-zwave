@@ -1,24 +1,10 @@
-from tools import Visitor
-
-from typing import Any
+from tools import Object, Visitor
 
 
-class Packet:
+class Packet(Object):
     def __init__(self, name: str, **kwargs):
+        super().__init__(**kwargs)
         self.name = name
-        self.fields = kwargs
-
-    def __eq__(self, other: 'Packet'):
-        return self.name == other.name and self.fields == other.fields
-
-    def __getattr__(self, field_name: str) -> Any:
-        return self.fields.get(field_name)
-
-    def __getitem__(self, field_name: str) -> Any:
-        return self.fields.get(field_name)
-
-    def __setitem__(self, field_name: str, value: Any):
-        self.fields[field_name] = value
 
 
 class PacketVisitor(Visitor):

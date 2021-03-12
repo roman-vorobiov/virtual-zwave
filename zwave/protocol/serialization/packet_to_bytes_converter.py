@@ -11,7 +11,7 @@ from .schema import (
     MaskedField
 )
 
-from tools import Visitor, visit
+from tools import Object, Visitor, visit
 
 import pampy
 from typing import List, Union, Any
@@ -21,7 +21,7 @@ class PacketToBytesConverter(Visitor):
     def serialize_packet(self, schema: PacketSchema, packet: Packet) -> List[int]:
         return list(self.collect_bytes(schema, packet))
 
-    def collect_bytes(self, schema: PacketSchema, packet: Packet):
+    def collect_bytes(self, schema: PacketSchema, packet: Object):
         for field in schema.fields:
             yield from self.visit(field, packet)
 
@@ -72,6 +72,6 @@ class PacketToBytesConverter(Visitor):
     def get_field_length(self, field: Any):
         return pampy.match(field,
                            Union[list, str], lambda f: len(f),
-                           Packet, lambda f: sum(self.get_field_length(subfield) for subfield in f.fields.values()),
+                           Object, lambda f: sum(self.get_field_length(subfield) for subfield in f.fields.values()),
                            None, 0,
                            default=1)

@@ -1,7 +1,6 @@
 from ..packet import Packet
 from .schema import (
     PacketSchema,
-    Field,
     ConstField,
     IntField,
     BoolField,
@@ -12,7 +11,7 @@ from .schema import (
     MaskedField
 )
 
-from tools import Visitor, visit
+from tools import Object, Visitor, visit
 
 import pampy
 from typing import List, Dict, Optional, Union
@@ -25,13 +24,19 @@ class PacketFromBytesConverter(Visitor):
         self.idx = 0
         self.field_lengths: Dict[str, int] = {}
 
-    def create_packet(self, schema: PacketSchema, data: List[int]) -> Packet:
+    def reset(self, schema: PacketSchema, data: List[int]):
         self.schema = schema
         self.data = data
         self.idx = 0
         self.field_lengths = {}
 
+    def create_packet(self, schema: PacketSchema, data: List[int]) -> Packet:
+        self.reset(schema, data)
         return Packet(self.schema.name, **dict(self.collect_fields()))
+
+    def create_object(self, schema: PacketSchema, data: List[int]) -> Object:
+        self.reset(schema, data)
+        return Object(**dict(self.collect_fields()))
 
     def collect_fields(self):
         for field in self.schema.fields:
@@ -92,7 +97,7 @@ class PacketFromBytesConverter(Visitor):
         end = self.idx + self.get_field_length(field)
         if begin != end:
             converter = PacketFromBytesConverter()
-            yield field.name, converter.create_packet(field, self.data[begin:end])
+            yield field.name, converter.create_object(field, self.data[begin:end])
             self.idx += converter.idx
 
     def get_field_length(self, field: Union[ListField, StringField, PacketSchema]):
