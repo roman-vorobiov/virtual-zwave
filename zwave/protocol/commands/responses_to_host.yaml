@@ -26,8 +26,8 @@ SET_LISTEN_BEFORE_TALK_THRESHOLD:
 
 GET_NODE_PROTOCOL_INFO:
   - 0x41
-  - capabilities
-  - security
+  - 0x53
+  - 0xDC
   - 0x01
   - basic
   - generic

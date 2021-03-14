@@ -4,7 +4,7 @@ from zwave.protocol.packet_builder import PacketBuilder, Bytes
 
 from tools import SerialPort, log_warning, log_debug, dump_hex
 
-from typing import Iterator
+from typing import AsyncIterator
 
 
 class ZwaveDevice(Device):
@@ -24,17 +24,13 @@ class ZwaveDevice(Device):
         self.running = False
         self.port.close()
 
-    def poll(self) -> Iterator[Bytes]:
-        for packet in self.poll_packets():
-            log_debug(f"RX: {dump_hex(packet)}")
-            yield packet
-
-    def poll_packets(self) -> Iterator[Bytes]:
+    async def poll(self) -> AsyncIterator[Bytes]:
         while True:
-            data = self.port.read_byte()
-            if data is not None:
+            if (data := await self.port.read_byte()) is not None:
                 byte = int.from_bytes(data, byteorder='big')
-                yield from self.packet_builder.process(byte)
+                if (packet := self.packet_builder.process(byte)) is not None:
+                    log_debug(f"RX: {dump_hex(packet)}")
+                    yield packet
             elif self.running:
                 log_warning("Pipe broken")
                 self.packet_builder.reset()

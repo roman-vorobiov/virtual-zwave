@@ -1,4 +1,5 @@
 from .fake_device import FakeDevice
+from .mock import Mock
 
 from zwave.core.resources import Resources
 from zwave.core.host import Host
@@ -13,7 +14,6 @@ from tools import load_yaml
 
 import pytest
 from unittest import mock
-from unittest.mock import Mock
 
 
 @pytest.fixture

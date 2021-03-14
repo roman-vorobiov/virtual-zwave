@@ -2,6 +2,7 @@ from .log_utils import log_info
 
 import os
 import signal
+import asyncio
 from subprocess import Popen, PIPE
 from typing import Optional
 
@@ -27,8 +28,8 @@ class SerialPort:
     def is_open(self) -> bool:
         return self.proc is not None and self.proc.poll() is None
 
-    def read_byte(self) -> Optional[bytes]:
-        data = self.proc.stdout.read(1)
+    async def read_byte(self) -> Optional[bytes]:
+        data = await asyncio.get_event_loop().run_in_executor(None, self.proc.stdout.read, 1)
         if self.is_open:
             return data
 

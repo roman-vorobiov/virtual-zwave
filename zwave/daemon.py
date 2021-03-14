@@ -1,11 +1,11 @@
 from zwave.core import ZwaveDevice, Core
 
 import signal
-from threading import Thread
+import asyncio
 
 
-def listener(device: ZwaveDevice, handler: Core):
-    for packet in device.poll():
+async def listener(device: ZwaveDevice, handler: Core):
+    async for packet in device.poll():
         handler.process_packet(packet)
 
 
@@ -13,22 +13,14 @@ class Daemon:
     def __init__(self, link: str):
         self.device = ZwaveDevice(link)
         self.handler = Core(self.device)
-        self.polling_job = Thread(target=listener, args=(self.device, self.handler))
 
     def run(self):
         self.device.initialize()
-        self.polling_job.start()
 
-        def teardown(sig, frame):
-            self.stop()
-            exit(0)
+        for sig in [signal.SIGINT, signal.SIGTERM]:
+            signal.signal(sig, lambda *_: self.stop())
 
-        signal.signal(signal.SIGINT, teardown)
-        signal.signal(signal.SIGTERM, teardown)
-        signal.pause()
+        asyncio.run(listener(self.device, self.handler))
 
     def stop(self):
         self.device.finalize()
-
-        if self.polling_job.is_alive():
-            self.polling_job.join()

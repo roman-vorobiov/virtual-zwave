@@ -2,15 +2,18 @@ from zwave.core import Device
 
 from zwave.protocol.packet_builder import Bytes
 
-from typing import Iterator, List
+from tools import empty_async_generator
+
+from typing import AsyncIterator, List
 
 
 class FakeDevice(Device):
     def __init__(self):
         self.tx_buffer = []
 
-    def poll(self) -> Iterator[Bytes]:
-        yield from []
+    @empty_async_generator
+    async def poll(self) -> AsyncIterator[Bytes]:
+        pass
 
     def send_data(self, data: Bytes):
         self.tx_buffer.append(data)

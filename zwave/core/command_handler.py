@@ -8,6 +8,7 @@ from zwave.protocol.serialization import PacketSerializer
 
 from tools import visit, log_warning
 
+import asyncio
 from typing import List
 
 
@@ -28,7 +29,8 @@ class CommandHandler(PacketVisitor):
 
     def process_packet(self, packet: List[int]):
         command = self.command_serializer.from_bytes(packet)
-        self.visit(command)
+        if (async_task := self.visit(command)) is not None:
+            asyncio.create_task(async_task)
 
     @visit('APPLICATION_NODE_INFORMATION')
     def handle_application_node_information(self, command: Packet):
@@ -63,12 +65,31 @@ class CommandHandler(PacketVisitor):
                                            result=result)
 
     @visit('ADD_NODE_TO_NETWORK')
-    def handle_add_node_to_network(self, command: Packet):
-        self.network.handle_add_node_to_network_command(command)
+    async def handle_add_node_to_network(self, command: Packet):
+        async for status, source, node_info in self.network.add_node_to_network(command.mode):
+            self.request_manager.send_request('ADD_NODE_TO_NETWORK',
+                                              function_id=command.function_id,
+                                              status=status,
+                                              source=source,
+                                              node_info=node_info)
 
     @visit('REMOVE_NODE_FROM_NETWORK')
     def handle_remove_node_from_network(self, command: Packet):
-        self.network.handle_remove_node_from_network_command(command)
+        self.network.remove_node_from_network(command.mode)
+
+    @visit('GET_NODE_PROTOCOL_INFO')
+    def handle_get_node_protocol_info(self, command: Packet):
+        if (node_info := self.network.get_node_protocol_info(command.node_id)) is not None:
+            self.request_manager.send_response('GET_NODE_PROTOCOL_INFO',
+                                               basic=node_info.basic,
+                                               generic=node_info.generic,
+                                               specific=node_info.specific)
+
+    @visit('REQUEST_NODE_INFO')
+    def handle_request_node_info(self, command: Packet):
+        self.network.request_node_info(command.node_id)
+        self.request_manager.send_response('REQUEST_NODE_INFO',
+                                           result=True)
 
     @visit('SET_DEFAULT')
     def handle_set_default(self, command: Packet):

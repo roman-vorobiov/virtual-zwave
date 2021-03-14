@@ -1,12 +1,12 @@
 from zwave.protocol.packet_builder import Bytes
 
 from abc import ABC, abstractmethod
-from typing import Iterator
+from typing import AsyncIterator
 
 
 class Device(ABC):
     @abstractmethod
-    def poll(self) -> Iterator[Bytes]:
+    async def poll(self) -> AsyncIterator[Bytes]:
         pass
 
     @abstractmethod

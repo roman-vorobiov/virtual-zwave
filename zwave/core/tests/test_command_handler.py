@@ -3,16 +3,15 @@ from .fixtures import *
 from zwave.core.command_handler import CommandHandler
 
 from zwave.protocol import Packet
+from zwave.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStatus
+
+from tools import Object
 
 import pytest
-from unittest.mock import Mock
 
 
 @pytest.fixture
 def command_handler(requests_from_host_serializer, request_manager, storage, library, network):
-    network.handle_add_node_to_network_command = Mock()
-    network.handle_remove_node_from_network_command = Mock()
-    network.reset = Mock()
     yield CommandHandler(requests_from_host_serializer, request_manager, storage, library, network)
 
 
@@ -27,9 +26,10 @@ def rx(command_handler, requests_from_host_serializer):
 
 @pytest.fixture
 def tx_req(request_manager, command_handler, requests_to_host_serializer):
-    def inner(name: str, **kwargs):
-        request_manager.send_request.assert_called_with(name, **kwargs)
-        request_manager.send_request.reset_mock()
+    async def inner(name: str, **kwargs):
+        await request_manager.send_request.wait_until_called(timeout=1)
+        request_manager.send_request.assert_called_first_with(name, **kwargs)
+        request_manager.send_request.pop_first_call()
 
     yield inner
 
@@ -37,8 +37,8 @@ def tx_req(request_manager, command_handler, requests_to_host_serializer):
 @pytest.fixture
 def tx_res(request_manager, command_handler, responses_to_host_serializer):
     def inner(name: str, **kwargs):
-        request_manager.send_response.assert_called_with(name, **kwargs)
-        request_manager.send_response.reset_mock()
+        request_manager.send_response.assert_called_first_with(name, **kwargs)
+        request_manager.send_response.pop_first_call()
 
     yield inner
 
@@ -84,20 +84,67 @@ def test_set_suc_node_id_with_foreign_id(rx, tx_req, tx_res):
     tx_res('SET_SUC_NODE_ID', result=False)
 
 
-def test_add_node_to_network(rx, tx_req, tx_res, network):
-    rx('ADD_NODE_TO_NETWORK', mode=0, options=0, function_id=0)
-    network.handle_add_node_to_network_command.assert_called()
+@pytest.mark.asyncio
+async def test_add_node_to_network_no_node(rx, tx_req, tx_res):
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=0, node_info=None)
 
 
-def test_remove_node_from_network(rx, tx_req, tx_res, network):
-    rx('REMOVE_NODE_FROM_NETWORK', mode=0, options=0, function_id=0)
-    network.handle_remove_node_from_network_command.assert_called()
+@pytest.mark.asyncio
+async def test_add_node_to_network_with_node(rx, tx_req, tx_res, network):
+    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+
+    network.on_node_information_frame(node_info)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node_info)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=2, node_info=None)
 
 
-def test_set_default(rx, tx_req, tx_res, network):
+@pytest.mark.asyncio
+async def test_add_node_to_network_stop(rx, tx_req, tx_res):
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=0, node_info=None)
+
+
+@pytest.mark.asyncio
+async def test_add_node_to_network_smart_start(rx, tx_req, tx_res):
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.SMART_START, options=0, function_id=0)
+
+
+def test_remove_node_from_network(rx, tx_req, tx_res):
+    rx('REMOVE_NODE_FROM_NETWORK', mode=1, options=0, function_id=0)
+
+
+def test_get_node_protocol_info_no_node(rx, tx_req, tx_res):
+    rx('GET_NODE_PROTOCOL_INFO', node_id=0)
+
+
+def test_get_node_protocol_info_with_node(rx, tx_req, tx_res, network):
+    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    network.nodes[2] = node_info
+
+    rx('GET_NODE_PROTOCOL_INFO', node_id=2)
+    tx_res('GET_NODE_PROTOCOL_INFO', basic=1, generic=2, specific=3)
+
+
+def test_request_node_info(rx, tx_req, tx_res):
+    rx('REQUEST_NODE_INFO', node_id=0)
+    tx_res('REQUEST_NODE_INFO', result=True)
+
+
+@pytest.mark.asyncio
+async def test_set_default(rx, tx_req, tx_res):
     rx('SET_DEFAULT', function_id=123)
-    network.reset.assert_called()
-    tx_req('SET_DEFAULT', function_id=123)
+    await tx_req('SET_DEFAULT', function_id=123)
 
 
 def test_nvm_get_value_unknown(rx, tx_req, tx_res):
