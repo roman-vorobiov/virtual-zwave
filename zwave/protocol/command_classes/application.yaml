@@ -1,0 +1,17 @@
+---
+
+# COMMAND_CLASS_BASIC
+
+BASIC_SET:
+  - 0x20
+  - 0x01
+  - value
+
+BASIC_GET:
+  - 0x20
+  - 0x02
+
+BASIC_REPORT:
+  - 0x20
+  - 0x03
+  - value

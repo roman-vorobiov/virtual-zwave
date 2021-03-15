@@ -36,19 +36,17 @@ class NodeAddingController:
         yield AddNodeStatus.LEARN_READY, 0, None
 
         # if len(self.network.nodes) == 0:
-        #     self.on_node_information_frame(None, Object(basic=0x04,
-        #                                                 generic=0x01,
-        #                                                 specific=0x01,
-        #                                                 command_class_ids=[0x5E, 0x72]))
+        #     self.network.dummy_node.send_node_information()
 
         try:
             await self.node_info
             yield AddNodeStatus.NODE_FOUND, 0, None
 
             self.new_node_id = self.generate_node_id()
+            self.network.nodes[self.new_node_id] = self.node_info.result()
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, self.node_info.result()
 
-            self.network.nodes[self.new_node_id] = self.node_info.result()
+            self.network.dummy_node.add_to_network(self.network.home_id, self.new_node_id)
             yield AddNodeStatus.PROTOCOL_DONE, self.new_node_id, None
         except CancelledError:
             pass
@@ -56,6 +54,7 @@ class NodeAddingController:
     async def stop(self):
         self.node_info.cancel()
         yield AddNodeStatus.DONE, self.new_node_id, None
+        self.reset()
 
     @empty_async_generator
     async def enable_smart_start(self):

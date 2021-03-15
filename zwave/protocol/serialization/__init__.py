@@ -1,1 +1,1 @@
-from .packet_serializer import PacketSerializer
+from .packet_serializer import PacketSerializer, CommandClassSerializer

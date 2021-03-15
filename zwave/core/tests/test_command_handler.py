@@ -171,8 +171,8 @@ def test_request_node_info(rx, tx_req, tx_res):
 @pytest.mark.asyncio
 async def test_send_data(rx, tx_req, tx_res):
     rx('SEND_DATA', node_id=2, data=[0x01, 0x02, 0x03], tx_options=0, function_id=123)
-    tx_res('SEND_DATA', result=True)
-    await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
+    tx_res('SEND_DATA', result=False)
+    # await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
 
 
 @pytest.mark.asyncio

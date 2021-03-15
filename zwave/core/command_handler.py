@@ -98,6 +98,10 @@ class CommandHandler(PacketVisitor):
 
     @visit('SEND_DATA')
     def handle_send_data(self, command: Packet):
+        if len(self.network.nodes) == 0:
+            self.request_manager.send_response('SEND_DATA', result=False)
+            return
+
         self.request_manager.send_response('SEND_DATA',
                                            result=True)
 

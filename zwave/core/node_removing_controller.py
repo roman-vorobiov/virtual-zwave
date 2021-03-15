@@ -32,8 +32,8 @@ class NodeRemovingController:
         self.reset()
         yield RemoveNodeStatus.LEARN_READY, 0, None
 
-        # if (node_id := next(iter(self.network.nodes), None)) is not None:
-        #     self.on_node_information_frame(node_id, self.network.nodes[node_id])
+        # if len(self.network.nodes) != 0:
+        #     self.network.dummy_node.send_node_information()
 
         try:
             await self.node_id
@@ -42,6 +42,7 @@ class NodeRemovingController:
             node_info = self.network.nodes.pop(self.node_id.result())
             yield RemoveNodeStatus.REMOVING_SLAVE, self.node_id.result(), node_info
 
+            self.network.dummy_node.remove_from_network()
             yield RemoveNodeStatus.DONE, self.node_id.result(), node_info
         except CancelledError:
             pass
@@ -49,3 +50,4 @@ class NodeRemovingController:
     @empty_async_generator
     async def stop(self):
         self.node_id.cancel()
+        self.reset()

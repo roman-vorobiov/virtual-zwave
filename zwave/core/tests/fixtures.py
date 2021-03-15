@@ -8,7 +8,7 @@ from zwave.core.storage import Storage
 from zwave.core.library import Library
 from zwave.core.network import Network
 
-from zwave.protocol.serialization import PacketSerializer
+from zwave.protocol.serialization import PacketSerializer, CommandClassSerializer
 
 from tools import load_yaml
 
@@ -34,6 +34,20 @@ def requests_to_host_serializer():
 @pytest.fixture
 def responses_to_host_serializer():
     yield PacketSerializer(load_yaml("zwave/protocol/commands/responses_to_host.yaml"))
+
+
+@pytest.fixture
+def command_class_serializer():
+    schema_files = [
+        "zwave/protocol/command_classes/management.yaml",
+        "zwave/protocol/command_classes/application.yaml"
+    ]
+
+    data = {}
+    for schema_file in schema_files:
+        data.update(load_yaml(schema_file))
+
+    yield CommandClassSerializer(data)
 
 
 @pytest.fixture
@@ -70,6 +84,6 @@ def storage(resources):
 
 
 @pytest.fixture
-def network(request_manager):
+def network(command_class_serializer, request_manager):
     with mock.patch('random.randint', lambda *args: 0):
-        yield Network(request_manager)
+        yield Network(command_class_serializer, request_manager)
