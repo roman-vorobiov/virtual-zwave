@@ -43,7 +43,9 @@ class Core:
         self.library = Library(
             resources=self.resources
         )
-        self.network = Network()
+        self.network = Network(
+            request_manager=self.request_manager
+        )
 
         self.command_handler = CommandHandler(
             command_serializer=self.requests_from_host_serializer,

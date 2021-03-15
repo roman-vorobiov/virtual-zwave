@@ -70,6 +70,6 @@ def storage(resources):
 
 
 @pytest.fixture
-def network():
+def network(request_manager):
     with mock.patch('random.randint', lambda *args: 0):
-        yield Network()
+        yield Network(request_manager)

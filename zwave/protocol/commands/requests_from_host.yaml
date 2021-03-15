@@ -47,7 +47,8 @@ ADD_NODE_TO_NETWORK:
 
 REMOVE_NODE_FROM_NETWORK:
   - 0x4B
-  - mode
+  - 0b00000111: mode
+    0b11000000: options
   - function_id
 
 SET_LEARN_MODE:

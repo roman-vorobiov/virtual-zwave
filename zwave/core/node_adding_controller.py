@@ -3,7 +3,7 @@ from zwave.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStat
 from tools import Object, empty_async_generator
 
 from asyncio import Future, CancelledError
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .network import Network
@@ -19,7 +19,7 @@ class NodeAddingController:
         self.node_info = Future()
         self.new_node_id = 0
 
-    def on_node_information_frame(self, node_info: Object):
+    def on_node_information_frame(self, node_id: Optional[int], node_info: Object):
         self.node_info.set_result(node_info)
 
     def add_node_to_network(self, mode: AddNodeMode):
@@ -36,10 +36,10 @@ class NodeAddingController:
         yield AddNodeStatus.LEARN_READY, 0, None
 
         # if len(self.network.nodes) == 0:
-        #     self.on_node_information_frame(Object(basic=0x04,
-        #                                           generic=0x01,
-        #                                           specific=0x01,
-        #                                           command_class_ids=[0x5E, 0x72, 0x20]))
+        #     self.on_node_information_frame(None, Object(basic=0x04,
+        #                                                 generic=0x01,
+        #                                                 specific=0x01,
+        #                                                 command_class_ids=[0x5E, 0x72]))
 
         try:
             await self.node_info

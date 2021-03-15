@@ -10,5 +10,5 @@ class LibraryType(IntEnum):
     SLAVE_ROUTING = 0x06
     CONTROLLER_BRIDGE = 0x07
     DUT = 0x08
-    AVREMOTE = 0x0A
-    AVDEVICE = 0x0B
+    AV_REMOTE = 0x0A
+    AV_DEVICE = 0x0B

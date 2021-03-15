@@ -74,8 +74,13 @@ class CommandHandler(PacketVisitor):
                                               node_info=node_info)
 
     @visit('REMOVE_NODE_FROM_NETWORK')
-    def handle_remove_node_from_network(self, command: Packet):
-        self.network.remove_node_from_network(command.mode)
+    async def handle_remove_node_from_network(self, command: Packet):
+        async for status, source, node_info in self.network.remove_node_from_network(command.mode):
+            self.request_manager.send_request('REMOVE_NODE_FROM_NETWORK',
+                                              function_id=command.function_id,
+                                              status=status,
+                                              source=source,
+                                              node_info=node_info)
 
     @visit('GET_NODE_PROTOCOL_INFO')
     def handle_get_node_protocol_info(self, command: Packet):
@@ -90,6 +95,32 @@ class CommandHandler(PacketVisitor):
         self.network.request_node_info(command.node_id)
         self.request_manager.send_response('REQUEST_NODE_INFO',
                                            result=True)
+
+    @visit('SEND_DATA')
+    def handle_send_data(self, command: Packet):
+        self.request_manager.send_response('SEND_DATA',
+                                           result=True)
+
+        async def flow():
+            async for tx_status in self.network.send_data(command.node_id, command.data):
+                self.request_manager.send_request('SEND_DATA',
+                                                  function_id=command.function_id,
+                                                  tx_status=tx_status)
+
+        return flow()
+
+    @visit('ASSIGN_SUC_RETURN_ROUTE')
+    def handle_assign_suc_return_route(self, command: Packet):
+        self.request_manager.send_response('ASSIGN_SUC_RETURN_ROUTE',
+                                           result=True)
+
+        async def flow():
+            async for status in self.network.assign_suc_return_route(command.node_id):
+                self.request_manager.send_request('ASSIGN_SUC_RETURN_ROUTE',
+                                                  function_id=command.function_id,
+                                                  status=status)
+
+        return flow()
 
     @visit('SET_DEFAULT')
     def handle_set_default(self, command: Packet):

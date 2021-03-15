@@ -8,7 +8,8 @@ _NodeInfo: &NodeInfo
 
 APPLICATION_COMMAND_HANDLER:
   - 0x04
-  - rx_status
+  - 0b11000011: rx_status
+    0b00011100: rx_type
   - source_node
   - { length_of: command }
   - command[]

@@ -3,7 +3,9 @@ from .fixtures import *
 from zwave.core.command_handler import CommandHandler
 
 from zwave.protocol import Packet
+from zwave.protocol.commands.send_data import TransmitStatus
 from zwave.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStatus
+from zwave.protocol.commands.remove_node_from_network import RemoveNodeMode, RemoveNodeStatus
 
 from tools import Object
 
@@ -100,7 +102,7 @@ async def test_add_node_to_network_with_node(rx, tx_req, tx_res, network):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
 
-    network.on_node_information_frame(node_info)
+    network.on_node_information_frame(None, node_info)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node_info)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
@@ -120,8 +122,33 @@ async def test_add_node_to_network_smart_start(rx, tx_req, tx_res):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.SMART_START, options=0, function_id=0)
 
 
-def test_remove_node_from_network(rx, tx_req, tx_res):
-    rx('REMOVE_NODE_FROM_NETWORK', mode=1, options=0, function_id=0)
+@pytest.mark.asyncio
+async def test_remove_node_from_network_no_node(rx, tx_req, tx_res):
+    rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
+    await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.LEARN_READY, source=0, node_info=None)
+
+    rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
+
+
+@pytest.mark.asyncio
+async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, network):
+    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    network.nodes[2] = node_info
+
+    rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
+    await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.LEARN_READY, source=0, node_info=None)
+
+    network.on_node_information_frame(2, node_info)
+    await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.NODE_FOUND, source=0, node_info=None)
+    await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.REMOVING_SLAVE, source=2, node_info=node_info)
+    await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.DONE, source=2, node_info=node_info)
+
+    rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
+
+
+@pytest.mark.asyncio
+async def test_remove_node_from_network_stop(rx, tx_req, tx_res):
+    rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
 
 
 def test_get_node_protocol_info_no_node(rx, tx_req, tx_res):
@@ -139,6 +166,20 @@ def test_get_node_protocol_info_with_node(rx, tx_req, tx_res, network):
 def test_request_node_info(rx, tx_req, tx_res):
     rx('REQUEST_NODE_INFO', node_id=0)
     tx_res('REQUEST_NODE_INFO', result=True)
+
+
+@pytest.mark.asyncio
+async def test_send_data(rx, tx_req, tx_res):
+    rx('SEND_DATA', node_id=2, data=[0x01, 0x02, 0x03], tx_options=0, function_id=123)
+    tx_res('SEND_DATA', result=True)
+    await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
+
+
+@pytest.mark.asyncio
+async def test_assign_suc_return_route(rx, tx_req, tx_res):
+    rx('ASSIGN_SUC_RETURN_ROUTE', node_id=2, function_id=123)
+    tx_res('ASSIGN_SUC_RETURN_ROUTE', result=True)
+    await tx_req('ASSIGN_SUC_RETURN_ROUTE', function_id=123, status=TransmitStatus.OK)
 
 
 @pytest.mark.asyncio
