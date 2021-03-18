@@ -1,26 +1,31 @@
 from zwave.core import ZwaveDevice, Core
 
-import signal
+from tools.websockets import NetworkServerConnection
+
 import asyncio
 
 
-async def listener(device: ZwaveDevice, handler: Core):
-    async for packet in device.poll():
-        handler.process_packet(packet)
-
-
 class Daemon:
-    def __init__(self, link: str):
+    def __init__(self, link: str, port: int):
         self.device = ZwaveDevice(link)
-        self.handler = Core(self.device)
+        self.connection = NetworkServerConnection(port)
+        self.handler = Core(self.device, self.connection)
 
-    def run(self):
+    async def run(self):
         self.device.initialize()
+        await self.connection.initialize()
 
-        for sig in [signal.SIGINT, signal.SIGTERM]:
-            signal.signal(sig, lambda *_: self.stop())
-
-        asyncio.run(listener(self.device, self.handler))
+        await asyncio.gather(self.handle_packets_from_host(),
+                             self.handle_messages_from_network())
 
     def stop(self):
         self.device.finalize()
+        asyncio.create_task(self.connection.close())
+
+    async def handle_packets_from_host(self):
+        async for packet in self.device.poll():
+            self.handler.process_packet(packet)
+
+    async def handle_messages_from_network(self):
+        async for message in self.connection.poll():
+            self.handler.process_message(message)

@@ -61,8 +61,4 @@ class NodeAddingController:
         pass
 
     def generate_node_id(self):
-        # return next(reversed(self.network.nodes.keys()), self.network.node_id) + 1
-        if len(self.network.nodes):
-            return next(reversed(self.network.nodes.keys())) + 1
-        else:
-            return self.network.node_id + 1
+        return next(reversed(self.network.nodes.keys()), self.network.node_id) + 1

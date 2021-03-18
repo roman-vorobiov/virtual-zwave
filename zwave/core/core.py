@@ -4,13 +4,17 @@ from .host import Host
 from .request_manager import RequestManager
 from .frame_handler import FrameHandler
 from .command_handler import CommandHandler
+from .network_event_handler import NetworkEventHandler
 from .library import Library
-from .network import Network
+from .network import Network as NetworkController
 from .storage import Storage
 
 from zwave.protocol.serialization import PacketSerializer, CommandClassSerializer
 
+from common import Network
+
 from tools import load_yaml
+from tools.websockets import NetworkConnection
 
 from typing import List
 
@@ -28,7 +32,7 @@ def make_command_class_serializer(*schema_paths: str) -> CommandClassSerializer:
 
 
 class Core:
-    def __init__(self, device: Device):
+    def __init__(self, device: Device, connection: NetworkConnection):
         self.frame_serializer = make_packet_serializer("zwave/protocol/frames/frames.yaml")
         self.requests_from_host_serializer = make_packet_serializer("zwave/protocol/commands/requests_from_host.yaml")
         self.requests_to_host_serializer = make_packet_serializer("zwave/protocol/commands/requests_to_host.yaml")
@@ -55,7 +59,7 @@ class Core:
         self.library = Library(
             resources=self.resources
         )
-        self.network = Network(
+        self.network_controller = NetworkController(
             command_class_serializer=self.command_class_serializer,
             request_manager=self.request_manager
         )
@@ -65,7 +69,7 @@ class Core:
             request_manager=self.request_manager,
             storage=self.storage,
             library=self.library,
-            network=self.network
+            network=self.network_controller
         )
         self.frame_handler = FrameHandler(
             frame_serializer=self.frame_serializer,
@@ -73,5 +77,15 @@ class Core:
             command_handler=self.command_handler
         )
 
+        self.network = Network(
+            connection=connection
+        )
+        self.network_event_handler = NetworkEventHandler(
+            network=self.network
+        )
+
     def process_packet(self, packet: List[int]):
         self.frame_handler.process_packet(packet)
+
+    def process_message(self, message: str):
+        self.network_event_handler.process_message(message)
