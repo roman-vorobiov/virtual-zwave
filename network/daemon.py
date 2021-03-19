@@ -1,37 +1,31 @@
-from .core import Core
+from network.core import Core, UserInterface
 
-from tools import log_error
+from common import Daemon
+
 from tools.websockets import NetworkClientConnection
 
 import asyncio
-from aioconsole import ainput
 
 
-class Daemon:
+class NetworkDaemon(Daemon):
     def __init__(self, port: int):
+        self.user_interface = UserInterface()
         self.connection = NetworkClientConnection(port)
         self.handler = Core(self.connection)
 
-    async def run(self):
+    async def start(self):
         await self.connection.initialize()
 
         await asyncio.gather(self.handle_commands_from_user(),
                              self.handle_messages_from_network())
 
-    async def stop(self):
-        await self.connection.close()
+    def stop(self):
+        self.user_interface.stop()
+        asyncio.create_task(self.connection.close())
 
     async def handle_commands_from_user(self):
-        while True:
-            command = await ainput()
-
-            if command == 'stop':
-                await self.stop()
-                break
-            elif command == 'send':
-                await self.handler.send_test_data()
-            else:
-                log_error(f"Unknown command '{command}'")
+        async for command in self.user_interface.poll():
+            self.handler.process_command(command)
 
     async def handle_messages_from_network(self):
         async for message in self.connection.poll():

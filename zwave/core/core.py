@@ -81,7 +81,8 @@ class Core:
             connection=connection
         )
         self.network_event_handler = NetworkEventHandler(
-            network=self.network
+            network=self.network,
+            network_controller=self.network_controller
         )
 
     def process_packet(self, packet: List[int]):

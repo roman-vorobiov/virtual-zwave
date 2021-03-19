@@ -1,17 +1,19 @@
 from zwave.core import ZwaveDevice, Core
 
+from common import Daemon
+
 from tools.websockets import NetworkServerConnection
 
 import asyncio
 
 
-class Daemon:
+class ZwaveDaemon(Daemon):
     def __init__(self, link: str, port: int):
         self.device = ZwaveDevice(link)
         self.connection = NetworkServerConnection(port)
         self.handler = Core(self.device, self.connection)
 
-    async def run(self):
+    async def start(self):
         self.device.initialize()
         await self.connection.initialize()
 

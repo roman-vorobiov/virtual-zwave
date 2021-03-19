@@ -1,6 +1,5 @@
-from network import Daemon
+from network import NetworkDaemon
 
-import asyncio
 from argparse import ArgumentParser
 
 
@@ -16,9 +15,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    daemon = Daemon(args.port)
-
-    asyncio.run(daemon.run())
+    daemon = NetworkDaemon(port=args.port)
+    daemon.run()
 
 
 if __name__ == '__main__':

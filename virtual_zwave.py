@@ -1,7 +1,5 @@
-from zwave import Daemon
+from zwave import ZwaveDaemon
 
-import signal
-import asyncio
 from argparse import ArgumentParser
 
 
@@ -20,13 +18,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-    daemon = Daemon(args.link, args.port)
-
-    for sig in [signal.SIGINT, signal.SIGTERM]:
-        asyncio.get_event_loop().add_signal_handler(sig, daemon.stop)
-
-    asyncio.get_event_loop().run_until_complete(daemon.run())
-    asyncio.get_event_loop().close()
+    daemon = ZwaveDaemon(link=args.link, port=args.port)
+    daemon.run()
 
 
 if __name__ == '__main__':

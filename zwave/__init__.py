@@ -1,1 +1,1 @@
-from .daemon import Daemon
+from .daemon import ZwaveDaemon

@@ -56,8 +56,6 @@ class Network:
     def reset(self):
         self.home_id = random.randint(0xC0000000, 0xFFFFFFFE)
         self.nodes = {}
-        self.node_adding_controller.reset()
-        self.node_removing_controller.reset()
 
     def set_suc_node_id(self, node_id: int) -> bool:
         return node_id == self.node_id
