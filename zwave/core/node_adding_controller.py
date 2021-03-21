@@ -3,20 +3,20 @@ from zwave.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStat
 from tools import Object, ReusableFuture, empty_async_generator
 
 from asyncio import CancelledError
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .network import Network
+    from .network_controller import NetworkController
 
 
 class NodeAddingController:
-    def __init__(self, network: 'Network'):
-        self.network = network
+    def __init__(self, network_controller: 'NetworkController'):
+        self.network_controller = network_controller
         self.node_info = ReusableFuture()
         self.new_node_id = 0
 
-    def on_node_information_frame(self, node_id: Optional[int], node_info: Object):
-        self.node_info.set_result(node_info)
+    def on_node_information_frame(self, node_id: int, node_info: Object):
+        self.node_info.set_result((node_id, node_info))
 
     def add_node_to_network(self, mode: AddNodeMode):
         handlers = {
@@ -31,14 +31,21 @@ class NodeAddingController:
         yield AddNodeStatus.LEARN_READY, 0, None
 
         try:
-            node_info = await self.node_info
+            old_node_id, node_info = await self.node_info
             yield AddNodeStatus.NODE_FOUND, 0, None
 
             self.new_node_id = self.generate_node_id()
-            self.network.nodes[self.new_node_id] = node_info
+            self.network_controller.nodes[self.new_node_id] = node_info
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, node_info
 
-            self.network.dummy_node.add_to_network(self.network.home_id, self.new_node_id)
+            self.network_controller.network.send_message({
+                'messageType': "ADD_TO_NETWORK",
+                'message': {
+                    'destinationNodeId': old_node_id,
+                    'homeId': self.network_controller.home_id,
+                    'newNodeId': self.new_node_id
+                }
+            })
             yield AddNodeStatus.PROTOCOL_DONE, self.new_node_id, None
         except CancelledError:
             pass
@@ -52,4 +59,4 @@ class NodeAddingController:
         pass
 
     def generate_node_id(self):
-        return next(reversed(self.network.nodes.keys()), self.network.node_id) + 1
+        return next(reversed(self.network_controller.nodes.keys()), self.network_controller.node_id) + 1

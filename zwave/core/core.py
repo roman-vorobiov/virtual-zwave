@@ -6,12 +6,12 @@ from .frame_handler import FrameHandler
 from .command_handler import CommandHandler
 from .network_event_handler import NetworkEventHandler
 from .library import Library
-from .network import Network as NetworkController
+from .network_controller import NetworkController
 from .storage import Storage
 
 from zwave.protocol.serialization import PacketSerializer, CommandClassSerializer
 
-from common import Network
+from common import NetworkImpl
 
 from tools import load_yaml
 from tools.websockets import NetworkConnection
@@ -42,6 +42,10 @@ class Core:
             "zwave/protocol/command_classes/application.yaml"
         )
 
+        self.network = NetworkImpl(
+            connection=connection
+        )
+
         self.host = Host(
             frame_serializer=self.frame_serializer,
             device=device
@@ -61,7 +65,8 @@ class Core:
         )
         self.network_controller = NetworkController(
             command_class_serializer=self.command_class_serializer,
-            request_manager=self.request_manager
+            request_manager=self.request_manager,
+            network=self.network
         )
 
         self.command_handler = CommandHandler(
@@ -69,7 +74,7 @@ class Core:
             request_manager=self.request_manager,
             storage=self.storage,
             library=self.library,
-            network=self.network_controller
+            network_controller=self.network_controller
         )
         self.frame_handler = FrameHandler(
             frame_serializer=self.frame_serializer,
@@ -77,9 +82,6 @@ class Core:
             command_handler=self.command_handler
         )
 
-        self.network = Network(
-            connection=connection
-        )
         self.network_event_handler = NetworkEventHandler(
             network=self.network,
             network_controller=self.network_controller

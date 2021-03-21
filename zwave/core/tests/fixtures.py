@@ -1,16 +1,17 @@
 from .fake_device import FakeDevice
-from .mock import Mock
 
 from zwave.core.resources import Resources
 from zwave.core.host import Host
 from zwave.core.request_manager import RequestManager
 from zwave.core.storage import Storage
 from zwave.core.library import Library
-from zwave.core.network import Network
+from zwave.core.network_controller import NetworkController
 
 from zwave.protocol.serialization import PacketSerializer, CommandClassSerializer
 
-from tools import load_yaml
+from common.tests import FakeNetwork
+
+from tools import Mock, load_yaml
 
 import pytest
 from unittest import mock
@@ -56,6 +57,11 @@ def device():
 
 
 @pytest.fixture
+def network():
+    yield FakeNetwork()
+
+
+@pytest.fixture
 def host(frame_serializer, device):
     yield Host(frame_serializer, device)
 
@@ -84,6 +90,6 @@ def storage(resources):
 
 
 @pytest.fixture
-def network(command_class_serializer, request_manager):
+def network_controller(network, command_class_serializer, request_manager):
     with mock.patch('random.randint', lambda *args: 0):
-        yield Network(command_class_serializer, request_manager)
+        yield NetworkController(command_class_serializer, request_manager, network)

@@ -2,6 +2,8 @@ import asyncio
 from asyncio import CancelledError
 from aioconsole import ainput
 
+from typing import AsyncIterator
+
 
 class UserInterface:
     def __init__(self):
@@ -10,7 +12,7 @@ class UserInterface:
     def stop(self):
         self.task.cancel()
 
-    async def poll(self):
+    async def poll(self) -> AsyncIterator[str]:
         while True:
             try:
                 self.task = asyncio.create_task(ainput())

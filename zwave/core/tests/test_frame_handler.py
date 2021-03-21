@@ -5,8 +5,9 @@ from zwave.core.frame_handler import FrameHandler
 from zwave.protocol import Packet
 from zwave.protocol.frames.data import FrameType
 
+from tools import Mock
+
 import pytest
-from unittest.mock import Mock
 
 
 @pytest.fixture

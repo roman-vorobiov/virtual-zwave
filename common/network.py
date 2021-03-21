@@ -1,13 +1,7 @@
-from tools.websockets import NetworkConnection
-
-import json
-import asyncio
+from abc import ABC, abstractmethod
 
 
-class Network:
-    def __init__(self, connection: NetworkConnection):
-        self.connection = connection
-
+class Network(ABC):
+    @abstractmethod
     def send_message(self, message: dict):
-        data = json.dumps(message)
-        asyncio.create_task(self.connection.send_data(data))
+        pass
