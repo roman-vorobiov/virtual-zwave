@@ -4,7 +4,7 @@ from zwave.protocol import Packet
 
 from common import Network
 
-from tools import Object, log_warning
+from tools import log_warning
 
 from typing import Optional, Type, Dict, TypeVar
 
@@ -49,33 +49,50 @@ class Node:
         else:
             log_warning(f"Unhandled command class: {command.class_id} {command.name}")
 
-    def get_node_info(self) -> Object:
-        return Object(
-            basic=self.basic,
-            generic=self.generic,
-            specific=self.specific,
-            command_class_ids=list(self.command_classes.keys() - {0x20})
-        )
-
     def send_command(self, destination_id: int, command: Packet):
-        self.network.send_message({
-            'messageType': "APPLICATION_COMMAND",
-            'message': {
-                'sourceNodeId': self.node_id,
-                'destinationNodeId': destination_id,
-                'classId': command.class_id,
-                'command': command.name,
-                'args': command.fields
+        self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
+            'classId': command.class_id,
+            'command': command.name,
+            'args': command.fields
+        })
+
+    def send_node_information(self, home_id: Optional[int] = None, node_id: Optional[int] = None):
+        node_info = {
+            'basic': self.basic,
+            'generic': self.generic,
+            'specific': self.specific,
+            'commandClassIds': list(self.command_classes.keys() - {0x20})
+        }
+
+        if home_id is not None and node_id is not None:
+            self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {
+                'nodeInfo': node_info
+            })
+        else:
+            self.broadcast_message('APPLICATION_NODE_INFORMATION', {
+                'nodeInfo': node_info
+            })
+
+    def send_message_in_current_network(self, node_id: int, message_type: str, details: dict):
+        self.send_message(self.home_id, node_id, message_type, details)
+
+    def send_message(self, home_id: int, node_id: int, message_type: str, details: dict):
+        self.broadcast_message(message_type, {
+            **details,
+            'destination': {
+                'homeId': home_id,
+                'nodeId': node_id
             }
         })
 
-    def send_node_information(self, destination_id: int):
+    def broadcast_message(self, message_type: str, details: dict):
         self.network.send_message({
-            'messageType': 'APPLICATION_NODE_INFORMATION',
+            'messageType': message_type,
             'message': {
-                'homeId': self.home_id,
-                'sourceNodeId': self.node_id,
-                'destinationNodeId': destination_id,
-                'nodeInfo': self.get_node_info().fields
+                **details,
+                'source': {
+                    'homeId': self.home_id,
+                    'nodeId': self.node_id
+                }
             }
         })

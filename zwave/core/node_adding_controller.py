@@ -15,8 +15,8 @@ class NodeAddingController:
         self.node_info = ReusableFuture()
         self.new_node_id = 0
 
-    def on_node_information_frame(self, node_id: int, node_info: Object):
-        self.node_info.set_result((node_id, node_info))
+    def on_node_information_frame(self, home_id: int, node_id: int, node_info: Object):
+        self.node_info.set_result((home_id, node_id, node_info))
 
     def add_node_to_network(self, mode: AddNodeMode):
         handlers = {
@@ -29,22 +29,19 @@ class NodeAddingController:
 
     async def start(self):
         yield AddNodeStatus.LEARN_READY, 0, None
+        self.network_controller.broadcast_message('ADD_NODE_STARTED', {})
 
         try:
-            old_node_id, node_info = await self.node_info
+            # Todo: ignore included nodes
+            old_home_id, old_node_id, node_info = await self.node_info
             yield AddNodeStatus.NODE_FOUND, 0, None
 
             self.new_node_id = self.generate_node_id()
             self.network_controller.nodes[self.new_node_id] = node_info
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, node_info
 
-            self.network_controller.network.send_message({
-                'messageType': "ADD_TO_NETWORK",
-                'message': {
-                    'destinationNodeId': old_node_id,
-                    'homeId': self.network_controller.home_id,
-                    'newNodeId': self.new_node_id
-                }
+            self.network_controller.send_message(old_home_id, old_node_id, 'ADD_TO_NETWORK', {
+                'newNodeId': self.new_node_id
             })
             yield AddNodeStatus.PROTOCOL_DONE, self.new_node_id, None
         except CancelledError:

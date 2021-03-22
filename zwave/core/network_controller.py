@@ -52,12 +52,8 @@ class NetworkController:
         return node_id == self.node_id
 
     async def assign_suc_return_route(self, node_id: int):
-        self.network.send_message({
-            'messageType': "ASSIGN_SUC_RETURN_ROUTE",
-            'message': {
-                'destinationNodeId': node_id,
-                'sucNodeId': self.suc_id
-            }
+        self.send_message_in_current_network(node_id, 'ASSIGN_SUC_RETURN_ROUTE', {
+            'sucNodeId': self.suc_id
         })
         yield TransmitStatus.OK
 
@@ -65,13 +61,7 @@ class NetworkController:
         return self.nodes.get(node_id)
 
     def request_node_info(self, node_id: int):
-        self.network.send_message({
-            'messageType': "REQUEST_NODE_INFO",
-            'message': {
-                'sourceNodeId': self.node_id,
-                'destinationNodeId': node_id,
-            }
-        })
+        self.send_message_in_current_network(node_id, 'REQUEST_NODE_INFO', {})
 
     def add_node_to_network(self, mode: AddNodeMode):
         return self.node_adding_controller.add_node_to_network(mode)
@@ -79,25 +69,20 @@ class NetworkController:
     def remove_node_from_network(self, mode: RemoveNodeMode):
         return self.node_removing_controller.remove_node_from_network(mode)
 
-    async def send_data(self, node_id: int, data: List[int]):
+    async def send_data(self, destination_node_id: int, data: List[int]):
         command = self.command_class_serializer.from_bytes(data)
 
-        self.network.send_message({
-            'messageType': "APPLICATION_COMMAND",
-            'message': {
-                'sourceNodeId': self.node_id,
-                'destinationNodeId': node_id,
-                'classId': command.class_id,
-                'command': command.name,
-                'args': command.fields
-            }
+        self.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
+            'classId': command.class_id,
+            'command': command.name,
+            'args': command.fields
         })
 
         yield TransmitStatus.OK
 
-    def on_node_information_frame(self, node_id: int, node_info: Object):
-        self.node_adding_controller.on_node_information_frame(node_id, node_info)
-        self.node_removing_controller.on_node_information_frame(node_id, node_info)
+    def on_node_information_frame(self, home_id: int, node_id: int, node_info: Object):
+        self.node_adding_controller.on_node_information_frame(home_id, node_id, node_info)
+        self.node_removing_controller.on_node_information_frame(home_id, node_id, node_info)
 
     def on_application_command(self, node_id: int, command: Packet):
         data = self.command_class_serializer.to_bytes(command)
@@ -106,3 +91,27 @@ class NetworkController:
                                           rx_type=0,
                                           source_node=node_id,
                                           command=data)
+
+    def send_message_in_current_network(self, node_id: int, message_type: str, details: dict):
+        self.send_message(self.home_id, node_id, message_type, details)
+
+    def send_message(self, home_id: int, node_id: int, message_type: str, details: dict):
+        self.broadcast_message(message_type, {
+            **details,
+            'destination': {
+                'homeId': home_id,
+                'nodeId': node_id
+            }
+        })
+
+    def broadcast_message(self, message_type: str, details: dict):
+        self.network.send_message({
+            'messageType': message_type,
+            'message': {
+                **details,
+                'source': {
+                    'homeId': self.home_id,
+                    'nodeId': self.node_id
+                }
+            }
+        })

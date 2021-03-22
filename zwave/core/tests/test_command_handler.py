@@ -27,7 +27,7 @@ def rx(command_handler, requests_from_host_serializer):
 
 
 @pytest.fixture
-def tx_req(request_manager, command_handler, requests_to_host_serializer):
+def tx_req(request_manager):
     async def inner(name: str, **kwargs):
         await request_manager.send_request.wait_until_called(timeout=1)
         request_manager.send_request.assert_called_first_with(name, **kwargs)
@@ -45,11 +45,18 @@ def tx_res(request_manager, command_handler, responses_to_host_serializer):
     yield inner
 
 
-@pytest.fixture(autouse=True)
-def check_communication(request_manager):
-    yield
-    request_manager.send_request.assert_not_called()
-    request_manager.send_response.assert_not_called()
+@pytest.fixture
+def tx_network(network):
+    def inner(message_type: str, message):
+        assert network.free_buffer() == [{
+            'messageType': message_type,
+            'message': {
+                'source': {'homeId': 0xC0000000, 'nodeId': 1},
+                **message
+            }
+        }]
+
+    yield inner
 
 
 def test_application_node_information(rx, tx_req, tx_res):
@@ -58,7 +65,7 @@ def test_application_node_information(rx, tx_req, tx_res):
 
 def test_memory_get_id(rx, tx_req, tx_res):
     rx('MEMORY_GET_ID')
-    tx_res('MEMORY_GET_ID', home_id=0, node_id=1)
+    tx_res('MEMORY_GET_ID', home_id=0xC0000000, node_id=1)
 
 
 def test_version(rx, tx_req, tx_res):
@@ -87,25 +94,34 @@ def test_set_suc_node_id_with_foreign_id(rx, tx_req, tx_res):
 
 
 @pytest.mark.asyncio
-async def test_add_node_to_network_no_node(rx, tx_req, tx_res):
+async def test_add_node_to_network_no_node(rx, tx_req, tx_res, tx_network):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('ADD_NODE_STARTED', {})
 
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=0, node_info=None)
 
 
 @pytest.mark.asyncio
-async def test_add_node_to_network_with_node(rx, tx_req, tx_res, network_controller):
+async def test_add_node_to_network_with_node(rx, tx_req, tx_res, tx_network, network_controller):
     node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
 
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('ADD_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(None, node_info)
+    network_controller.on_node_information_frame(0, 1, node_info)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node_info)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
+    tx_network('ADD_TO_NETWORK', {
+        'destination': {
+            'homeId': 0,
+            'nodeId': 1
+        },
+        'newNodeId': 2
+    })
 
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=2, node_info=None)
@@ -123,25 +139,33 @@ async def test_add_node_to_network_smart_start(rx, tx_req, tx_res):
 
 
 @pytest.mark.asyncio
-async def test_remove_node_from_network_no_node(rx, tx_req, tx_res):
+async def test_remove_node_from_network_no_node(rx, tx_req, tx_res, tx_network):
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('REMOVE_NODE_STARTED', {})
 
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
 
 
 @pytest.mark.asyncio
-async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, network_controller):
+async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, tx_network, network_controller):
     node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
     network_controller.nodes[2] = node_info
 
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('REMOVE_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(2, node_info)
+    network_controller.on_node_information_frame(network_controller.home_id, 2, node_info)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.NODE_FOUND, source=0, node_info=None)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.REMOVING_SLAVE, source=2, node_info=node_info)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.DONE, source=2, node_info=node_info)
+    tx_network('REMOVE_FROM_NETWORK', {
+        'destination': {
+            'homeId': 0xC0000000,
+            'nodeId': 2
+        }
+    })
 
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
 
@@ -151,7 +175,7 @@ async def test_remove_node_from_network_stop(rx, tx_req, tx_res):
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.STOP, options=0, function_id=0)
 
 
-def test_get_node_protocol_info_no_node(rx, tx_req, tx_res):
+def test_get_node_protocol_info_no_node(rx, tx_req, tx_res, network):
     rx('GET_NODE_PROTOCOL_INFO', node_id=0)
 
 
@@ -163,23 +187,47 @@ def test_get_node_protocol_info_with_node(rx, tx_req, tx_res, network_controller
     tx_res('GET_NODE_PROTOCOL_INFO', basic=1, generic=2, specific=3)
 
 
-def test_request_node_info(rx, tx_req, tx_res):
-    rx('REQUEST_NODE_INFO', node_id=0)
+def test_request_node_info(rx, tx_req, tx_res, tx_network):
+    rx('REQUEST_NODE_INFO', node_id=2)
     tx_res('REQUEST_NODE_INFO', result=True)
+    tx_network('REQUEST_NODE_INFO', {
+        'destination': {
+            'homeId': 0xC0000000,
+            'nodeId': 2
+        }
+    })
 
 
 @pytest.mark.asyncio
-async def test_send_data(rx, tx_req, tx_res):
-    rx('SEND_DATA', node_id=2, data=[0x01, 0x02, 0x03], tx_options=0, function_id=123)
-    tx_res('SEND_DATA', result=False)
-    # await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
+async def test_send_data(rx, tx_req, tx_res, tx_network):
+    rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
+    tx_res('SEND_DATA', result=True)
+    await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
+    tx_network('APPLICATION_COMMAND', {
+        'destination': {
+            'homeId': 0xC0000000,
+            'nodeId': 2
+        },
+        'classId': 0x20,
+        'command': 'BASIC_SET',
+        'args': {
+            'value': 0x10
+        }
+    })
 
 
 @pytest.mark.asyncio
-async def test_assign_suc_return_route(rx, tx_req, tx_res):
+async def test_assign_suc_return_route(rx, tx_req, tx_res, tx_network):
     rx('ASSIGN_SUC_RETURN_ROUTE', node_id=2, function_id=123)
     tx_res('ASSIGN_SUC_RETURN_ROUTE', result=True)
     await tx_req('ASSIGN_SUC_RETURN_ROUTE', function_id=123, status=TransmitStatus.OK)
+    tx_network('ASSIGN_SUC_RETURN_ROUTE', {
+        'destination': {
+            'homeId': 0xC0000000,
+            'nodeId': 2
+        },
+        'sucNodeId': 1
+    })
 
 
 @pytest.mark.asyncio

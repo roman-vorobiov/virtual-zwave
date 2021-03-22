@@ -91,5 +91,16 @@ def storage(resources):
 
 @pytest.fixture
 def network_controller(network, command_class_serializer, request_manager):
-    with mock.patch('random.randint', lambda *args: 0):
+    with mock.patch('random.randint', lambda *args: 0xC0000000):
         yield NetworkController(command_class_serializer, request_manager, network)
+
+
+@pytest.fixture(autouse=True)
+def check_communication(device, request_manager, network):
+    yield
+    request_manager.send_request.assert_not_called()
+    request_manager.send_response.assert_not_called()
+
+    assert device.free_buffer() == []
+
+    assert network.free_buffer() == []

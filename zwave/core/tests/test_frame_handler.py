@@ -33,12 +33,6 @@ def tx(host, frame_handler, frame_serializer, device):
     yield inner
 
 
-@pytest.fixture(autouse=True)
-def check_communication(device):
-    yield
-    assert len(device.tx_buffer) == 0
-
-
 def test_ack_frame(rx, tx):
     rx('ACK')
 

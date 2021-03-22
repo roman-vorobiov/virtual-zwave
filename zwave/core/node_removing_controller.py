@@ -14,8 +14,8 @@ class NodeRemovingController:
         self.network_controller = network_controller
         self.node_id = ReusableFuture()
 
-    def on_node_information_frame(self, node_id: int, node_info: Object):
-        self.node_id.set_result((node_id, node_info))
+    def on_node_information_frame(self, home_id: int, node_id: int, node_info: Object):
+        self.node_id.set_result((home_id, node_id, node_info))
 
     def remove_node_from_network(self, mode: RemoveNodeMode):
         handlers = {
@@ -27,20 +27,16 @@ class NodeRemovingController:
 
     async def start(self):
         yield RemoveNodeStatus.LEARN_READY, 0, None
+        self.network_controller.broadcast_message('REMOVE_NODE_STARTED', {})
 
         try:
-            node_id, _ = await self.node_id
+            home_id, node_id, _ = await self.node_id
             yield RemoveNodeStatus.NODE_FOUND, 0, None
 
             node_info = self.network_controller.nodes.pop(node_id)
             yield RemoveNodeStatus.REMOVING_SLAVE, node_id, node_info
 
-            self.network_controller.network.send_message({
-                'messageType': "REMOVE_FROM_NETWORK",
-                'message': {
-                    'destinationNodeId': node_id
-                }
-            })
+            self.network_controller.send_message(home_id, node_id, 'REMOVE_FROM_NETWORK', {})
             yield RemoveNodeStatus.DONE, node_id, node_info
         except CancelledError:
             pass

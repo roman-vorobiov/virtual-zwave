@@ -1,60 +1,69 @@
 from .fixtures import *
 
-from network.application.command_classes import make_command
-
 from zwave.core.network_event_handler import NetworkEventHandler
 
-from tools import Mock, Object
+from zwave.protocol.commands.application_slave_update import UpdateStatus
+
+from tools import Object, Mock
 
 import pytest
 import json
 
 
 @pytest.fixture
-def network_event_handler(network_controller):
-    network_controller.on_application_command = Mock()
-    network_controller.on_node_information_frame = Mock()
-
-    yield NetworkEventHandler(Mock(), network_controller)
+def network_event_handler(network_controller, request_manager):
+    yield NetworkEventHandler(Mock(), network_controller, request_manager)
 
 
-def test_application_command(network_event_handler, network_controller):
-    message = {
-        'messageType': "APPLICATION_COMMAND",
-        'message': {
-            'sourceNodeId': 1,
-            'destinationNodeId': 2,
-            'classId': 0x20,
-            'command': 'BASIC_SET',
-            'args': {
-                'value': 123
+@pytest.fixture
+def rx_network(network_event_handler):
+    def inner(message_type: str, message: dict):
+        network_event_handler.process_message(json.dumps({
+            'messageType': message_type,
+            'message': {
+                **message,
+                'destination': {'homeId': 0xC0000000, 'nodeId': 1}
             }
+        }))
+
+    yield inner
+
+
+@pytest.fixture
+def tx_req(request_manager):
+    async def inner(name: str, **kwargs):
+        await request_manager.send_request.wait_until_called(timeout=1)
+        request_manager.send_request.assert_called_first_with(name, **kwargs)
+        request_manager.send_request.pop_first_call()
+
+    yield inner
+
+
+@pytest.mark.asyncio
+async def test_application_command(rx_network, tx_req):
+    rx_network('APPLICATION_COMMAND', {
+        'source': {'homeId': 0xC0000000, 'nodeId': 2},
+        'classId': 0x20,
+        'command': 'BASIC_SET',
+        'args': {
+            'value': 123
         }
-    }
-
-    network_event_handler.process_message(json.dumps(message))
-
-    command = make_command(0x20, 'BASIC_SET', value=123)
-    network_controller.on_application_command.assert_called_with(1, command)
+    })
+    await tx_req('APPLICATION_COMMAND_HANDLER', rx_status=0, rx_type=0, source_node=2, command=[0x20, 0x01, 123])
 
 
-def test_application_node_information(network_event_handler, network_controller):
-    message = {
-        'messageType': 'APPLICATION_NODE_INFORMATION',
-        'message': {
-            'homeId': 1,
-            'sourceNodeId': 2,
-            'destinationNodeId': 3,
-            'nodeInfo': {
-                'basic': 4,
-                'generic': 5,
-                'specific': 6,
-                'command_class_ids': [7, 8]
-            }
+@pytest.mark.asyncio
+async def test_application_node_information(rx_network, tx_req):
+    rx_network('APPLICATION_NODE_INFORMATION', {
+        'source': {'homeId': 0xC0000000, 'nodeId': 2},
+        'nodeInfo': {
+            'basic': 4,
+            'generic': 1,
+            'specific': 1,
+            'commandClassIds': [0x72, 0x5E]
         }
-    }
-
-    network_event_handler.process_message(json.dumps(message))
-
-    node_info = Object(basic=4, generic=5, specific=6, command_class_ids=[7, 8])
-    network_controller.on_node_information_frame.assert_called_with(2, node_info)
+    })
+    await tx_req('APPLICATION_SLAVE_UPDATE',
+                 status=UpdateStatus.NODE_INFO_RECEIVED,
+                 node_id=2,
+                 node_info=Object(basic=4, generic=1, specific=1, command_class_ids=[0x72, 0x5E]))
