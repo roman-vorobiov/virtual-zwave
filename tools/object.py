@@ -1,9 +1,20 @@
+import humps
 from typing import Any
 
 
 class Object:
     def __init__(self, **kwargs):
         self.fields = kwargs
+
+    @classmethod
+    def from_json(cls, json: dict) -> 'Object':
+        return Object(**humps.decamelize(json))
+
+    def to_json(self) -> dict:
+        return humps.camelize(self.fields)
+
+    def __repr__(self):
+        return self.fields.__repr__()
 
     def __eq__(self, other: 'Object'):
         return self.fields == other.fields

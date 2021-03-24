@@ -4,12 +4,9 @@ from zwave.protocol import Packet
 
 from common import Network
 
-from tools import log_warning
+from tools import Object, log_warning
 
-from typing import Optional, Type, Dict, TypeVar
-
-
-T = TypeVar('T', bound=CommandClass)
+from typing import Optional, Dict
 
 
 class Node:
@@ -26,10 +23,8 @@ class Node:
 
         self.command_classes: Dict[int, CommandClass] = {}
 
-    def add_command_class(self, cls: Type[T], **kwargs) -> T:
-        cc = cls(self, **kwargs)
+    def add_command_class(self, cc: CommandClass):
         self.command_classes[cc.class_id] = cc
-        return cc
 
     def add_to_network(self, home_id: int, node_id: int):
         self.node_id = node_id
@@ -49,6 +44,15 @@ class Node:
         else:
             log_warning(f"Unhandled command class: {command.class_id} {command.name}")
 
+    def get_node_info(self) -> Object:
+        return Object(
+            basic=self.basic,
+            generic=self.generic,
+            specific=self.specific,
+            # Todo: names instead of IDs
+            command_class_ids=list(self.command_classes.keys() - {0x20})
+        )
+
     def send_command(self, destination_id: int, command: Packet):
         self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
             'classId': command.class_id,
@@ -57,12 +61,7 @@ class Node:
         })
 
     def send_node_information(self, home_id: Optional[int] = None, node_id: Optional[int] = None):
-        node_info = {
-            'basic': self.basic,
-            'generic': self.generic,
-            'specific': self.specific,
-            'commandClassIds': list(self.command_classes.keys() - {0x20})
-        }
+        node_info = self.get_node_info().to_json()
 
         if home_id is not None and node_id is not None:
             self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {

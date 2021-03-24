@@ -28,12 +28,7 @@ class NetworkEventHandler(NetworkMessageVisitor):
 
     @visit('APPLICATION_NODE_INFORMATION')
     def handle_node_information(self, message: dict):
-        node_info = Object(
-            basic=message['nodeInfo']['basic'],
-            generic=message['nodeInfo']['generic'],
-            specific=message['nodeInfo']['specific'],
-            command_class_ids=message['nodeInfo']['commandClassIds']
-        )
+        node_info = Object.from_json(message['nodeInfo'])
 
         home_id = message['source']['homeId']
         node_id = message['source']['nodeId']

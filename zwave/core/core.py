@@ -1,4 +1,3 @@
-from .resources import Resources
 from .device import Device
 from .host import Host
 from .request_manager import RequestManager
@@ -13,7 +12,7 @@ from zwave.protocol.serialization import PacketSerializer, CommandClassSerialize
 
 from common import NetworkImpl
 
-from tools import load_yaml
+from tools import Resources, load_yaml
 from tools.websockets import NetworkConnection
 
 from typing import List
@@ -33,6 +32,8 @@ def make_command_class_serializer(*schema_paths: str) -> CommandClassSerializer:
 
 class Core:
     def __init__(self, device: Device, connection: NetworkConnection):
+        self.config = Resources("zwave/resources/config.yaml")
+
         self.frame_serializer = make_packet_serializer("zwave/protocol/frames/frames.yaml")
         self.requests_from_host_serializer = make_packet_serializer("zwave/protocol/commands/requests_from_host.yaml")
         self.requests_to_host_serializer = make_packet_serializer("zwave/protocol/commands/requests_to_host.yaml")
@@ -56,12 +57,11 @@ class Core:
             host=self.host
         )
 
-        self.resources = Resources()
         self.storage = Storage(
-            resources=self.resources
+            config=self.config
         )
         self.library = Library(
-            resources=self.resources
+            config=self.config
         )
         self.network_controller = NetworkController(
             command_class_serializer=self.command_class_serializer,

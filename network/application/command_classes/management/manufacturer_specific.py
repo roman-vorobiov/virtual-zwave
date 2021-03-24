@@ -5,7 +5,7 @@ from zwave.protocol import Packet
 from tools import visit
 
 
-@command_class(0x72, 'COMMAND_CLASS_MANUFACTURER_SPECIFIC')
+@command_class('COMMAND_CLASS_MANUFACTURER_SPECIFIC')
 class ManufacturerSpecific(CommandClass):
     def __init__(
         self,

@@ -1,37 +1,54 @@
 from .node import Node
-from .command_classes.management.manufacturer_specific import ManufacturerSpecific
-from .command_classes.management.zwaveplus_info import ZWavePlusInfo
-from .command_classes.application.basic import Basic
+from .command_classes.command_class_factory import command_class_factory
+
+from network.resources import CONSTANTS
 
 from common import Network
 
 
+def get_user_icon_type(generic: str, specific: str) -> int:
+    if (specific_icon_types := CONSTANTS['SpecificIconTypes'][generic]) is not None:
+        return specific_icon_types[specific]
+    else:
+        return CONSTANTS['GenericIconTypes'][generic]
+
+
 def create_node(
     network: Network,
-    basic: int,
-    generic: int,
-    specific: int,
+
+    basic: str,
+    generic: str,
+    specific: str,
+
     manufacturer_id: int,
     product_type_id: int,
     product_id: int,
-    role_type: int,
-    installer_icon_type: int,
-    user_icon_type: int
+
+    zwave_plus_version: int,
+    role_type: str,
+    node_type: str,
+    installer_icon_type: str,
+    user_icon_type: str
 ) -> Node:
-    node = Node(network, basic=basic, generic=generic, specific=specific)
+    node = Node(network,
+                basic=CONSTANTS['BasicType'][basic],
+                generic=CONSTANTS['GenericDeviceType'][generic],
+                specific=CONSTANTS['SpecificDeviceTypes'][generic][specific])
 
-    node.add_command_class(ManufacturerSpecific,
-                           manufacturer_id=manufacturer_id,
-                           product_type_id=product_type_id,
-                           product_id=product_id)
+    command_class_factory.create_command_class('COMMAND_CLASS_MANUFACTURER_SPECIFIC',
+                                               node,
+                                               manufacturer_id=manufacturer_id,
+                                               product_type_id=product_type_id,
+                                               product_id=product_id)
 
-    node.add_command_class(ZWavePlusInfo,
-                           zwave_plus_version=2,
-                           role_type=role_type,
-                           node_type=0x00,
-                           installer_icon_type=installer_icon_type,
-                           user_icon_type=user_icon_type)
+    command_class_factory.create_command_class('COMMAND_CLASS_ZWAVEPLUS_INFO',
+                                               node,
+                                               zwave_plus_version=zwave_plus_version,
+                                               role_type=CONSTANTS['RoleType'][role_type],
+                                               node_type=CONSTANTS['NodeTypes'][node_type],
+                                               installer_icon_type=CONSTANTS['GenericIconTypes'][installer_icon_type],
+                                               user_icon_type=get_user_icon_type(installer_icon_type, user_icon_type))
 
-    node.add_command_class(Basic)
+    command_class_factory.create_command_class('COMMAND_CLASS_BASIC', node)
 
     return node

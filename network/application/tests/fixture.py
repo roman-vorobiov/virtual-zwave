@@ -10,7 +10,8 @@ import pytest
 
 @pytest.fixture
 def node():
-    node = Node(Mock(), 1, 2, 3)
+    node = Node(Mock(), basic=0x04, generic=0x10, specific=0x01)
+
     node.send_command = Mock()
 
     node.add_to_network(123, 2)

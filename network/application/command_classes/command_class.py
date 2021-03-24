@@ -1,4 +1,7 @@
+from .command_class_factory import command_class_factory
 from .command_factory import make_command
+
+from network.resources import CONSTANTS
 
 from zwave.protocol import Packet, PacketVisitor
 
@@ -32,10 +35,13 @@ class CommandClass(PacketVisitor):
         return make_command(cls.class_id, command_name, **kwargs)
 
 
-def command_class(class_id: int, class_name: str):
+def command_class(class_name: str):
     def inner(cls):
-        cls.class_id = class_id
+        cls.class_id = CONSTANTS['CommandClassId'][class_name]
         cls.class_name = class_name
+
+        command_class_factory.register(class_name, cls)
+
         return cls
 
     return inner

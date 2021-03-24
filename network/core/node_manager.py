@@ -9,17 +9,19 @@ def make_dummy_node(network: Network) -> Node:
     return create_node(
         network,
 
-        basic=0x04,
-        generic=0x01,
-        specific=0x01,
+        basic='BASIC_TYPE_ROUTING_SLAVE',
+        generic='GENERIC_TYPE_SWITCH_BINARY',
+        specific='SPECIFIC_TYPE_POWER_SWITCH_BINARY',
 
         manufacturer_id=1,
         product_type_id=2,
         product_id=3,
 
-        role_type=0x05,
-        installer_icon_type=0x0700,
-        user_icon_type=0x0700
+        zwave_plus_version=2,
+        role_type='SLAVE_ALWAYS_ON',
+        node_type='NODE_TYPE_ZWAVEPLUS_NODE',
+        installer_icon_type='GENERIC_ON_OFF_POWER_SWITCH',
+        user_icon_type='SPECIFIC_ON_OFF_POWER_SWITCH_PLUGIN'
     )
 
 

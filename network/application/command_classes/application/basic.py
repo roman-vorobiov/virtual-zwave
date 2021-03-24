@@ -6,7 +6,7 @@ from zwave.protocol import Packet
 from tools import visit
 
 
-@command_class(0x20, 'COMMAND_CLASS_BASIC')
+@command_class('COMMAND_CLASS_BASIC')
 class Basic(CommandClass):
     def __init__(self, node: Node):
         super().__init__(node)

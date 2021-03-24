@@ -1,4 +1,4 @@
-from .resources import Resources
+from tools import Resources
 
 from typing import List
 
@@ -8,8 +8,8 @@ def from_string(value: str) -> List[int]:
 
 
 class Storage:
-    def __init__(self, resources: Resources):
-        self.resources = resources
+    def __init__(self, config: Resources):
+        self.config = config
         self.data = []
 
         self.reset()
@@ -24,7 +24,7 @@ class Storage:
         self.initialize_private_key()
 
     def initialize_public_key(self):
-        self.data[0x23:0x43] = from_string(self.resources['PUBLIC_KEY'])
+        self.data[0x23:0x43] = from_string(self.config['PUBLIC_KEY'])
 
     def initialize_private_key(self):
-        self.data[0x43:0x63] = from_string(self.resources['PRIVATE_KEY'])
+        self.data[0x43:0x63] = from_string(self.config['PRIVATE_KEY'])

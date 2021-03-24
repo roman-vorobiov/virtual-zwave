@@ -5,7 +5,7 @@ from zwave.protocol import Packet
 from tools import visit
 
 
-@command_class(0x5E, 'COMMAND_CLASS_ZWAVEPLUS_INFO')
+@command_class('COMMAND_CLASS_ZWAVEPLUS_INFO')
 class ZWavePlusInfo(CommandClass):
     def __init__(
         self,

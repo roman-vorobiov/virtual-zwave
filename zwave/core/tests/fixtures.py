@@ -1,6 +1,5 @@
 from .fake_device import FakeDevice
 
-from zwave.core.resources import Resources
 from zwave.core.host import Host
 from zwave.core.request_manager import RequestManager
 from zwave.core.storage import Storage
@@ -11,7 +10,7 @@ from zwave.protocol.serialization import PacketSerializer, CommandClassSerialize
 
 from common.tests import FakeNetwork
 
-from tools import Mock, load_yaml
+from tools import Mock, Resources, load_yaml
 
 import pytest
 from unittest import mock
@@ -75,18 +74,18 @@ def request_manager(requests_to_host_serializer, responses_to_host_serializer, h
 
 
 @pytest.fixture
-def resources():
-    yield Resources()
+def config():
+    yield Resources("zwave/resources/config.yaml")
 
 
 @pytest.fixture
-def library(resources):
-    yield Library(resources)
+def library(config):
+    yield Library(config)
 
 
 @pytest.fixture
-def storage(resources):
-    yield Storage(resources)
+def storage(config):
+    yield Storage(config)
 
 
 @pytest.fixture

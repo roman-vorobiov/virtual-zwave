@@ -57,13 +57,13 @@ async def test_application_node_information(rx_network, tx_req):
     rx_network('APPLICATION_NODE_INFORMATION', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
         'nodeInfo': {
-            'basic': 4,
-            'generic': 1,
-            'specific': 1,
+            'basic': 0x04,
+            'generic': 0x10,
+            'specific': 0x01,
             'commandClassIds': [0x72, 0x5E]
         }
     })
     await tx_req('APPLICATION_SLAVE_UPDATE',
                  status=UpdateStatus.NODE_INFO_RECEIVED,
                  node_id=2,
-                 node_info=Object(basic=4, generic=1, specific=1, command_class_ids=[0x72, 0x5E]))
+                 node_info=Object(basic=0x04, generic=0x10, specific=0x01, command_class_ids=[0x72, 0x5E]))
