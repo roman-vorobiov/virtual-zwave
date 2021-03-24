@@ -25,7 +25,7 @@ class CommandHandler:
             log_error("Invalid command")
 
     def send_nif(self, home_id: str, node_id: str):
-        self.node_manager.get_node(int(home_id), int(node_id)).send_node_information()
+        self.node_manager.get_node(int(home_id), int(node_id)).broadcast_node_information()
 
     def generate_node(self):
         node = self.node_manager.generate_new_node()

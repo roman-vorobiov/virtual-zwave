@@ -56,7 +56,7 @@ class CommandHandler(PacketVisitor):
     @visit('GET_SUC_NODE_ID')
     def handle_get_suc_node_id(self, command: Packet):
         self.request_manager.send_response('GET_SUC_NODE_ID',
-                                           node_id=self.network_controller.suc_id)
+                                           node_id=self.network_controller.suc_node_id)
 
     @visit('SET_SUC_NODE_ID')
     def handle_set_suc_node_id(self, command: Packet):

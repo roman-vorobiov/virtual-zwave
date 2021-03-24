@@ -2,7 +2,7 @@ from .request_manager import RequestManager
 from .node_adding_controller import NodeAddingController
 from .node_removing_controller import NodeRemovingController
 
-from common import Network
+from common import Network, BaseNode
 
 from zwave.protocol import Packet
 from zwave.protocol.commands.add_node_to_network import AddNodeMode
@@ -16,32 +16,30 @@ import random
 from typing import Optional, List
 
 
-def generate_new_home_id() -> int:
-    return random.randint(0xC0000000, 0xFFFFFFFE)
-
-
-class NetworkController:
+class NetworkController(BaseNode):
     def __init__(
         self,
         command_class_serializer: CommandClassSerializer,
         request_manager: RequestManager,
         network: Network
     ):
+        super().__init__(network)
+
         self.command_class_serializer = command_class_serializer
         self.request_manager = request_manager
-        self.network = network
 
         self.node_adding_controller = NodeAddingController(self)
         self.node_removing_controller = NodeRemovingController(self)
 
-        self.home_id = generate_new_home_id()
-        self.node_id = 1
-        self.suc_id = self.node_id
-
         self.nodes = {}
 
+        self.reset()
+
     def reset(self):
-        self.home_id = generate_new_home_id()
+        self.home_id = self.generate_new_home_id()
+        self.node_id = 1
+        self.suc_node_id = self.node_id
+
         self.nodes = {}
 
     @classmethod
@@ -53,7 +51,7 @@ class NetworkController:
 
     async def assign_suc_return_route(self, node_id: int):
         self.send_message_in_current_network(node_id, 'ASSIGN_SUC_RETURN_ROUTE', {
-            'sucNodeId': self.suc_id
+            'sucNodeId': self.suc_node_id
         })
         yield TransmitStatus.OK
 
@@ -91,27 +89,3 @@ class NetworkController:
                                           rx_type=0,
                                           source_node=node_id,
                                           command=data)
-
-    def send_message_in_current_network(self, node_id: int, message_type: str, details: dict):
-        self.send_message(self.home_id, node_id, message_type, details)
-
-    def send_message(self, home_id: int, node_id: int, message_type: str, details: dict):
-        self.broadcast_message(message_type, {
-            **details,
-            'destination': {
-                'homeId': home_id,
-                'nodeId': node_id
-            }
-        })
-
-    def broadcast_message(self, message_type: str, details: dict):
-        self.network.send_message({
-            'messageType': message_type,
-            'message': {
-                **details,
-                'source': {
-                    'homeId': self.home_id,
-                    'nodeId': self.node_id
-                }
-            }
-        })

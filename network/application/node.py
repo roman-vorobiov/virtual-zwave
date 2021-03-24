@@ -2,20 +2,16 @@ from .command_classes import CommandClass
 
 from zwave.protocol import Packet
 
-from common import Network
+from common import Network, BaseNode
 
 from tools import Object, log_warning
 
-from typing import Optional, Dict
+from typing import Dict
 
 
-class Node:
+class Node(BaseNode):
     def __init__(self, network: Network, basic: int, generic: int, specific: int):
-        self.network = network
-
-        self.home_id: Optional[int] = None
-        self.node_id: Optional[int] = None
-        self.suc_node_id: Optional[int] = None
+        super().__init__(network)
 
         self.basic = basic
         self.generic = generic
@@ -49,7 +45,6 @@ class Node:
             basic=self.basic,
             generic=self.generic,
             specific=self.specific,
-            # Todo: names instead of IDs
             command_class_ids=list(self.command_classes.keys() - {0x20})
         )
 
@@ -60,38 +55,12 @@ class Node:
             'args': command.fields
         })
 
-    def send_node_information(self, home_id: Optional[int] = None, node_id: Optional[int] = None):
-        node_info = self.get_node_info().to_json()
-
-        if home_id is not None and node_id is not None:
-            self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {
-                'nodeInfo': node_info
-            })
-        else:
-            self.broadcast_message('APPLICATION_NODE_INFORMATION', {
-                'nodeInfo': node_info
-            })
-
-    def send_message_in_current_network(self, node_id: int, message_type: str, details: dict):
-        self.send_message(self.home_id, node_id, message_type, details)
-
-    def send_message(self, home_id: int, node_id: int, message_type: str, details: dict):
-        self.broadcast_message(message_type, {
-            **details,
-            'destination': {
-                'homeId': home_id,
-                'nodeId': node_id
-            }
+    def send_node_information(self, home_id: int, node_id: int):
+        self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {
+            'nodeInfo': self.get_node_info().to_json()
         })
 
-    def broadcast_message(self, message_type: str, details: dict):
-        self.network.send_message({
-            'messageType': message_type,
-            'message': {
-                **details,
-                'source': {
-                    'homeId': self.home_id,
-                    'nodeId': self.node_id
-                }
-            }
+    def broadcast_node_information(self):
+        self.broadcast_message('APPLICATION_NODE_INFORMATION', {
+            'nodeInfo': self.get_node_info().to_json()
         })
