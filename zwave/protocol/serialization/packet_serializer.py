@@ -1,9 +1,11 @@
-from ..packet import Packet
+from ..packet import Packet, make_packet
 from .schema import PacketSchema
 from .schema_builder import PacketSchemaBuilder
 from .packet_from_bytes_converter import PacketFromBytesConverter
 from .packet_to_bytes_converter import PacketToBytesConverter
 from .exceptions import SerializationError
+
+from common import Command
 
 from typing import Dict, List, Any
 
@@ -28,13 +30,13 @@ class PacketSerializer:
         if (packet_schema := self.schemas_by_id.get(self.get_id(packet))) is not None:
             return PacketFromBytesConverter().create_packet(packet_schema, packet)
 
-        return Packet(name='unknown', data=packet)
+        return make_packet('unknown', data=packet)
 
     def to_bytes(self, packet: Packet) -> List[int]:
-        if (packet_schema := self.schemas_by_name.get(packet.name)) is not None:
+        if (packet_schema := self.schemas_by_name.get(packet.get_meta('name'))) is not None:
             return PacketToBytesConverter().serialize_packet(packet_schema, packet)
 
-        raise SerializationError(f"Unknown packet '{packet.name}'")
+        raise SerializationError(f"Unknown packet '{packet.get_meta('name')}'")
 
     def get_id(self, packet_or_schema: list):
         return packet_or_schema[0]
@@ -47,11 +49,7 @@ class CommandClassSerializer(PacketSerializer):
         else:
             return packet_or_schema[0], packet_or_schema[1]
 
-    def from_bytes(self, packet: List[int]) -> Packet:
+    def from_bytes(self, packet: List[int]) -> Command:
         command = super().from_bytes(packet)
-
-        command.class_id = packet[0]
-        if len(packet) > 1:
-            command.command_id = packet[1]
-
+        command.set_meta('class_id', packet[0])
         return command

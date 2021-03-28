@@ -2,13 +2,12 @@ from .request_manager import RequestManager
 from .node_adding_controller import NodeAddingController
 from .node_removing_controller import NodeRemovingController
 
-from common import Network, BaseNode
-
-from zwave.protocol import Packet
 from zwave.protocol.commands.add_node_to_network import AddNodeMode
 from zwave.protocol.commands.remove_node_from_network import RemoveNodeMode
 from zwave.protocol.commands.send_data import TransmitStatus
 from zwave.protocol.serialization import CommandClassSerializer
+
+from common import Command, Network, BaseNode
 
 from tools import Object
 
@@ -71,9 +70,9 @@ class NetworkController(BaseNode):
         command = self.command_class_serializer.from_bytes(data)
 
         self.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
-            'classId': command.class_id,
-            'command': command.name,
-            'args': command.fields
+            'classId': command.get_meta('class_id'),
+            'command': command.get_meta('name'),
+            'args': command.get_data()
         })
 
         yield TransmitStatus.OK
@@ -82,7 +81,7 @@ class NetworkController(BaseNode):
         self.node_adding_controller.on_node_information_frame(home_id, node_id, node_info)
         self.node_removing_controller.on_node_information_frame(home_id, node_id, node_info)
 
-    def on_application_command(self, node_id: int, command: Packet):
+    def on_application_command(self, node_id: int, command: Command):
         data = self.command_class_serializer.to_bytes(command)
         self.request_manager.send_request('APPLICATION_COMMAND_HANDLER',
                                           rx_status=0,

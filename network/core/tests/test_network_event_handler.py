@@ -1,8 +1,8 @@
 from .fixture import *
 
-from network.application.command_classes import make_command
-
 from network.core.network_event_handler import NetworkEventHandler
+
+from common import make_command
 
 import pytest
 import json

@@ -2,7 +2,7 @@ from .fixtures import *
 
 from zwave.core.frame_handler import FrameHandler
 
-from zwave.protocol import Packet
+from zwave.protocol import make_packet
 from zwave.protocol.frames.data import FrameType
 
 from tools import Mock
@@ -18,7 +18,7 @@ def frame_handler(frame_serializer, host):
 @pytest.fixture
 def rx(frame_handler, frame_serializer):
     def inner(name: str, **kwargs):
-        frame = Packet(name, **kwargs)
+        frame = make_packet(name, **kwargs)
         frame_handler.process_packet(frame_serializer.to_bytes(frame))
 
     yield inner
@@ -27,7 +27,7 @@ def rx(frame_handler, frame_serializer):
 @pytest.fixture
 def tx(host, frame_handler, frame_serializer, device):
     def inner(name: str, **kwargs):
-        frame = Packet(name, **kwargs)
+        frame = make_packet(name, **kwargs)
         assert device.free_buffer() == [frame_serializer.to_bytes(frame)]
 
     yield inner

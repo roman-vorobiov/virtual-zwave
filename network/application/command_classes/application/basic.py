@@ -1,7 +1,7 @@
 from ..command_class import CommandClass, command_class
 from ...node import Node
 
-from zwave.protocol import Packet
+from common import Command
 
 from tools import visit
 
@@ -14,11 +14,11 @@ class Basic(CommandClass):
         self.value = 0xFE
 
     @visit('BASIC_SET')
-    def handle_set(self, command: Packet, source_id: int):
+    def handle_set(self, command: Command, source_id: int):
         self.value = command.value
 
     @visit('BASIC_GET')
-    def handle_get(self, command: Packet, source_id: int):
+    def handle_get(self, command: Command, source_id: int):
         self.send_report(destination_id=source_id)
 
     def send_report(self, destination_id: int):

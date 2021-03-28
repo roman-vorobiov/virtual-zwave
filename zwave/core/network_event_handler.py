@@ -3,7 +3,7 @@ from .request_manager import RequestManager
 
 from common import Network, NetworkMessageVisitor
 
-from zwave.protocol import Packet
+from zwave.protocol import make_packet
 from zwave.protocol.commands.application_slave_update import UpdateStatus
 
 from tools import Object, visit
@@ -23,7 +23,7 @@ class NetworkEventHandler(NetworkMessageVisitor):
 
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
-        command = Packet(message['command'], **message['args'])
+        command = make_packet(message['command'], **message['args'])
         self.network_controller.on_application_command(message['source']['nodeId'], command)
 
     @visit('APPLICATION_NODE_INFORMATION')

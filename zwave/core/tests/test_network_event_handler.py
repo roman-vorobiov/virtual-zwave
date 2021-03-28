@@ -4,7 +4,7 @@ from zwave.core.network_event_handler import NetworkEventHandler
 
 from zwave.protocol.commands.application_slave_update import UpdateStatus
 
-from tools import Object, Mock
+from tools import Mock, make_object
 
 import pytest
 import json
@@ -66,4 +66,4 @@ async def test_application_node_information(rx_network, tx_req):
     await tx_req('APPLICATION_SLAVE_UPDATE',
                  status=UpdateStatus.NODE_INFO_RECEIVED,
                  node_id=2,
-                 node_info=Object(basic=0x04, generic=0x10, specific=0x01, command_class_ids=[0x72, 0x5E]))
+                 node_info=make_object(basic=0x04, generic=0x10, specific=0x01, command_class_ids=[0x72, 0x5E]))

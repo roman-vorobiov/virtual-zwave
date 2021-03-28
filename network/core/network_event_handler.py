@@ -1,9 +1,8 @@
 from .node_manager import NodeManager, NodeNotFoundException
 
 from network.application import Node
-from network.application.command_classes import make_command
 
-from common import NetworkMessageVisitor
+from common import NetworkMessageVisitor, make_command
 
 from tools import visit, log_error
 

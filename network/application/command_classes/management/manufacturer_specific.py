@@ -1,6 +1,7 @@
 from ..command_class import CommandClass, command_class
 from ...node import Node
-from zwave.protocol import Packet
+
+from common import Command
 
 from tools import visit
 
@@ -21,7 +22,7 @@ class ManufacturerSpecific(CommandClass):
         self.product_id = product_id
 
     @visit('MANUFACTURER_SPECIFIC_GET')
-    def handle_get(self, command: Packet, source_id: int):
+    def handle_get(self, command: Command, source_id: int):
         self.send_report(destination_id=source_id)
 
     def send_report(self, destination_id: int):

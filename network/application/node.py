@@ -1,10 +1,8 @@
 from .command_classes import CommandClass
 
-from zwave.protocol import Packet
+from common import Command, Network, BaseNode
 
-from common import Network, BaseNode
-
-from tools import Object, log_warning
+from tools import Object, make_object, log_warning
 
 import uuid
 from typing import Dict
@@ -40,25 +38,25 @@ class Node(BaseNode):
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id
 
-    def handle_command(self, source_id: int, command: Packet):
-        if (command_class := self.command_classes.get(command.class_id)) is not None:
+    def handle_command(self, source_id: int, command: Command):
+        if (command_class := self.command_classes.get(command.get_meta('class_id'))) is not None:
             command_class.handle_command(source_id, command)
         else:
-            log_warning(f"Unhandled command class: {command.class_id} {command.name}")
+            log_warning(f"Node does not support command class {command.get_meta('class_id')}")
 
     def get_node_info(self) -> Object:
-        return Object(
+        return make_object(
             basic=self.basic,
             generic=self.generic,
             specific=self.specific,
             command_class_ids=list(self.command_classes.keys() - {0x20})
         )
 
-    def send_command(self, destination_id: int, command: Packet):
+    def send_command(self, destination_id: int, command: Command):
         self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
-            'classId': command.class_id,
-            'command': command.name,
-            'args': command.fields
+            'classId': command.get_meta('class_id'),
+            'command': command.get_meta('name'),
+            'args': command.get_data()
         })
 
     def send_node_information(self, home_id: int, node_id: int):

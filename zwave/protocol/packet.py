@@ -1,12 +1,13 @@
 from tools import Object, Visitor
 
 
-class Packet(Object):
-    def __init__(self, name: str, **kwargs):
-        super().__init__(**kwargs)
-        self.name = name
+Packet = Object
+
+
+def make_packet(name: str, **kwargs) -> Packet:
+    return Packet(data=kwargs, meta={'name': name})
 
 
 class PacketVisitor(Visitor):
     def visit(self, packet: Packet, *args, **kwargs):
-        return self.visit_as(packet, packet.name, *args, **kwargs)
+        return self.visit_as(packet, packet.get_meta('name'), *args, **kwargs)

@@ -1,6 +1,7 @@
 from ..command_class import CommandClass, command_class
 from ...node import Node
-from zwave.protocol import Packet
+
+from common import Command
 
 from tools import visit
 
@@ -25,7 +26,7 @@ class ZWavePlusInfo(CommandClass):
         self.user_icon_type = user_icon_type
 
     @visit('ZWAVEPLUS_INFO_GET')
-    def handle_info_get(self, command: Packet, source_id: int):
+    def handle_info_get(self, command: Command, source_id: int):
         self.send_info_report(destination_id=source_id)
 
     def send_info_report(self, destination_id: int):

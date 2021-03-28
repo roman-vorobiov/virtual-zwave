@@ -1,4 +1,4 @@
-from zwave.protocol.packet import Packet
+from zwave.protocol import Packet
 
 from tools import calculate_lrc
 

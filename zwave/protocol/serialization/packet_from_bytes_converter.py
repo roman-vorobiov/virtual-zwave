@@ -31,12 +31,13 @@ class PacketFromBytesConverter(Visitor):
         self.field_lengths = {}
 
     def create_packet(self, schema: PacketSchema, data: List[int]) -> Packet:
-        self.reset(schema, data)
-        return Packet(self.schema.name, **dict(self.collect_fields()))
+        packet = self.create_object(schema, data)
+        packet.set_meta('name', self.schema.name)
+        return packet
 
     def create_object(self, schema: PacketSchema, data: List[int]) -> Object:
         self.reset(schema, data)
-        return Object(**dict(self.collect_fields()))
+        return Object(dict(self.collect_fields()))
 
     def collect_fields(self):
         for field in self.schema.fields:

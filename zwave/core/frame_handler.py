@@ -31,7 +31,7 @@ class FrameHandler(PacketVisitor):
 
     @visit('NAK', 'CAN')
     def handle_nak_can_frame(self, packet: Packet):
-        log_warning(f"{packet.name} received")
+        log_warning(f"{packet.get_meta('name')} received")
 
     @visit('ACK')
     def handle_ack_frame(self, packet: Packet):

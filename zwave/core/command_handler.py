@@ -135,4 +135,4 @@ class CommandHandler(PacketVisitor):
                                            data=data)
 
     def visit_default(self, packet: Packet, *args, **kwargs):
-        log_warning(f"{packet.name} {packet.fields}")
+        log_warning(str(packet))

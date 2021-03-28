@@ -2,12 +2,12 @@ from .fixtures import *
 
 from zwave.core.command_handler import CommandHandler
 
-from zwave.protocol import Packet
+from zwave.protocol import make_packet
 from zwave.protocol.commands.send_data import TransmitStatus
 from zwave.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStatus
 from zwave.protocol.commands.remove_node_from_network import RemoveNodeMode, RemoveNodeStatus
 
-from tools import Object
+from tools import make_object
 
 import pytest
 
@@ -20,7 +20,7 @@ def command_handler(requests_from_host_serializer, request_manager, storage, lib
 @pytest.fixture
 def rx(command_handler, requests_from_host_serializer):
     def inner(name: str, **kwargs):
-        cmd = Packet(name, **kwargs)
+        cmd = make_packet(name, **kwargs)
         command_handler.process_packet(requests_from_host_serializer.to_bytes(cmd))
 
     yield inner
@@ -105,7 +105,7 @@ async def test_add_node_to_network_no_node(rx, tx_req, tx_res, tx_network):
 
 @pytest.mark.asyncio
 async def test_add_node_to_network_with_node(rx, tx_req, tx_res, tx_network, network_controller):
-    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    node_info = make_object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
 
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
@@ -149,7 +149,7 @@ async def test_remove_node_from_network_no_node(rx, tx_req, tx_res, tx_network):
 
 @pytest.mark.asyncio
 async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, tx_network, network_controller):
-    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    node_info = make_object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
     network_controller.nodes[2] = node_info
 
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
@@ -180,7 +180,7 @@ def test_get_node_protocol_info_no_node(rx, tx_req, tx_res, network):
 
 
 def test_get_node_protocol_info_with_node(rx, tx_req, tx_res, network_controller):
-    node_info = Object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    node_info = make_object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
     network_controller.nodes[2] = node_info
 
     rx('GET_NODE_PROTOCOL_INFO', node_id=2)

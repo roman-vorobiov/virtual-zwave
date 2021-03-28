@@ -30,7 +30,7 @@ def test_const_field(from_bytes_converter, to_bytes_converter):
     data = [0x01]
 
     packet = from_bytes_converter.create_packet(schema, data)
-    assert packet.fields == {}
+    assert packet.get_data() == {}
 
     assert to_bytes_converter.serialize_packet(schema, packet) == data
 

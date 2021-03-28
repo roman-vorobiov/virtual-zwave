@@ -1,7 +1,6 @@
 from network.application.node import Node
-from network.application.command_classes import make_command
 
-from zwave.protocol import Packet
+from common import make_command
 
 from tools import Mock
 
@@ -20,9 +19,9 @@ def node():
 
 
 @pytest.fixture
-def tx(node):
+def tx(node, command_class):
     def inner(name: str, **kwargs):
-        command = Packet(name, **kwargs)
+        command = make_command(command_class.class_id, name, **kwargs)
         node.send_command.assert_called_first_with(1, command)
         node.send_command.pop_first_call()
 

@@ -1,7 +1,7 @@
 from .device import Device
 from .utils import calculate_checksum
 
-from zwave.protocol import Packet
+from zwave.protocol import Packet, make_packet
 from zwave.protocol.frames.data import FrameType
 from zwave.protocol.serialization import PacketSerializer
 
@@ -44,20 +44,20 @@ class Host:
         self.tx_buffer.unblock()
 
     def send_ack(self):
-        frame = Packet('ACK')
+        frame = make_packet('ACK')
         self.send_frame(frame, False)
 
     def send_nak(self):
-        frame = Packet('NAK')
+        frame = make_packet('NAK')
         self.send_frame(frame, False)
 
     def send_can(self):
-        frame = Packet('CAN')
+        frame = make_packet('CAN')
         self.send_frame(frame, False)
 
     def send_data(self, frame_type: FrameType, command: List[int]):
-        frame = Packet('Data', type=frame_type.value, command=command, checksum=0xFF)
-        frame['checksum'] = calculate_checksum(frame)
+        frame = make_packet('Data', type=frame_type.value, command=command, checksum=0xFF)
+        frame.checksum = calculate_checksum(frame)
         self.send_frame(frame, True)
 
     def send_frame(self, frame: Packet, blocking: bool):
