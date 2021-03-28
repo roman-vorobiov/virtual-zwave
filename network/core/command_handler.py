@@ -1,19 +1,23 @@
 from .node_manager import NodeManager, NodeNotFoundException
 
+from network.client import Client
+
 from common import Network
 
-from tools import log_error, log_info
+from tools import log_error
 
 
 class CommandHandler:
-    def __init__(self, network: Network, node_manager: NodeManager):
+    def __init__(self, network: Network, client: Client, node_manager: NodeManager):
         self.network = network
+        self.client = client
         self.node_manager = node_manager
 
     def handle_command(self, command: str):
         handlers = {
             'nif': self.send_nif,
-            'generate': self.generate_node
+            'generate': self.generate_node,
+            'list': self.get_nodes
         }
 
         command_name, *args = command.split(' ')
@@ -28,8 +32,12 @@ class CommandHandler:
         self.node_manager.get_node(int(home_id), int(node_id)).broadcast_node_information()
 
     def generate_node(self):
-        node = self.node_manager.generate_new_node()
-        log_info(f"New node generated: home ID = {node.home_id}, node ID = {node.node_id}")
+        self.node_manager.generate_new_node()
+
+    def get_nodes(self):
+        self.client.send_message('NODES_LIST', {
+            'nodes': list(self.node_manager.get_nodes())
+        })
 
     def handle_unknown_command(self):
         log_error("Unknown command")

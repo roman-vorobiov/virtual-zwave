@@ -14,7 +14,7 @@ def network():
 
 @pytest.fixture
 def node_manager(network):
-    yield NodeManager(network)
+    yield NodeManager(network, Mock())
 
 
 @pytest.fixture(autouse=True)

@@ -10,7 +10,7 @@ import json
 
 @pytest.fixture
 def included_node(node, node_manager):
-    node_manager.add_node(0xC0000000, 2, node)
+    node_manager.add_to_network(node, 0xC0000000, 2)
     yield node
 
 
@@ -55,6 +55,8 @@ def test_add_to_network(rx, tx, node_manager, node):
         'newNodeId': 2
     })
     assert node_manager.nodes == {0: {}, 0xC0000000: {2: node}}
+
+    # Todo: test client notifications
 
 
 def test_remove_from_network(rx, tx, node_manager, included_node):

@@ -2,23 +2,27 @@ from .node_manager import NodeManager
 from .network_event_handler import NetworkEventHandler
 from .command_handler import CommandHandler
 
+from network.client import Client
+
 from common import NetworkImpl
 
 from tools.websockets import NetworkConnection
 
 
 class Core:
-    def __init__(self, connection: NetworkConnection):
+    def __init__(self, connection: NetworkConnection, client: Client):
         self.network = NetworkImpl(
             connection=connection
         )
 
         self.node_manager = NodeManager(
-            network=self.network
+            network=self.network,
+            client=client
         )
 
         self.command_handler = CommandHandler(
             network=self.network,
+            client=client,
             node_manager=self.node_manager
         )
 

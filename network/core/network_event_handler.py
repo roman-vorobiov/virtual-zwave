@@ -39,12 +39,12 @@ class NetworkEventHandler(NetworkMessageVisitor):
     @visit('ADD_TO_NETWORK')
     def handle_add_to_network(self, message: dict):
         node = self.get_node(message)
-        self.node_manager.add_node(message['source']['homeId'], message['newNodeId'], node)
+        self.node_manager.add_to_network(node, message['source']['homeId'], message['newNodeId'])
 
     @visit('REMOVE_FROM_NETWORK')
     def handle_remove_from_network(self, message: dict):
         node = self.get_node(message)
-        self.node_manager.remove_node(node)
+        self.node_manager.remove_from_network(node)
 
     @visit('ADD_NODE_STARTED', 'REMOVE_NODE_STARTED')
     def handle_transfer_presentation(self, message: dict):

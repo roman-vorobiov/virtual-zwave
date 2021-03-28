@@ -6,13 +6,19 @@ from common import Network, BaseNode
 
 from tools import Object, log_warning
 
+import uuid
 from typing import Dict
+
+
+def generate_id() -> str:
+    return str(uuid.uuid4())
 
 
 class Node(BaseNode):
     def __init__(self, network: Network, basic: int, generic: int, specific: int):
         super().__init__(network)
 
+        self.id = generate_id()
         self.basic = basic
         self.generic = generic
         self.specific = specific
