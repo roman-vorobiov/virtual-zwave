@@ -1,6 +1,6 @@
 from .command_classes import CommandClass
 
-from common import Command, Network, BaseNode
+from common import Command, RemoteInterface, BaseNode
 
 from tools import Object, make_object, log_warning
 
@@ -13,8 +13,8 @@ def generate_id() -> str:
 
 
 class Node(BaseNode):
-    def __init__(self, network: Network, basic: int, generic: int, specific: int):
-        super().__init__(network)
+    def __init__(self, controller: RemoteInterface, basic: int, generic: int, specific: int):
+        super().__init__(controller)
 
         self.id = generate_id()
         self.basic = basic

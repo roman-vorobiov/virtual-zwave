@@ -1,11 +1,11 @@
-from .network import Network
+from .remote_interface import RemoteInterface
 
 from typing import Optional
 
 
 class BaseNode:
-    def __init__(self, network: Network):
-        self.network = network
+    def __init__(self, remote_interface: RemoteInterface):
+        self.remote_interface = remote_interface
 
         self.home_id: Optional[int] = None
         self.node_id: Optional[int] = None
@@ -24,7 +24,7 @@ class BaseNode:
         })
 
     def broadcast_message(self, message_type: str, details: dict):
-        self.network.send_message({
+        self.remote_interface.send_message({
             'messageType': message_type,
             'message': {
                 **details,

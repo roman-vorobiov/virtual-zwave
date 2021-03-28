@@ -1,9 +1,9 @@
 #!/bin/sh
 
-pid=$(pgrep -f virtual_zwave.py)
+pid=$(pgrep -f virtual_controller.py)
 if [ -z "$pid" ]
 then
-  (python3.8 ./virtual_zwave.py "$@") &
+  (python3 ./virtual_controller.py "$@") &
 else
   echo "Virtual Z-Wave controller already running"
   exit 1

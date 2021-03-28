@@ -1,14 +1,14 @@
 from network.application import Node, create_node
 from network.client import Client
 
-from common import Network
+from common import RemoteInterface
 
 from typing import Dict, Iterator
 
 
-def make_dummy_node(network: Network) -> Node:
+def make_dummy_node(controller: RemoteInterface) -> Node:
     return create_node(
-        network,
+        controller,
 
         basic='BASIC_TYPE_ROUTING_SLAVE',
         generic='GENERIC_TYPE_SWITCH_BINARY',
@@ -36,8 +36,8 @@ class NodeNotFoundException(Exception):
 class NodeManager:
     DEFAULT_HOME_ID = 0
 
-    def __init__(self, network: Network, client: Client):
-        self.network = network
+    def __init__(self, controller: RemoteInterface, client: Client):
+        self.controller = controller
         self.client = client
         self.nodes: Dict[int, Dict[int, Node]] = {}
 
@@ -55,7 +55,7 @@ class NodeManager:
                 }
 
     def generate_new_node(self) -> Node:
-        node = make_dummy_node(self.network)
+        node = make_dummy_node(self.controller)
         self.put_node_in_default_home(node)
         return node
 

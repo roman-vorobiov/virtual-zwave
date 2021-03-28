@@ -2,14 +2,11 @@ from .node_manager import NodeManager, NodeNotFoundException
 
 from network.client import Client
 
-from common import Network
-
 from tools import log_error
 
 
 class CommandHandler:
-    def __init__(self, network: Network, client: Client, node_manager: NodeManager):
-        self.network = network
+    def __init__(self, client: Client, node_manager: NodeManager):
         self.client = client
         self.node_manager = node_manager
 

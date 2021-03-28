@@ -1,1 +1,1 @@
-from .fake_network import FakeNetwork
+from .fake_remote_interface import FakeRemoteInterface

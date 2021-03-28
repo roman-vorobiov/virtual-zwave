@@ -1,32 +1,31 @@
 from .node_manager import NodeManager
-from .network_event_handler import NetworkEventHandler
+from .controller_event_handler import ControllerEventHandler
 from .command_handler import CommandHandler
 
 from network.client import Client
 
-from common import NetworkImpl
+from common import RemoteInterfaceImpl
 
-from tools.websockets import NetworkConnection
+from tools.websockets import RemoteConnection
 
 
 class Core:
-    def __init__(self, connection: NetworkConnection, client: Client):
-        self.network = NetworkImpl(
+    def __init__(self, connection: RemoteConnection, client: Client):
+        self.controller = RemoteInterfaceImpl(
             connection=connection
         )
 
         self.node_manager = NodeManager(
-            network=self.network,
+            controller=self.controller,
             client=client
         )
 
         self.command_handler = CommandHandler(
-            network=self.network,
             client=client,
             node_manager=self.node_manager
         )
 
-        self.network_event_handler = NetworkEventHandler(
+        self.controller_event_handler = ControllerEventHandler(
             node_manager=self.node_manager
         )
 
@@ -34,4 +33,4 @@ class Core:
         self.command_handler.handle_command(command)
 
     def process_message(self, message: str):
-        self.network_event_handler.handle_message(message)
+        self.controller_event_handler.handle_message(message)

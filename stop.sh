@@ -1,6 +1,6 @@
 #!/bin/sh
 
-pid=$(pgrep -f virtual_zwave.py)
+pid=$(pgrep -f virtual_controller.py)
 if [ -n "$pid" ]
 then
   kill -15 "$pid"

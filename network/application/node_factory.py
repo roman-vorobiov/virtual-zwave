@@ -3,7 +3,7 @@ from .command_classes.command_class_factory import command_class_factory
 
 from network.resources import CONSTANTS
 
-from common import Network
+from common import RemoteInterface
 
 
 def get_user_icon_type(generic: str, specific: str) -> int:
@@ -14,7 +14,7 @@ def get_user_icon_type(generic: str, specific: str) -> int:
 
 
 def create_node(
-    network: Network,
+    controller: RemoteInterface,
 
     basic: str,
     generic: str,
@@ -30,7 +30,7 @@ def create_node(
     installer_icon_type: str,
     user_icon_type: str
 ) -> Node:
-    node = Node(network,
+    node = Node(controller,
                 basic=CONSTANTS['BasicType'][basic],
                 generic=CONSTANTS['GenericDeviceType'][generic],
                 specific=CONSTANTS['SpecificDeviceTypes'][generic][specific])

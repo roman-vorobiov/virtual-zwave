@@ -1,4 +1,4 @@
-from tools.websockets import NetworkServerConnection
+from tools.websockets import RemoteServer
 
 import asyncio
 import json
@@ -17,7 +17,7 @@ class Handler(SimpleHTTPRequestHandler):
 class Client:
     def __init__(self):
         self.httpd = ThreadingHTTPServer(('localhost', 3000), Handler)
-        self.connection = NetworkServerConnection(7654)
+        self.connection = RemoteServer(7654)
 
     async def initialize(self):
         await self.connection.initialize()
