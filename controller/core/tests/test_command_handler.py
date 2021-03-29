@@ -134,6 +134,37 @@ async def test_add_node_to_network_stop(rx, tx_req, tx_res):
 
 
 @pytest.mark.asyncio
+async def test_add_node_to_network_after_stop(rx, tx_req, tx_res, tx_network, network_controller):
+    node_info = make_object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('ADD_NODE_STARTED', {})
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=0, node_info=None)
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
+    tx_network('ADD_NODE_STARTED', {})
+
+    network_controller.on_node_information_frame(0, 1, node_info)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node_info)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
+    tx_network('ADD_TO_NETWORK', {
+        'destination': {
+            'homeId': 0,
+            'nodeId': 1
+        },
+        'newNodeId': 2
+    })
+
+    rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.STOP, options=0, function_id=0)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.DONE, source=2, node_info=None)
+
+
+@pytest.mark.asyncio
 async def test_add_node_to_network_smart_start(rx, tx_req, tx_res):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.SMART_START, options=0, function_id=0)
 

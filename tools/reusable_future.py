@@ -8,10 +8,13 @@ class ReusableFuture:
 
     def __await__(self):
         self.waiting = True
-        result = yield from self.impl
-        self.waiting = False
-        self.impl = Future()
-        return result
+
+        try:
+            result = yield from self.impl
+            return result
+        finally:
+            self.waiting = False
+            self.impl = Future()
 
     def cancel(self):
         if self.waiting:
