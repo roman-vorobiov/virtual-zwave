@@ -12,11 +12,11 @@ def parse_args():
     parser.add_argument('--port', type=int, default=8765,
                         help="websocket server port")
 
-    return parser.parse_args()
+    return parser.parse_known_args()
 
 
 def main():
-    args = parse_args()
+    args, _ = parse_args()
 
     daemon = ControllerDaemon(link=args.link, port=args.port)
     daemon.run()
