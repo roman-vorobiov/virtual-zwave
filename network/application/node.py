@@ -1,22 +1,22 @@
 from .command_classes import CommandClass
 
-from common import Command, RemoteInterface, BaseNode
+from common import Command, RemoteInterface, BaseNode, Model
 
-from tools import Object, make_object, log_warning
+from tools import Object, make_object, serializable, log_warning
 
-import uuid
-from typing import Dict
-
-
-def generate_id() -> str:
-    return str(uuid.uuid4())
+from typing import Dict, Optional
 
 
-class Node(BaseNode):
+@serializable(excluded_fields=['remote_interface', 'repository'])
+class Node(Model, BaseNode):
     def __init__(self, controller: RemoteInterface, basic: int, generic: int, specific: int):
-        super().__init__(controller)
+        Model.__init__(self)
+        BaseNode.__init__(self, controller)
 
-        self.id = generate_id()
+        self.home_id: Optional[int] = None
+        self.node_id: Optional[int] = None
+        self.suc_node_id: Optional[int] = None
+
         self.basic = basic
         self.generic = generic
         self.specific = specific
@@ -29,10 +29,6 @@ class Node(BaseNode):
     def add_to_network(self, home_id: int, node_id: int):
         self.node_id = node_id
         self.home_id = home_id
-
-    def remove_from_network(self):
-        self.node_id = None
-        self.home_id = None
         self.suc_node_id = None
 
     def set_suc_node_id(self, node_id: int):

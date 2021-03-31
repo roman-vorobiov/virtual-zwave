@@ -1,11 +1,11 @@
 from ..fixture import *
 
-from network.application.command_classes.command_class_factory import command_class_factory
+from network.application.command_classes.application import Basic
 
 
 @pytest.fixture(autouse=True)
 def command_class(node):
-    yield command_class_factory.create_command_class('COMMAND_CLASS_BASIC', node)
+    yield Basic(node)
 
 
 def test_basic_get(rx, tx):

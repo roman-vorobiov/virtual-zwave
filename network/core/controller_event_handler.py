@@ -22,7 +22,9 @@ class ControllerEventHandler(RemoteMessageVisitor):
 
     @visit('ASSIGN_SUC_RETURN_ROUTE')
     def handle_assign_suc_return_route(self, message: dict):
-        self.get_node(message).set_suc_node_id(message['sucNodeId'])
+        node = self.get_node(message)
+        node.set_suc_node_id(message['sucNodeId'])
+        node.save()
 
     @visit('REQUEST_NODE_INFO')
     def handle_request_node_info(self, message: dict):
@@ -33,7 +35,9 @@ class ControllerEventHandler(RemoteMessageVisitor):
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
         command = make_command(message['classId'], message['command'], **message['args'])
-        self.get_node(message).handle_command(message['source']['nodeId'], command)
+        node = self.get_node(message)
+        node.handle_command(message['source']['nodeId'], command)
+        node.save()
 
     @visit('ADD_TO_NETWORK')
     def handle_add_to_network(self, message: dict):

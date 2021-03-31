@@ -47,33 +47,35 @@ def tx(controller):
     yield inner
 
 
-def test_add_to_network(rx, tx, node_manager, node):
-    assert node_manager.nodes == {0: {1: node}}
+def test_add_to_network(rx, tx, nodes, node):
+    assert nodes.find(0, 1) == node
 
     rx('ADD_TO_NETWORK', {
         'destination': {'homeId': 0, 'nodeId': 1},
         'newNodeId': 2
     })
-    assert node_manager.nodes == {0: {}, 0xC0000000: {2: node}}
+    assert nodes.find(0xC0000000, 2) == node
 
     # Todo: test client notifications
 
 
-def test_remove_from_network(rx, tx, node_manager, included_node):
-    assert node_manager.nodes == {0: {}, 0xC0000000: {2: included_node}}
+def test_remove_from_network(rx, tx, nodes, included_node):
+    assert nodes.find(0xC0000000, 2) == included_node
 
     rx('REMOVE_FROM_NETWORK', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
-    assert node_manager.nodes == {0: {1: included_node}, 0xC0000000: {}}
+    assert nodes.find(0, 1) == included_node
 
 
-def test_assign_suc_return_route(rx, tx, included_node):
+def test_assign_suc_return_route(rx, tx, nodes, included_node):
+    assert nodes.find(0xC0000000, 2).suc_node_id is None
+
     rx('ASSIGN_SUC_RETURN_ROUTE', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
         'sucNodeId': 1
     })
-    assert included_node.suc_node_id == 1
+    assert nodes.find(0xC0000000, 2).suc_node_id == 1
 
 
 def test_request_node_info(rx, tx, included_node):

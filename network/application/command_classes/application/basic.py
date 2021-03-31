@@ -8,10 +8,10 @@ from tools import visit
 
 @command_class('COMMAND_CLASS_BASIC')
 class Basic(CommandClass):
-    def __init__(self, node: Node):
+    def __init__(self, node: Node, value=0xFE):
         super().__init__(node)
 
-        self.value = 0xFE
+        self.value = value
 
     @visit('BASIC_SET')
     def handle_set(self, command: Command, source_id: int):

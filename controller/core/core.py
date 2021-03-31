@@ -8,6 +8,8 @@ from .library import Library
 from .network_controller import NetworkController
 from .storage import Storage
 
+from controller.model.tinydb import DatabaseProvider
+
 from controller.protocol.serialization import PacketSerializer, CommandClassSerializer
 
 from common import RemoteInterfaceImpl
@@ -42,6 +44,10 @@ class Core:
         self.command_class_serializer = make_command_class_serializer("command_classes/management.yaml",
                                                                       "command_classes/application.yaml")
 
+        self.repository_provider = DatabaseProvider()
+        self.state = self.repository_provider.get_state()
+        self.node_infos = self.repository_provider.get_node_infos()
+
         self.network = RemoteInterfaceImpl(
             connection=connection
         )
@@ -64,6 +70,8 @@ class Core:
         )
         self.network_controller = NetworkController(
             command_class_serializer=self.command_class_serializer,
+            state=self.state,
+            node_infos=self.node_infos,
             request_manager=self.request_manager,
             network=self.network
         )

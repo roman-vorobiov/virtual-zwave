@@ -21,7 +21,7 @@ class Object:
             return f"{self._meta.__repr__()} {self._data.__repr__()}"
 
     def __eq__(self, other: 'Object'):
-        return self._meta == other._meta and self._data == other._data
+        return self.get_data() == other.get_data()
 
     def __getattr__(self, field_name: str) -> Any:
         return self._data.get(field_name)

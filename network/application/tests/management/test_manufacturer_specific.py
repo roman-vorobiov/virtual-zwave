@@ -1,15 +1,11 @@
 from ..fixture import *
 
-from network.application.command_classes.command_class_factory import command_class_factory
+from network.application.command_classes.management import ManufacturerSpecific
 
 
 @pytest.fixture(autouse=True)
 def command_class(node):
-    yield command_class_factory.create_command_class('COMMAND_CLASS_MANUFACTURER_SPECIFIC',
-                                                     node,
-                                                     manufacturer_id=1,
-                                                     product_type_id=2,
-                                                     product_id=3)
+    yield ManufacturerSpecific(node, manufacturer_id=1, product_type_id=2, product_id=3)
 
 
 def test_manufacturer_specific_get(rx, tx):

@@ -33,7 +33,7 @@ class NodeRemovingController:
             home_id, node_id, _ = await self.node_id
             yield RemoveNodeStatus.NODE_FOUND, 0, None
 
-            node_info = self.network_controller.nodes.pop(node_id)
+            node_info = self.network_controller.node_infos.remove(node_id)
             yield RemoveNodeStatus.REMOVING_SLAVE, node_id, node_info
 
             self.network_controller.send_message(home_id, node_id, 'REMOVE_FROM_NETWORK', {})

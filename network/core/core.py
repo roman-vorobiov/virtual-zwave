@@ -2,6 +2,10 @@ from .node_manager import NodeManager
 from .controller_event_handler import ControllerEventHandler
 from .command_handler import CommandHandler
 
+from network.application import NodeFactory
+
+from network.model.tinydb import DatabaseProvider
+
 from network.client import Client
 
 from common import RemoteInterfaceImpl
@@ -15,9 +19,20 @@ class Core:
             connection=connection
         )
 
+        # Todo: let's pretend that RemoteInterface is not a service and isn't used in the data layer :)
+        self.node_factory = NodeFactory(
+            controller=self.controller
+        )
+
+        self.repository_provider = DatabaseProvider(
+            node_factory=self.node_factory
+        )
+        self.nodes = self.repository_provider.get_nodes()
+
         self.node_manager = NodeManager(
-            controller=self.controller,
-            client=client
+            client=client,
+            node_factory=self.node_factory,
+            nodes=self.nodes
         )
 
         self.command_handler = CommandHandler(

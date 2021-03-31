@@ -18,6 +18,11 @@ def node():
     yield node
 
 
+@pytest.fixture(autouse=True)
+def set_up_relations(node, command_class):
+    node.add_command_class(command_class)
+
+
 @pytest.fixture
 def tx(node, command_class):
     def inner(name: str, **kwargs):

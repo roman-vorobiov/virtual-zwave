@@ -37,7 +37,7 @@ class NodeAddingController:
             yield AddNodeStatus.NODE_FOUND, 0, None
 
             self.new_node_id = self.generate_node_id()
-            self.network_controller.nodes[self.new_node_id] = node_info
+            self.network_controller.node_infos.add(self.new_node_id, node_info)
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, node_info
 
             self.network_controller.send_message(old_home_id, old_node_id, 'ADD_TO_NETWORK', {
@@ -55,5 +55,5 @@ class NodeAddingController:
     async def enable_smart_start(self):
         pass
 
-    def generate_node_id(self):
-        return next(reversed(self.network_controller.nodes.keys()), self.network_controller.node_id) + 1
+    def generate_node_id(self) -> int:
+        return max(self.network_controller.node_infos.get_node_ids(), default=self.network_controller.node_id) + 1

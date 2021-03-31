@@ -22,8 +22,6 @@ class CommandHandler:
             handlers.get(command_name, self.handle_unknown_command)(*args)
         except NodeNotFoundException as e:
             log_error(f"Node not found: home ID = {e.home_id}, node ID = {e.node_id}")
-        except (TypeError, ValueError):
-            log_error("Invalid command")
 
     def send_nif(self, home_id: str, node_id: str):
         self.node_manager.get_node(int(home_id), int(node_id)).broadcast_node_information()
@@ -33,7 +31,7 @@ class CommandHandler:
 
     def get_nodes(self):
         self.client.send_message('NODES_LIST', {
-            'nodes': list(self.node_manager.get_nodes())
+            'nodes': self.node_manager.get_nodes_as_json()
         })
 
     def handle_unknown_command(self):

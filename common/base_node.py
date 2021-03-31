@@ -7,10 +7,6 @@ class BaseNode:
     def __init__(self, remote_interface: RemoteInterface):
         self.remote_interface = remote_interface
 
-        self.home_id: Optional[int] = None
-        self.node_id: Optional[int] = None
-        self.suc_node_id: Optional[int] = None
-
     def send_message_in_current_network(self, node_id: int, message_type: str, details: dict):
         self.send_message(self.home_id, node_id, message_type, details)
 

@@ -1,4 +1,5 @@
 from .fake_controller import FakeController
+from .in_memory_repository_provider import InMemoryRepositoryProvider
 
 from controller.core.host import Host
 from controller.core.request_manager import RequestManager
@@ -61,6 +62,21 @@ def network():
 
 
 @pytest.fixture
+def repository_provider():
+    yield InMemoryRepositoryProvider()
+
+
+@pytest.fixture
+def state(repository_provider):
+    yield repository_provider.get_state()
+
+
+@pytest.fixture
+def node_info_repository(repository_provider):
+    yield repository_provider.get_node_infos()
+
+
+@pytest.fixture
 def host(frame_serializer, controller):
     yield Host(frame_serializer, controller)
 
@@ -89,9 +105,9 @@ def storage(config):
 
 
 @pytest.fixture
-def network_controller(network, command_class_serializer, request_manager):
+def network_controller(command_class_serializer, state, node_info_repository, request_manager, network):
     with mock.patch('random.randint', lambda *args: 0xC0000000):
-        yield NetworkController(command_class_serializer, request_manager, network)
+        yield NetworkController(command_class_serializer, state, node_info_repository, request_manager, network)
 
 
 @pytest.fixture(autouse=True)

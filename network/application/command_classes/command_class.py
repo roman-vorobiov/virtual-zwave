@@ -4,7 +4,7 @@ from network.resources import CONSTANTS
 
 from common import Command, CommandVisitor, make_command
 
-from tools import log_warning
+from tools import serializable, log_warning
 
 from typing import TYPE_CHECKING
 
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from ..node import Node
 
 
+@serializable(excluded_fields=['node'])
 class CommandClass(CommandVisitor):
     class_id: int
 
@@ -36,7 +37,7 @@ class CommandClass(CommandVisitor):
 def command_class(class_name: str):
     def inner(cls):
         cls.class_id = CONSTANTS['CommandClassId'][class_name]
-        command_class_factory.register(class_name, cls)
+        command_class_factory.register(cls)
         return cls
 
     return inner
