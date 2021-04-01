@@ -22,9 +22,11 @@ class ControllerEventHandler(RemoteMessageVisitor):
 
     @visit('ASSIGN_SUC_RETURN_ROUTE')
     def handle_assign_suc_return_route(self, message: dict):
-        node = self.get_node(message)
-        node.set_suc_node_id(message['sucNodeId'])
-        node.save()
+        home_id = message['destination']['homeId']
+        node_id = message['destination']['nodeId']
+        suc_node_id = message['sucNodeId']
+
+        self.node_manager.set_suc_node_id(home_id, node_id, suc_node_id)
 
     @visit('REQUEST_NODE_INFO')
     def handle_request_node_info(self, message: dict):
@@ -38,6 +40,7 @@ class ControllerEventHandler(RemoteMessageVisitor):
         node = self.get_node(message)
         node.handle_command(message['source']['nodeId'], command)
         node.save()
+        # Todo: broadcast changes in command classes
 
     @visit('ADD_TO_NETWORK')
     def handle_add_to_network(self, message: dict):
@@ -57,4 +60,4 @@ class ControllerEventHandler(RemoteMessageVisitor):
         home_id = message['destination']['homeId']
         node_id = message['destination']['nodeId']
 
-        return self.node_manager.get_node(home_id, node_id)
+        return self.node_manager.find_node(home_id, node_id)

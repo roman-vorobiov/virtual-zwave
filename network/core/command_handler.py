@@ -1,38 +1,46 @@
-from .node_manager import NodeManager, NodeNotFoundException
+from .node_manager import NodeManager
 
 from network.client import Client
 
-from tools import log_error
+from common import RemoteMessageVisitor
+
+from tools import visit, log_error
+
+import json
+import traceback
 
 
-class CommandHandler:
+class CommandHandler(RemoteMessageVisitor):
     def __init__(self, client: Client, node_manager: NodeManager):
         self.client = client
         self.node_manager = node_manager
 
-    def handle_command(self, command: str):
-        handlers = {
-            'nif': self.send_nif,
-            'generate': self.generate_node,
-            'list': self.get_nodes
-        }
-
-        command_name, *args = command.split(' ')
+    def handle_command(self, data: str):
+        message = json.loads(data)
         try:
-            handlers.get(command_name, self.handle_unknown_command)(*args)
-        except NodeNotFoundException as e:
-            log_error(f"Node not found: home ID = {e.home_id}, node ID = {e.node_id}")
+            self.visit(message)
+        except Exception:
+            log_error(traceback.format_exc())
 
-    def send_nif(self, home_id: str, node_id: str):
-        self.node_manager.get_node(int(home_id), int(node_id)).broadcast_node_information()
-
-    def generate_node(self):
-        self.node_manager.generate_new_node()
-
-    def get_nodes(self):
+    @visit('GET_NODES')
+    def handle_get_nodes(self, message: dict):
         self.client.send_message('NODES_LIST', {
             'nodes': self.node_manager.get_nodes_as_json()
         })
 
-    def handle_unknown_command(self):
-        log_error("Unknown command")
+    @visit('SEND_NIF')
+    def handle_send_nif(self, message: dict):
+        self.node_manager.get_node(message['id']).broadcast_node_information()
+
+    @visit('CREATE_NODE')
+    def handle_create_node(self, message: dict):
+        self.node_manager.generate_new_node()
+
+    @visit('RESET')
+    def handle_reset(self, message: dict):
+        self.node_manager.reset()
+
+        # Todo
+        self.client.send_message('NODES_LIST', {
+            'nodes': []
+        })

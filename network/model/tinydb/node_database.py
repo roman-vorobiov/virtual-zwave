@@ -33,6 +33,10 @@ class NodeDatabase(NodeRepository):
     def update(self, node: Node):
         self.table.update(node.to_dict(), where(id=node.id))
 
+    def get(self, id: int) -> Optional[Node]:
+        if (record := self.table.get(where(id=id))) is not None:
+            return self.from_record(record)
+
     def find(self, home_id: int, node_id: int) -> Optional[Node]:
         if (record := self.table.get(where(home_id=home_id, node_id=node_id))) is not None:
             return self.from_record(record)

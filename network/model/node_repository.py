@@ -18,6 +18,10 @@ class NodeRepository(ABC):
         pass
 
     @abstractmethod
+    def get(self, id: int) -> Optional[Node]:
+        pass
+
+    @abstractmethod
     def find(self, home_id: int, node_id: int) -> Optional[Node]:
         pass
 

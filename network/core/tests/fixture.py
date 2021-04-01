@@ -16,6 +16,11 @@ def controller():
 
 
 @pytest.fixture
+def client():
+    yield Mock()
+
+
+@pytest.fixture
 def node_factory(controller):
     yield NodeFactory(controller)
 
@@ -31,18 +36,20 @@ def nodes(repository_provider):
 
 
 @pytest.fixture
-def node_manager(node_factory, nodes):
-    yield NodeManager(Mock(), node_factory, nodes)
+def node_manager(client, node_factory, nodes):
+    yield NodeManager(client, node_factory, nodes)
 
 
 @pytest.fixture(autouse=True)
-def node(node_manager):
+def node(node_manager, client):
     node = node_manager.generate_new_node()
+    client.send_message.reset_mock()
     Node.handle_command = Mock()
     yield node
 
 
 @pytest.fixture(autouse=True)
-def check_communication(controller):
+def check_communication(controller, client):
     yield
     assert controller.free_buffer() == []
+    client.send_message.assert_not_called()

@@ -1,7 +1,15 @@
 let ws = new WebSocket("ws://localhost:7654");
 
+let sendData = function(data) {
+    console.log(data);
+    ws.send(JSON.stringify(data));
+}
+
 ws.onopen = function() {
-    ws.send("list");
+    sendData({
+        messageType: "GET_NODES",
+        message: {}
+    });
 };
 
 let nodes = {};
@@ -16,12 +24,21 @@ let addNewButton = function(id) {
         let homeId = nodes[id].homeId;
         let nodeId = nodes[id].nodeId;
 
-        sendNif(homeId, nodeId);
+        sendNif(id);
     };
 
     newDiv.appendChild(newButton);
 
-    document.body.appendChild(newDiv);
+    let nodesDiv = document.getElementById("nodes");
+    nodesDiv.appendChild(newDiv);
+};
+
+let removeButtons = function() {
+    let nodesDiv = document.getElementById("nodes");
+
+    while (nodesDiv.firstChild) {
+        nodesDiv.removeChild(nodesDiv.firstChild);
+    }
 };
 
 let onNodeUpdated = function(node) {
@@ -49,14 +66,30 @@ ws.onmessage = function(event) {
             onNewNode(message);
         }
     } else if (messageType === "NODES_LIST") {
+        removeButtons();
         message.nodes.forEach(onNewNode);
     }
 };
 
-let sendNif = function(homeId, nodeId) {
-    ws.send(`nif ${homeId} ${nodeId}`);
+let sendNif = function(id) {
+    sendData({
+        messageType: "SEND_NIF",
+        message: {
+            id: id
+        }
+    });
+};
+
+let onResetClicked = function() {
+    sendData({
+        messageType: "RESET",
+        message: {}
+    });
 };
 
 let onGenerateClicked = function() {
-    ws.send("generate");
+    sendData({
+        messageType: "CREATE_NODE",
+        message: {}
+    });
 };

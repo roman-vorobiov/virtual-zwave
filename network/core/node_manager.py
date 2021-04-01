@@ -63,7 +63,10 @@ class NodeManager:
     def get_nodes_as_json(self) -> List[dict]:
         return humps.camelize(self.nodes.all())
 
-    def get_node(self, home_id: int, node_id: int) -> Node:
+    def get_node(self, id: str) -> Node:
+        return self.nodes.get(id)
+
+    def find_node(self, home_id: int, node_id: int) -> Node:
         if (node := self.nodes.find(home_id, node_id)) is not None:
             return node
 
@@ -82,6 +85,12 @@ class NodeManager:
 
     def remove_from_network(self, node: Node):
         self.put_node_in_default_home(node)
+
+    def set_suc_node_id(self, home_id: int, node_id: int, suc_node_id: int):
+        node = self.find_node(home_id, node_id)
+        node.set_suc_node_id(suc_node_id)
+        node.save()
+        self.notify_node_updated(node)
 
     def put_node_in_default_home(self, node: Node):
         self.add_to_network(node, NodeManager.DEFAULT_HOME_ID, self.generate_node_id())

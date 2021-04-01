@@ -4,13 +4,15 @@ from network.core.controller_event_handler import ControllerEventHandler
 
 from common import make_command
 
+import humps
 import pytest
 import json
 
 
 @pytest.fixture
-def included_node(node, node_manager):
+def included_node(node, node_manager, client):
     node_manager.add_to_network(node, 0xC0000000, 2)
+    client.send_message.reset_mock()
     yield node
 
 
@@ -47,34 +49,52 @@ def tx(controller):
     yield inner
 
 
-def test_add_to_network(rx, tx, nodes, node):
+@pytest.fixture
+def tx_client(client):
+    def inner(message_type: str, message: dict):
+        client.send_message.assert_called_first_with(message_type, message)
+        client.send_message.pop_first_call()
+
+    return inner
+
+
+@pytest.fixture
+def tx_client_node_updated_broadcast(nodes, tx_client):
+    def inner(home_id: int, node_id: int):
+        tx_client('NODE_UPDATED', humps.camelize(nodes.find(home_id, node_id).to_dict()))
+
+    return inner
+
+
+def test_add_to_network(rx, tx, tx_client_node_updated_broadcast, nodes, node):
     assert nodes.find(0, 1) == node
 
     rx('ADD_TO_NETWORK', {
         'destination': {'homeId': 0, 'nodeId': 1},
         'newNodeId': 2
     })
+    tx_client_node_updated_broadcast(0xC0000000, 2)
     assert nodes.find(0xC0000000, 2) == node
 
-    # Todo: test client notifications
 
-
-def test_remove_from_network(rx, tx, nodes, included_node):
+def test_remove_from_network(rx, tx, tx_client_node_updated_broadcast, nodes, included_node):
     assert nodes.find(0xC0000000, 2) == included_node
 
     rx('REMOVE_FROM_NETWORK', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
+    tx_client_node_updated_broadcast(0, 1)
     assert nodes.find(0, 1) == included_node
 
 
-def test_assign_suc_return_route(rx, tx, nodes, included_node):
+def test_assign_suc_return_route(rx, tx, tx_client_node_updated_broadcast, nodes, included_node):
     assert nodes.find(0xC0000000, 2).suc_node_id is None
 
     rx('ASSIGN_SUC_RETURN_ROUTE', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
         'sucNodeId': 1
     })
+    tx_client_node_updated_broadcast(0xC0000000, 2)
     assert nodes.find(0xC0000000, 2).suc_node_id == 1
 
 
