@@ -13,9 +13,10 @@ if TYPE_CHECKING:
     from ..node import Node
 
 
-@serializable(excluded_fields=['node'])
+@serializable(excluded_fields=['node'], class_fields=['class_version'])
 class CommandClass(CommandVisitor):
     class_id: int
+    class_version: int
 
     def __init__(self, node: 'Node'):
         self.node = node
@@ -30,14 +31,17 @@ class CommandClass(CommandVisitor):
         log_warning(f"Unhandled command: {command.get_meta('name')}")
 
     @classmethod
-    def make_command(cls, command_name: str, **kwargs):
-        return make_command(cls.class_id, command_name, **kwargs)
+    def make_command(cls, command_name: str, **kwargs) -> Command:
+        return make_command(cls.class_id, command_name, cls.class_version, **kwargs)
 
 
-def command_class(class_name: str):
+def command_class(class_name: str, version=1):
     def inner(cls):
         cls.class_id = CONSTANTS['CommandClassId'][class_name]
+        cls.class_version = version
+
         command_class_factory.register(cls)
+
         return cls
 
     return inner

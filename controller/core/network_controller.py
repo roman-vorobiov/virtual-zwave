@@ -99,7 +99,11 @@ class NetworkController(BaseNode):
         return self.node_removing_controller.remove_node_from_network(mode)
 
     async def send_data(self, destination_node_id: int, data: List[int]):
-        command = self.command_class_serializer.from_bytes(data)
+        node_info = self.node_infos.find(destination_node_id)
+        class_id = data[0]
+        class_version = node_info.command_class_versions[class_id]
+
+        command = self.command_class_serializer.from_bytes(data, class_version)
 
         self.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
             'classId': command.get_meta('class_id'),

@@ -19,7 +19,11 @@ def command_handler(requests_from_host_serializer, request_manager, storage, lib
 
 @pytest.fixture
 def node():
-    yield make_object(basic=1, generic=2, specific=3, command_class_ids=[4, 5, 6])
+    yield make_object(basic=1,
+                      generic=2,
+                      specific=3,
+                      command_class_ids=[0x72, 0x5E, 0x20],
+                      command_class_versions={0x72: 1, 0x5E: 1, 0x20: 1})
 
 
 @pytest.fixture
@@ -231,7 +235,7 @@ def test_request_node_info(rx, tx_req, tx_res, tx_network):
 
 
 @pytest.mark.asyncio
-async def test_send_data(rx, tx_req, tx_res, tx_network):
+async def test_send_data(rx, tx_req, tx_res, tx_network, included_node):
     rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
     tx_res('SEND_DATA', result=True)
     await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)

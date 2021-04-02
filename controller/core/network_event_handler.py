@@ -1,9 +1,8 @@
 from .network_controller import NetworkController as NetworkController
 from .request_manager import RequestManager
 
-from common import RemoteMessageVisitor
+from common import RemoteMessageVisitor, make_command
 
-from controller.protocol import make_packet
 from controller.protocol.commands.application_slave_update import UpdateStatus
 
 from tools import Object, visit
@@ -22,7 +21,7 @@ class NetworkEventHandler(RemoteMessageVisitor):
 
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
-        command = make_packet(message['command'], **message['args'])
+        command = make_command(message['classId'], message['command'], message['classVersion'], **message['args'])
         self.network_controller.on_application_command(message['source']['nodeId'], command)
 
     @visit('APPLICATION_NODE_INFORMATION')

@@ -41,16 +41,22 @@ class Node(Model, BaseNode):
             log_warning(f"Node does not support command class {command.get_meta('class_id')}")
 
     def get_node_info(self) -> Object:
+        hidden_classes = [0x20]
+
         return make_object(
             basic=self.basic,
             generic=self.generic,
             specific=self.specific,
-            command_class_ids=list(self.command_classes.keys() - {0x20})
+            command_class_ids=[cc_id for cc_id in self.command_classes.keys() if cc_id not in hidden_classes],
+
+            # Note: needed on the controller side to correctly deserialize commands
+            command_class_versions={class_id: cc.class_version for class_id, cc in self.command_classes.items()}
         )
 
     def send_command(self, destination_id: int, command: Command):
         self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
             'classId': command.get_meta('class_id'),
+            'classVersion': command.get_meta('class_version'),
             'command': command.get_meta('name'),
             'args': command.get_data()
         })

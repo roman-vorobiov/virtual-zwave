@@ -16,16 +16,20 @@ def make_dummy_node(node_factory: NodeFactory) -> Node:
         specific=0x01
     )
 
+    # COMMAND_CLASS_ZWAVEPLUS_INFO
     command_class_factory.create_command_class(
         0x72,
+        1,
         node,
         manufacturer_id=1,
         product_type_id=2,
         product_id=3
     )
 
+    # COMMAND_CLASS_MANUFACTURER_SPECIFIC
     command_class_factory.create_command_class(
         0x5E,
+        1,
         node,
         zwave_plus_version=2,
         role_type=0x05,
@@ -34,8 +38,20 @@ def make_dummy_node(node_factory: NodeFactory) -> Node:
         user_icon_type=0x0701
     )
 
+    # COMMAND_CLASS_VERSION
+    command_class_factory.create_command_class(
+        0x86,
+        1,
+        node,
+        protocol_library_type=0x06,
+        protocol_version=(1, 0),
+        application_version=(1, 0)
+    )
+
+    # COMMAND_CLASS_BASIC
     command_class_factory.create_command_class(
         0x20,
+        1,
         node
     )
 

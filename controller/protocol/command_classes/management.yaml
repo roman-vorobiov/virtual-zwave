@@ -1,42 +1,130 @@
 ---
 
-# COMMAND_CLASS_MANUFACTURER_SPECIFIC
+#======================================================================================================================#
 
-MANUFACTURER_SPECIFIC_GET:
-  - 0x72
-  - 0x04
+COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
+  MANUFACTURER_SPECIFIC_GET:
+    - 0x72
+    - 0x04
 
-MANUFACTURER_SPECIFIC_REPORT:
-  - 0x72
-  - 0x05
-  - { name: manufacturer_id, type: int, size: 2 }
-  - { name: product_type_id, type: int, size: 2 }
-  - { name: product_id, type: int, size: 2 }
+  MANUFACTURER_SPECIFIC_REPORT:
+    - 0x72
+    - 0x05
+    - { name: manufacturer_id, type: int, size: 2 }
+    - { name: product_type_id, type: int, size: 2 }
+    - { name: product_id, type: int, size: 2 }
 
-DEVICE_SPECIFIC_GET:
-  - 0x72
-  - 0x05
-  - 0b00000111: device_id_type
+  DEVICE_SPECIFIC_GET:
+    - 0x72
+    - 0x05
+    - 0b00000111: device_id_type
 
-DEVICE_SPECIFIC_REPORT:
-  - 0x72
-  - 0x06
-  - 0b00000111: device_id_type
-  - 0b11100000: device_id_data_format
-    0b00011111: { length_of: device_id_data }
-  - device_id_data[]
+  DEVICE_SPECIFIC_REPORT:
+    - 0x72
+    - 0x06
+    - 0b00000111: device_id_type
+    - 0b11100000: device_id_data_format
+      0b00011111: { length_of: device_id_data }
+    - device_id_data[]
 
-# COMMAND_CLASS_ZWAVEPLUS_INFO
+#======================================================================================================================#
 
-ZWAVEPLUS_INFO_GET:
-  - 0x5E
-  - 0x01
+_MajorMinor: &MajorMinor
+  - major
+  - minor
 
-ZWAVEPLUS_INFO_REPORT:
-  - 0x5E
-  - 0x02
-  - zwave_plus_version
-  - role_type
-  - node_type
-  - { name: installer_icon_type, type: int, size: 2 }
-  - { name: user_icon_type, type: int, size: 2 }
+_MajorMinorPatch: &MajorMinorPatch
+  - major
+  - minor
+  - patch
+
+_SoftwareInformation: &SoftwareInformation
+  - { name: api_version, schema: *MajorMinorPatch }
+  - { name: build_number, type: int, size: 2 }
+
+#----------------------------------------------------------------------------------------------------------------------#
+
+COMMAND_CLASS_VERSION_1: &COMMAND_CLASS_VERSION_1
+  VERSION_GET:
+    - 0x86
+    - 0x11
+
+  VERSION_REPORT:
+    - 0x86
+    - 0x12
+    - protocol_library_type
+    - { name: protocol_version, schema: *MajorMinor }
+    - { name: application_version, schema: *MajorMinor }
+
+  VERSION_COMMAND_CLASS_GET:
+    - 0x86
+    - 0x13
+    - class_id
+
+  VERSION_COMMAND_CLASS_REPORT:
+    - 0x86
+    - 0x14
+    - class_id
+    - version
+
+#----------------------------------------------------------------------------------------------------------------------#
+
+COMMAND_CLASS_VERSION_2: &COMMAND_CLASS_VERSION_2
+  <<: *COMMAND_CLASS_VERSION_1
+
+  VERSION_REPORT:
+    - 0x86
+    - 0x12
+    - protocol_library_type
+    - { name: protocol_version, schema: *MajorMinor }
+    - { name: application_version, schema: *MajorMinor }
+    - hardware_version
+    - { length_of: firmware_versions }
+    - { name: "firmware_versions[]", schema: *MajorMinor }
+
+#----------------------------------------------------------------------------------------------------------------------#
+
+COMMAND_CLASS_VERSION_3:
+  <<: *COMMAND_CLASS_VERSION_2
+
+  CAPABILITIES_GET:
+    - 0x86
+    - 0x15
+
+  CAPABILITIES_REPORT:
+    - 0x86
+    - 0x16
+    - 0b00000100: { name: zwave_software, type: bool }
+      0b00000010: { name: command_class, type: bool }
+      0b00000001: { name: version, type: bool }
+
+  SOFTWARE_GET:
+    - 0x86
+    - 0x17
+
+  SOFTWARE_REPORT:
+    - 0x86
+    - 0x18
+    - { name: sdk_version, schema: *MajorMinorPatch }
+    - { name: zwave_application_framework, schema: *SoftwareInformation }
+    - { name: host, schema: *SoftwareInformation }
+    - { name: zwave_protocol, schema: *SoftwareInformation }
+    - { name: application, schema: *SoftwareInformation }
+
+#======================================================================================================================#
+
+COMMAND_CLASS_ZWAVEPLUS_INFO_1:
+  ZWAVEPLUS_INFO_GET:
+    - 0x5E
+    - 0x01
+
+  ZWAVEPLUS_INFO_REPORT:
+    - 0x5E
+    - 0x02
+    - zwave_plus_version
+    - role_type
+    - node_type
+    - { name: installer_icon_type, type: int, size: 2 }
+    - { name: user_icon_type, type: int, size: 2 }
+
+#======================================================================================================================#

@@ -12,6 +12,8 @@ from ..schema import (
     MaskedField
 )
 
+from ...packet import make_packet
+
 import pytest
 
 
@@ -32,6 +34,14 @@ def test_const_field(from_bytes_converter, to_bytes_converter):
     packet = from_bytes_converter.create_packet(schema, data)
     assert packet.get_data() == {}
 
+    assert to_bytes_converter.serialize_packet(schema, packet) == data
+
+
+def test_extra_field(to_bytes_converter):
+    schema = PacketSchema("", [IntField(name="hello")])
+    data = [0x11]
+
+    packet = make_packet("", hello=0x11, bye=0x22)
     assert to_bytes_converter.serialize_packet(schema, packet) == data
 
 

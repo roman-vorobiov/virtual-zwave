@@ -44,6 +44,7 @@ async def test_application_command(rx_network, tx_req):
     rx_network('APPLICATION_COMMAND', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
         'classId': 0x20,
+        'classVersion': 1,
         'command': 'BASIC_SET',
         'args': {
             'value': 123

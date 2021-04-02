@@ -60,7 +60,9 @@ class NodeDatabase(NodeRepository):
         node.set_suc_node_id(record['suc_node_id'])
 
         for class_id, args in record['command_classes'].items():
-            command_class_factory.create_command_class(int(class_id), node, **args)
+            version = args.pop('class_version')
+            command_class_factory.create_command_class(int(class_id), version, node, **args)
+            args['class_version'] = version
 
         return node
 

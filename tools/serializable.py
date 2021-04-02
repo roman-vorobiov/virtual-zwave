@@ -10,17 +10,11 @@ def unroll(obj):
 
 
 def unroll_dict(state: dict):
-    for key, value in state.items():
-        state[key] = unroll(value)
-
-    return state
+    return {key: unroll(value) for key, value in state.items()}
 
 
 def unroll_list(state: list):
-    for idx, item in enumerate(state):
-        state[idx] = unroll(item)
-
-    return state
+    return [unroll(item) for item in state]
 
 
 def unroll_object(obj):
@@ -30,15 +24,20 @@ def unroll_object(obj):
         return obj
 
 
-def serializable(excluded_fields: Optional[List] = None):
+def serializable(cls=None, /, *, excluded_fields: Optional[List[str]] = None, class_fields: Optional[List[str]] = None):
     def __getstate__(self) -> dict:
-        state = {key: value for key, value in self.__dict__.items() if key not in (excluded_fields or {})}
-        unroll(state)
-        return state
+        state = {key: getattr(self.__class__, key) for key in class_fields or []}
+
+        state.update({key: value for key, value in self.__dict__.items() if key not in (excluded_fields or [])})
+
+        return unroll(state)
 
     def inner(cls):
         setattr(cls, '__getstate__', __getstate__)
         setattr(cls, 'to_dict', __getstate__)
         return cls
 
-    return inner
+    if cls is None:
+        return inner
+    else:
+        return inner(cls)
