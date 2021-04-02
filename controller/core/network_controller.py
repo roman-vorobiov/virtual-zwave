@@ -100,10 +100,8 @@ class NetworkController(BaseNode):
 
     async def send_data(self, destination_node_id: int, data: List[int]):
         node_info = self.node_infos.find(destination_node_id)
-        class_id = data[0]
-        class_version = node_info.command_class_versions[class_id]
-
-        command = self.command_class_serializer.from_bytes(data, class_version)
+        class_versions = {int(class_id): version for class_id, version in node_info.command_class_versions.items()}
+        command = self.command_class_serializer.from_bytes(data, class_versions)
 
         self.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
             'classId': command.get_meta('class_id'),

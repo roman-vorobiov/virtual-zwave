@@ -8,7 +8,8 @@ from ..schema import (
     ListField,
     LengthOfField,
     CopyOfField,
-    MaskedField
+    MaskedField,
+    ObjectField
 )
 
 import pytest
@@ -98,6 +99,11 @@ def test_composite_field(factory):
         ]),
         IntField(name="c")
     ]
+
+
+def test_object_field(factory):
+    schema = factory.create_schema("", [{'name': "hello", 'type': 'Object'}])
+    assert schema.fields == [ObjectField(name="hello")]
 
 
 def test_multiple_fields(factory):

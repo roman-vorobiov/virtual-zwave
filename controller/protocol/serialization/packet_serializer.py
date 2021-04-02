@@ -1,8 +1,8 @@
 from ..packet import Packet, make_packet
 from .schema import Schema
 from .schema_builder import SchemaBuilder
-from .object_from_bytes_converter import ObjectFromBytesConverter
-from .object_to_bytes_converter import ObjectToBytesConverter
+from .object_from_bytes_converter import PacketFromBytesConverter
+from .object_to_bytes_converter import PacketToBytesConverter
 from .exceptions import SerializationError
 
 from typing import Dict, List
@@ -30,7 +30,7 @@ class PacketSerializer:
         packet_id = packet[0]
 
         if (schema := self.schemas_by_id.get(packet_id)) is not None:
-            packet = ObjectFromBytesConverter().create_object(schema, packet)
+            packet = PacketFromBytesConverter(self).create_object(schema, packet)
             packet.set_meta('name', schema.name)
             return packet
 
@@ -40,6 +40,6 @@ class PacketSerializer:
         packet_name = packet.get_meta('name')
 
         if (schema := self.schemas_by_name.get(packet_name)) is not None:
-            return ObjectToBytesConverter().serialize_object(schema, packet)
+            return PacketToBytesConverter(self).serialize_object(schema, packet)
 
         raise SerializationError(f"Unknown packet '{packet_name}'")

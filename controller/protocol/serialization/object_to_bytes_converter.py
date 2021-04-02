@@ -7,16 +7,24 @@ from .schema import (
     ListField,
     LengthOfField,
     CopyOfField,
-    MaskedField
+    MaskedField,
+    ObjectField
 )
 
 from tools import Object, Visitor, visit
 
 import pampy
-from typing import List, Union, Any
+from typing import TYPE_CHECKING, List, Union, Any
+
+if TYPE_CHECKING:
+    from .packet_serializer import PacketSerializer
+    from .command_class_serializer import CommandClassSerializer
 
 
 class ObjectToBytesConverter(Visitor):
+    def __init__(self, serializer: Union['PacketSerializer', 'CommandClassSerializer']):
+        self.serializer = serializer
+
     def serialize_object(self, schema: Schema, obj: Object) -> List[int]:
         return list(self.collect_bytes(schema, obj))
 
@@ -68,9 +76,22 @@ class ObjectToBytesConverter(Visitor):
         if (subfield := getattr(obj, field.name)) is not None:
             yield from self.collect_bytes(field, subfield)
 
+    @visit(ObjectField)
+    def visit_object_field(self, field: ObjectField, obj: Object):
+        subfield = getattr(obj, field.name)
+        yield from self.serializer.to_bytes(subfield)
+
     def get_field_length(self, field: Any):
         return pampy.match(field,
                            Union[list, str], lambda f: len(f),
                            Object, lambda f: sum(self.get_field_length(subfield) for subfield in f.get_data().values()),
                            None, 0,
                            default=1)
+
+
+class PacketToBytesConverter(ObjectToBytesConverter):
+    pass
+
+
+class CommandClassToBytesConverter(ObjectToBytesConverter):
+    pass

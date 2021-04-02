@@ -7,7 +7,8 @@ from .schema import (
     ListField,
     LengthOfField,
     CopyOfField,
-    MaskedField
+    MaskedField,
+    ObjectField,
 )
 from .exceptions import SerializationError
 
@@ -58,7 +59,8 @@ class SchemaBuilder(Visitor):
                 type_str,
                 'str', lambda _: StringField(name=field['name']),
                 'bool', lambda _: BoolField(name=field['name']),
-                'int', lambda _: IntField(name=field['name'], size=field.get('size', 1))
+                'int', lambda _: IntField(name=field['name'], size=field.get('size', 1)),
+                'Object', lambda _: ObjectField(name=field['name'])
             )
 
         raise SerializationError(f"Invalid schema field: {field}")

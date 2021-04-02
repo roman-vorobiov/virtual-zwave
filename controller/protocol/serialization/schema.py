@@ -55,5 +55,10 @@ class MaskedField(Field):
 
 
 @dataclass
+class ObjectField(NamedField):
+    pass
+
+
+@dataclass
 class Schema(NamedField):
     fields: List[Field]
