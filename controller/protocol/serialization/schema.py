@@ -55,5 +55,5 @@ class MaskedField(Field):
 
 
 @dataclass
-class PacketSchema(NamedField):
+class Schema(NamedField):
     fields: List[Field]

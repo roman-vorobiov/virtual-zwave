@@ -1,6 +1,6 @@
-from ..schema_builder import PacketSchemaBuilder
+from ..schema_builder import SchemaBuilder
 from ..schema import (
-    PacketSchema,
+    Schema,
     ConstField,
     IntField,
     BoolField,
@@ -16,7 +16,7 @@ import pytest
 
 @pytest.fixture
 def factory():
-    yield PacketSchemaBuilder()
+    yield SchemaBuilder()
 
 
 def test_const_field(factory):
@@ -92,7 +92,7 @@ def test_composite_field(factory):
     ])
     assert schema.fields == [
         IntField(name="a"),
-        PacketSchema(name="b", fields=[
+        Schema(name="b", fields=[
             IntField(name="b1"),
             ListField(name="b2")
         ]),

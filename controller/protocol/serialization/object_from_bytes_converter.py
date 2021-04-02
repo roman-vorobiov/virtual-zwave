@@ -1,6 +1,5 @@
-from ..packet import Packet
 from .schema import (
-    PacketSchema,
+    Schema,
     ConstField,
     IntField,
     BoolField,
@@ -17,25 +16,20 @@ import pampy
 from typing import List, Dict, Optional, Union
 
 
-class PacketFromBytesConverter(Visitor):
+class ObjectFromBytesConverter(Visitor):
     def __init__(self):
-        self.schema: Optional[PacketSchema] = None
+        self.schema: Optional[Schema] = None
         self.data: List[int] = []
         self.idx = 0
         self.field_lengths: Dict[str, int] = {}
 
-    def reset(self, schema: PacketSchema, data: List[int]):
+    def reset(self, schema: Schema, data: List[int]):
         self.schema = schema
         self.data = data
         self.idx = 0
         self.field_lengths = {}
 
-    def create_packet(self, schema: PacketSchema, data: List[int]) -> Packet:
-        packet = self.create_object(schema, data)
-        packet.set_meta('name', self.schema.name)
-        return packet
-
-    def create_object(self, schema: PacketSchema, data: List[int]) -> Object:
+    def create_object(self, schema: Schema, data: List[int]) -> Object:
         self.reset(schema, data)
         return Object(dict(self.collect_fields()))
 
@@ -92,16 +86,16 @@ class PacketFromBytesConverter(Visitor):
         self.data[self.idx] = value
         self.idx += 1
 
-    @visit(PacketSchema)
-    def visit_composite_field(self, field: PacketSchema):
+    @visit(Schema)
+    def visit_composite_field(self, field: Schema):
         begin = self.idx
         end = self.idx + self.get_field_length(field)
         if begin != end:
-            converter = PacketFromBytesConverter()
+            converter = ObjectFromBytesConverter()
             yield field.name, converter.create_object(field, self.data[begin:end])
             self.idx += converter.idx
 
-    def get_field_length(self, field: Union[ListField, StringField, PacketSchema]):
+    def get_field_length(self, field: Union[ListField, StringField, Schema]):
         # Size of the field is specified by value of another field
         if (length := self.field_lengths.get(field.name)) is not None:
             return length

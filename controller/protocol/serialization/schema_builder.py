@@ -1,5 +1,5 @@
 from .schema import (
-    PacketSchema,
+    Schema,
     ConstField,
     IntField,
     BoolField,
@@ -17,9 +17,9 @@ from typing import Dict, Any
 import pampy
 
 
-class PacketSchemaBuilder(Visitor):
-    def create_schema(self, name: str, data: list) -> PacketSchema:
-        return PacketSchema(name, list(self.collect_fields(data)))
+class SchemaBuilder(Visitor):
+    def create_schema(self, name: str, data: list) -> Schema:
+        return Schema(name, list(self.collect_fields(data)))
 
     def collect_fields(self, data: list):
         for field in data:
