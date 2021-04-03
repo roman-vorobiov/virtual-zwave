@@ -1,4 +1,4 @@
-from network.application import Node, Channel
+from network.application import Node, make_channel
 
 from common import make_command
 
@@ -20,9 +20,7 @@ def node():
 
 @pytest.fixture
 def channel(node):
-    channel = Channel(node, generic=0x10, specific=0x01)
-    node.add_channel(channel)
-    yield channel
+    yield make_channel(node, generic=0x10, specific=0x01)
 
 
 @pytest.fixture(autouse=True)

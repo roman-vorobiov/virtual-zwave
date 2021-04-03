@@ -67,15 +67,15 @@ def test_send_nif(rx, tx, tx_controller, node):
     })
 
 
-def test_create_node(rx, tx, tx_controller, nodes):
+def test_create_node(rx, tx, tx_controller, nodes, node_info):
+    assert len(nodes.all()) == 0
+
+    rx('CREATE_NODE', node_info)
     assert len(nodes.all()) == 1
-
-    rx('CREATE_NODE', {})
-    tx('NODE_UPDATED', humps.camelize(nodes.all()[1]))
-    assert len(nodes.all()) == 2
+    tx('NODE_UPDATED', humps.camelize(nodes.all()[0]))
 
 
-def test_reset(rx, tx, tx_controller, nodes):
+def test_reset(rx, tx, tx_controller, nodes, node):
     assert len(nodes.all()) == 1
 
     rx('RESET', {})

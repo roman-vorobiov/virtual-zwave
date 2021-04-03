@@ -42,3 +42,9 @@ class Channel:
         else:
             multi_channel_cc = self.node.channels[0].command_classes[0x60]
             multi_channel_cc.send_encapsulated_command(destination_id, self.endpoint, command)
+
+
+def make_channel(node: 'Node', generic: int, specific: int) -> Channel:
+    channel = Channel(node, generic, specific)
+    node.add_channel(channel)
+    return channel

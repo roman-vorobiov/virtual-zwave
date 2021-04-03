@@ -1,5 +1,4 @@
-from network.application import Node, NodeFactory, Channel
-from network.application.command_classes import command_class_factory
+from network.application import Node, NodeFactory, NodeBuilder
 
 from network.model import NodeRepository
 
@@ -7,54 +6,6 @@ from network.client import Client
 
 import humps
 from typing import List
-
-
-def make_dummy_node(node_factory: NodeFactory) -> Node:
-    node = node_factory.create_node(basic=0x04)
-
-    channel = Channel(node, generic=0x10, specific=0x01)
-    node.add_channel(channel)
-
-    # COMMAND_CLASS_MANUFACTURER_SPECIFIC
-    command_class_factory.create_command_class(
-        0x72,
-        1,
-        channel,
-        manufacturer_id=1,
-        product_type_id=2,
-        product_id=3
-    )
-
-    # COMMAND_CLASS_ZWAVEPLUS_INFO
-    command_class_factory.create_command_class(
-        0x5E,
-        2,
-        channel,
-        zwave_plus_version=2,
-        role_type=0x05,
-        node_type=0x00,
-        installer_icon_type=0x0700,
-        user_icon_type=0x0701
-    )
-
-    # COMMAND_CLASS_VERSION
-    command_class_factory.create_command_class(
-        0x86,
-        1,
-        channel,
-        protocol_library_type=0x06,
-        protocol_version=(1, 0),
-        application_version=(1, 0)
-    )
-
-    # COMMAND_CLASS_BASIC
-    command_class_factory.create_command_class(
-        0x20,
-        1,
-        channel
-    )
-
-    return node
 
 
 class NodeNotFoundException(Exception):
@@ -69,7 +20,7 @@ class NodeManager:
 
     def __init__(self, client: Client, node_factory: NodeFactory, nodes: NodeRepository):
         self.client = client
-        self.node_factory = node_factory
+        self.node_builder = NodeBuilder(node_factory)
         self.nodes = nodes
 
     def reset(self):
@@ -87,8 +38,8 @@ class NodeManager:
 
         raise NodeNotFoundException(home_id, node_id)
 
-    def generate_new_node(self) -> Node:
-        node = make_dummy_node(self.node_factory)
+    def generate_new_node(self, node_info: dict) -> Node:
+        node = self.node_builder.from_json(node_info)
         self.nodes.add(node)
         self.put_node_in_default_home(node)
         return node

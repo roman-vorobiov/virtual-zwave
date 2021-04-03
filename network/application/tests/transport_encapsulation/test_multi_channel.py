@@ -1,4 +1,4 @@
-from network.application import Node, Channel
+from network.application import Node, Channel, make_channel
 
 from network.application.command_classes.application import Basic1
 from network.application.command_classes.management import ManufacturerSpecific1
@@ -47,12 +47,6 @@ def rx(node, command_class):
 def check_communication(node):
     yield
     node.send_command.assert_not_called()
-
-
-def make_channel(node: Node, generic: int, specific: int):
-    channel = Channel(node, generic=generic, specific=specific)
-    node.add_channel(channel)
-    return channel
 
 
 @pytest.fixture

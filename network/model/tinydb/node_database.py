@@ -1,7 +1,6 @@
 from ..node_repository import NodeRepository
 
-from network.application import Node, NodeFactory, Channel
-from network.application.command_classes import command_class_factory
+from network.application import Node, NodeFactory, make_channel, make_command_class
 
 import uuid
 from tinydb import TinyDB, Query
@@ -60,12 +59,11 @@ class NodeDatabase(NodeRepository):
         node.set_suc_node_id(record['suc_node_id'])
 
         for channel_record in record['channels']:
-            channel = Channel(node, channel_record['generic'], channel_record['specific'])
-            node.add_channel(channel)
+            channel = make_channel(node, channel_record['generic'], channel_record['specific'])
 
             for class_id, args in channel_record['command_classes'].items():
                 version = args.pop('class_version')
-                command_class_factory.create_command_class(int(class_id), version, channel, **args)
+                make_command_class(int(class_id), version, channel, **args)
                 args['class_version'] = version
 
         return node
