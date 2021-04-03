@@ -42,6 +42,7 @@ class Core:
         self.requests_to_host_serializer = make_packet_serializer("commands/requests_to_host.yaml")
         self.responses_to_host_serializer = make_packet_serializer("commands/responses_to_host.yaml")
         self.command_class_serializer = make_command_class_serializer("command_classes/management.yaml",
+                                                                      "command_classes/transport_encapsulation.yaml",
                                                                       "command_classes/application.yaml")
 
         self.repository_provider = DatabaseProvider()

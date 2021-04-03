@@ -1,6 +1,6 @@
 from ..node_repository import NodeRepository
 
-from network.application import Node, NodeFactory
+from network.application import Node, NodeFactory, Channel
 from network.application.command_classes import command_class_factory
 
 import uuid
@@ -52,17 +52,21 @@ class NodeDatabase(NodeRepository):
         self.table.truncate()
 
     def from_record(self, record: dict) -> Node:
-        node = self.node_factory.create_node(record['basic'], record['generic'], record['specific'])
+        node = self.node_factory.create_node(record['basic'])
         node.id = record['id']
         node.repository = self
 
         node.add_to_network(record['home_id'], record['node_id'])
         node.set_suc_node_id(record['suc_node_id'])
 
-        for class_id, args in record['command_classes'].items():
-            version = args.pop('class_version')
-            command_class_factory.create_command_class(int(class_id), version, node, **args)
-            args['class_version'] = version
+        for channel_record in record['channels']:
+            channel = Channel(node, channel_record['generic'], channel_record['specific'])
+            node.add_channel(channel)
+
+            for class_id, args in channel_record['command_classes'].items():
+                version = args.pop('class_version')
+                command_class_factory.create_command_class(int(class_id), version, channel, **args)
+                args['class_version'] = version
 
         return node
 

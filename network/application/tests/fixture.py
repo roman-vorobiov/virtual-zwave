@@ -1,4 +1,4 @@
-from network.application.node import Node
+from network.application import Node, Channel
 
 from common import make_command
 
@@ -9,7 +9,7 @@ import pytest
 
 @pytest.fixture
 def node():
-    node = Node(Mock(), basic=0x04, generic=0x10, specific=0x01)
+    node = Node(Mock(), basic=0x04)
 
     node.send_command = Mock()
 
@@ -18,9 +18,16 @@ def node():
     yield node
 
 
+@pytest.fixture
+def channel(node):
+    channel = Channel(node, generic=0x10, specific=0x01)
+    node.add_channel(channel)
+    yield channel
+
+
 @pytest.fixture(autouse=True)
-def set_up_relations(node, command_class):
-    node.add_command_class(command_class)
+def set_up_relations(channel, command_class):
+    channel.add_command_class(command_class)
 
 
 @pytest.fixture

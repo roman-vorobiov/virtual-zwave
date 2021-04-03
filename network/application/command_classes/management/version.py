@@ -1,5 +1,5 @@
 from ..command_class import CommandClass, command_class
-from ...node import Node
+from ...channel import Channel
 
 from common import Command
 
@@ -16,12 +16,12 @@ MajorMinorPatch = Tuple[int, int, int]
 class Version1(CommandClass):
     def __init__(
         self,
-        node: Node,
+        channel: Channel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor
     ):
-        super().__init__(node)
+        super().__init__(channel)
         self.protocol_library_type = protocol_library_type
         self.protocol_version = protocol_version
         self.application_version = application_version
@@ -46,8 +46,9 @@ class Version1(CommandClass):
         self.send_command(destination_id, command)
 
     def get_command_class_version(self, class_id: int) -> Optional[int]:
-        if (cc := self.node.command_classes.get(class_id)) is not None:
-            return cc.class_version
+        for channel in self.node.channels:
+            if (cc := channel.command_classes.get(class_id)) is not None:
+                return cc.class_version
 
     def prepare_version_report(self):
         return self.make_command('VERSION_REPORT',
@@ -64,14 +65,14 @@ class Version1(CommandClass):
 class Version2(Version1):
     def __init__(
         self,
-        node: Node,
+        channel: Channel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor,
         hardware_version: int,
         firmware_versions: List[MajorMinor]
     ):
-        super().__init__(node, protocol_library_type, protocol_version, application_version)
+        super().__init__(channel, protocol_library_type, protocol_version, application_version)
         self.hardware_version = hardware_version
         self.firmware_versions = firmware_versions
 
@@ -86,7 +87,7 @@ class Version2(Version1):
 class Version3(Version2):
     def __init__(
         self,
-        node: Node,
+        channel: Channel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor,
@@ -102,7 +103,7 @@ class Version3(Version2):
         application_api_version: Optional[MajorMinorPatch] = None,
         application_build_number: Optional[int] = None
     ):
-        super().__init__(node, protocol_library_type, protocol_version, application_version, hardware_version, firmware_versions)
+        super().__init__(channel, protocol_library_type, protocol_version, application_version, hardware_version, firmware_versions)
         self.sdk_version = sdk_version
         self.zwave_application_framework_api_version = zwave_application_framework_api_version
         self.zwave_application_framework_build_number = zwave_application_framework_build_number

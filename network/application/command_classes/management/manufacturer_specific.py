@@ -1,21 +1,21 @@
 from ..command_class import CommandClass, command_class
-from ...node import Node
+from ...channel import Channel
 
 from common import Command
 
 from tools import visit
 
 
-@command_class('COMMAND_CLASS_MANUFACTURER_SPECIFIC')
-class ManufacturerSpecific(CommandClass):
+@command_class('COMMAND_CLASS_MANUFACTURER_SPECIFIC', version=1)
+class ManufacturerSpecific1(CommandClass):
     def __init__(
         self,
-        node: Node,
+        channel: Channel,
         manufacturer_id: int,
         product_type_id: int,
         product_id: int
     ):
-        super().__init__(node)
+        super().__init__(channel)
 
         self.manufacturer_id = manufacturer_id
         self.product_type_id = product_type_id

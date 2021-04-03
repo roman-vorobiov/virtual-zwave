@@ -1,23 +1,23 @@
 from ..command_class import CommandClass, command_class
-from ...node import Node
+from ...channel import Channel
 
 from common import Command
 
 from tools import visit
 
 
-@command_class('COMMAND_CLASS_ZWAVEPLUS_INFO')
-class ZWavePlusInfo(CommandClass):
+@command_class('COMMAND_CLASS_ZWAVEPLUS_INFO', version=2)
+class ZWavePlusInfo2(CommandClass):
     def __init__(
         self,
-        node: Node,
+        channel: Channel,
         zwave_plus_version: int,
         role_type: int,
         node_type: int,
         installer_icon_type: int,
         user_icon_type: int
     ):
-        super().__init__(node)
+        super().__init__(channel)
 
         self.zwave_plus_version = zwave_plus_version
         self.role_type = role_type

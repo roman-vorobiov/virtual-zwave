@@ -41,6 +41,7 @@ def responses_to_host_serializer():
 def command_class_serializer():
     schema_files = [
         "controller/protocol/command_classes/management.yaml",
+        "controller/protocol/command_classes/transport_encapsulation.yaml",
         "controller/protocol/command_classes/application.yaml"
     ]
 

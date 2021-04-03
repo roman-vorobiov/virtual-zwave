@@ -1,4 +1,4 @@
-from network.application import Node, NodeFactory
+from network.application import Node, NodeFactory, Channel
 from network.application.command_classes import command_class_factory
 
 from network.model import NodeRepository
@@ -10,27 +10,26 @@ from typing import List
 
 
 def make_dummy_node(node_factory: NodeFactory) -> Node:
-    node = node_factory.create_node(
-        basic=0x04,
-        generic=0x10,
-        specific=0x01
-    )
+    node = node_factory.create_node(basic=0x04)
 
-    # COMMAND_CLASS_ZWAVEPLUS_INFO
+    channel = Channel(node, generic=0x10, specific=0x01)
+    node.add_channel(channel)
+
+    # COMMAND_CLASS_MANUFACTURER_SPECIFIC
     command_class_factory.create_command_class(
         0x72,
         1,
-        node,
+        channel,
         manufacturer_id=1,
         product_type_id=2,
         product_id=3
     )
 
-    # COMMAND_CLASS_MANUFACTURER_SPECIFIC
+    # COMMAND_CLASS_ZWAVEPLUS_INFO
     command_class_factory.create_command_class(
         0x5E,
-        1,
-        node,
+        2,
+        channel,
         zwave_plus_version=2,
         role_type=0x05,
         node_type=0x00,
@@ -42,7 +41,7 @@ def make_dummy_node(node_factory: NodeFactory) -> Node:
     command_class_factory.create_command_class(
         0x86,
         1,
-        node,
+        channel,
         protocol_library_type=0x06,
         protocol_version=(1, 0),
         application_version=(1, 0)
@@ -52,7 +51,7 @@ def make_dummy_node(node_factory: NodeFactory) -> Node:
     command_class_factory.create_command_class(
         0x20,
         1,
-        node
+        channel
     )
 
     return node

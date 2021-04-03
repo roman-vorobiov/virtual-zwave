@@ -10,22 +10,26 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from ..node import Node
+    from ..node import Channel
 
 
-@serializable(excluded_fields=['node'], class_fields=['class_version'])
+@serializable(excluded_fields=['channel'], class_fields=['class_version'])
 class CommandClass(CommandVisitor):
     class_id: int
     class_version: int
 
-    def __init__(self, node: 'Node'):
-        self.node = node
+    def __init__(self, channel: 'Channel'):
+        self.channel = channel
+
+    @property
+    def node(self):
+        return self.channel.node
 
     def handle_command(self, source_id: int, command: Command):
         return self.visit(command, source_id=source_id)
 
     def send_command(self, destination_id: int, command: Command):
-        self.node.send_command(destination_id, command)
+        self.channel.send_command(destination_id, command)
 
     def visit_default(self, command: Command, *args, **kwargs):
         log_warning(f"Unhandled command: {command.get_meta('name')}")

@@ -1,15 +1,15 @@
 from ..command_class import CommandClass, command_class
-from ...node import Node
+from ...channel import Channel
 
 from common import Command
 
 from tools import visit
 
 
-@command_class('COMMAND_CLASS_BASIC')
-class Basic(CommandClass):
-    def __init__(self, node: Node, value=0xFE):
-        super().__init__(node)
+@command_class('COMMAND_CLASS_BASIC', version=1)
+class Basic1(CommandClass):
+    def __init__(self, channel: Channel, value=0xFE):
+        super().__init__(channel)
 
         self.value = value
 

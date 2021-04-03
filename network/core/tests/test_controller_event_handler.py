@@ -109,7 +109,7 @@ def test_request_node_info(rx, tx, included_node):
             'generic': 0x10,
             'specific': 0x01,
             'commandClassIds': [0x72, 0x5E, 0x86],
-            'commandClassVersions': {0x72: 1, 0x5E: 1, 0x86: 1, 0x20: 1}
+            'commandClassVersions': {0x72: 1, 0x5E: 2, 0x86: 1, 0x20: 1}
         }
     })
 

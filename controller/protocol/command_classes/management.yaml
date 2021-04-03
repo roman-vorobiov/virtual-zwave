@@ -113,7 +113,7 @@ COMMAND_CLASS_VERSION_3:
 
 #======================================================================================================================#
 
-COMMAND_CLASS_ZWAVEPLUS_INFO_1:
+COMMAND_CLASS_ZWAVEPLUS_INFO_2:
   ZWAVEPLUS_INFO_GET:
     - 0x5E
     - 0x01

@@ -1,5 +1,7 @@
 from ..fixture import *
 
+from network.application import make_channel, make_command_class
+
 from network.application.command_classes.management import Version1, Version2, Version3
 
 from tools import make_object
@@ -7,8 +9,8 @@ from tools import make_object
 
 class TestVersion1:
     @pytest.fixture(autouse=True)
-    def command_class(self, node):
-        yield Version1(node,
+    def command_class(self, channel):
+        yield Version1(channel,
                        protocol_library_type=0x06,
                        protocol_version=(1, 2),
                        application_version=(3, 4))
@@ -28,11 +30,18 @@ class TestVersion1:
         rx('VERSION_COMMAND_CLASS_GET', class_id=0x84)
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x84, version=0)
 
+    def test_version_command_class_get_other_channel(self, rx, tx, node):
+        channel = make_channel(node, generic=1, specific=2)
+        make_command_class(0x20, 1, channel)
+
+        rx('VERSION_COMMAND_CLASS_GET', class_id=0x20)
+        tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x20, version=1)
+
 
 class TestVersion2:
     @pytest.fixture(autouse=True)
-    def command_class(self, node):
-        yield Version2(node,
+    def command_class(self, channel):
+        yield Version2(channel,
                        protocol_library_type=0x06,
                        protocol_version=(1, 2),
                        application_version=(3, 4),
@@ -54,8 +63,8 @@ class TestVersion2:
 
 class TestVersion3NoSoftware:
     @pytest.fixture(autouse=True)
-    def command_class(self, node):
-        yield Version3(node,
+    def command_class(self, channel):
+        yield Version3(channel,
                        protocol_library_type=0x06,
                        protocol_version=(1, 2),
                        application_version=(3, 4),
@@ -75,8 +84,8 @@ class TestVersion3NoSoftware:
 
 class TestVersion3WithSoftware:
     @pytest.fixture(autouse=True)
-    def command_class(self, node):
-        yield Version3(node,
+    def command_class(self, channel):
+        yield Version3(channel,
                        protocol_library_type=0x06,
                        protocol_version=(1, 2),
                        application_version=(3, 4),

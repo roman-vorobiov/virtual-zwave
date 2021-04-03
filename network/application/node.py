@@ -1,15 +1,16 @@
 from .command_classes import CommandClass
+from .channel import Channel
 
 from common import Command, RemoteInterface, BaseNode, Model
 
-from tools import Object, make_object, serializable, log_warning
+from tools import Object, make_object, serializable
 
-from typing import Dict, Optional
+from typing import List, Optional
 
 
 @serializable(excluded_fields=['remote_interface', 'repository'])
 class Node(Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, basic: int, generic: int, specific: int):
+    def __init__(self, controller: RemoteInterface, basic: int):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
@@ -18,13 +19,11 @@ class Node(Model, BaseNode):
         self.suc_node_id: Optional[int] = None
 
         self.basic = basic
-        self.generic = generic
-        self.specific = specific
 
-        self.command_classes: Dict[int, CommandClass] = {}
+        self.channels: List[Channel] = []
 
-    def add_command_class(self, cc: CommandClass):
-        self.command_classes[cc.class_id] = cc
+    def add_channel(self, channel: Channel):
+        self.channels.append(channel)
 
     def add_to_network(self, home_id: int, node_id: int):
         self.node_id = node_id
@@ -35,23 +34,27 @@ class Node(Model, BaseNode):
         self.suc_node_id = node_id
 
     def handle_command(self, source_id: int, command: Command):
-        if (command_class := self.command_classes.get(command.get_meta('class_id'))) is not None:
-            command_class.handle_command(source_id, command)
-        else:
-            log_warning(f"Node does not support command class {command.get_meta('class_id')}")
+        self.channels[0].handle_command(source_id, command)
 
     def get_node_info(self) -> Object:
-        hidden_classes = [0x20]
+        command_classes = self.collect_command_classes()
 
         return make_object(
             basic=self.basic,
-            generic=self.generic,
-            specific=self.specific,
-            command_class_ids=[cc_id for cc_id in self.command_classes.keys() if cc_id not in hidden_classes],
+            generic=self.channels[0].generic,
+            specific=self.channels[0].specific,
+            command_class_ids=[cc.class_id for cc in command_classes if cc.class_id != 0x20],
 
             # Note: needed on the controller side to correctly deserialize commands
-            command_class_versions={class_id: cc.class_version for class_id, cc in self.command_classes.items()}
+            command_class_versions={cc.class_id: cc.class_version for cc in command_classes}
         )
+
+    def collect_command_classes(self) -> List[CommandClass]:
+        all_command_classes = (command_class for channel in self.channels
+                               for command_class in channel.command_classes.values())
+
+        # set does not preserve order, but dict does
+        return list(dict.fromkeys(all_command_classes))
 
     def send_command(self, destination_id: int, command: Command):
         self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
