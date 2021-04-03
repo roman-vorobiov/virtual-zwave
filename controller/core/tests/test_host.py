@@ -1,4 +1,4 @@
-from .fixtures import *
+from .fixtures.components import *
 
 from controller.protocol.frames.data import FrameType
 

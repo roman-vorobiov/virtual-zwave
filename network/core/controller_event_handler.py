@@ -20,6 +20,10 @@ class ControllerEventHandler(RemoteMessageVisitor):
         except NodeNotFoundException as e:
             log_error(f"Node not found: home ID = {e.home_id}, node ID = {e.node_id}")
 
+    @visit('ACK')
+    def handle_ack(self, message: dict):
+        pass
+
     @visit('ASSIGN_SUC_RETURN_ROUTE')
     def handle_assign_suc_return_route(self, message: dict):
         home_id = message['destination']['homeId']

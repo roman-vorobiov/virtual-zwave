@@ -1,14 +1,15 @@
-from .fixtures import *
+from .fixtures.components import *
+from .fixtures.communication import *
 
 from controller.core.command_handler import CommandHandler
 
-from controller.protocol import make_packet
 from controller.protocol.commands.send_data import TransmitStatus
 from controller.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStatus
 from controller.protocol.commands.remove_node_from_network import RemoveNodeMode, RemoveNodeStatus
 
 from tools import make_object
 
+import asyncio
 import pytest
 
 
@@ -33,43 +34,9 @@ def included_node(node, node_info_repository):
 
 
 @pytest.fixture
-def rx(command_handler, requests_from_host_serializer):
-    def inner(name: str, **kwargs):
-        cmd = make_packet(name, **kwargs)
-        command_handler.process_packet(requests_from_host_serializer.to_bytes(cmd))
-
-    yield inner
-
-
-@pytest.fixture
-def tx_req(request_manager):
-    async def inner(name: str, **kwargs):
-        await request_manager.send_request.wait_until_called(timeout=1)
-        request_manager.send_request.assert_called_first_with(name, **kwargs)
-        request_manager.send_request.pop_first_call()
-
-    yield inner
-
-
-@pytest.fixture
-def tx_res(request_manager, command_handler, responses_to_host_serializer):
-    def inner(name: str, **kwargs):
-        request_manager.send_response.assert_called_first_with(name, **kwargs)
-        request_manager.send_response.pop_first_call()
-
-    yield inner
-
-
-@pytest.fixture
-def tx_network(network):
-    def inner(message_type: str, message):
-        assert network.free_buffer() == [{
-            'messageType': message_type,
-            'message': {
-                'source': {'homeId': 0xC0000000, 'nodeId': 1},
-                **message
-            }
-        }]
+def ack(network_controller):
+    async def inner(node_id: int):
+        network_controller.on_ack(node_id=node_id)
 
     yield inner
 
@@ -235,10 +202,29 @@ def test_request_node_info(rx, tx_req, tx_res, tx_network):
 
 
 @pytest.mark.asyncio
-async def test_send_data(rx, tx_req, tx_res, tx_network, included_node):
+async def test_send_data(rx, tx_req, tx_res, tx_network, ack, included_node):
     rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
     tx_res('SEND_DATA', result=True)
+    asyncio.create_task(ack(node_id=2))
     await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.OK)
+    tx_network('APPLICATION_COMMAND', {
+        'destination': {
+            'homeId': 0xC0000000,
+            'nodeId': 2
+        },
+        'classId': 0x20,
+        'command': 'BASIC_SET',
+        'args': {
+            'value': 0x10
+        }
+    })
+
+
+@pytest.mark.asyncio
+async def test_send_data_unreachable(rx, tx_req, tx_res, tx_network, included_node):
+    rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
+    tx_res('SEND_DATA', result=True)
+    await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.NO_ACK)
     tx_network('APPLICATION_COMMAND', {
         'destination': {
             'homeId': 0xC0000000,

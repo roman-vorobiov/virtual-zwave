@@ -1,4 +1,4 @@
-from .fixture import *
+from .fixtures import *
 
 from network.core.command_handler import CommandHandler
 
@@ -8,19 +8,12 @@ import json
 
 
 @pytest.fixture
-def included_node(node, node_manager, client):
-    node_manager.add_to_network(node, 0xC0000000, 2)
-    client.send_message.reset_mock()
-    yield node
-
-
-@pytest.fixture
 def command_handler(client, node_manager):
     yield CommandHandler(client, node_manager)
 
 
 @pytest.fixture
-def rx(command_handler):
+def rx_client(command_handler):
     def inner(message_type: str, message: dict):
         command_handler.handle_command(json.dumps({
             'messageType': message_type,
@@ -30,35 +23,15 @@ def rx(command_handler):
     yield inner
 
 
-@pytest.fixture
-def tx(client):
-    def inner(message_type: str, message: dict):
-        client.send_message.assert_called_first_with(message_type, message)
-        client.send_message.pop_first_call()
-
-    return inner
-
-
-@pytest.fixture
-def tx_controller(controller):
-    def inner(message_type: str, message: dict):
-        assert controller.free_buffer() == [{
-            'messageType': message_type,
-            'message': message
-        }]
-
-    yield inner
-
-
-def test_get_nodes(rx, tx, included_node):
-    rx('GET_NODES', {})
-    tx('NODES_LIST', {
+def test_get_nodes(rx_client, tx_client, included_node):
+    rx_client('GET_NODES', {})
+    tx_client('NODES_LIST', {
         'nodes': [humps.camelize(included_node.to_dict())]
     })
 
 
-def test_send_nif(rx, tx, tx_controller, node):
-    rx('SEND_NIF', {
+def test_send_nif(rx_client, tx_client, tx_controller, node):
+    rx_client('SEND_NIF', {
         'id': node.id
     })
     tx_controller('APPLICATION_NODE_INFORMATION', {
@@ -67,21 +40,19 @@ def test_send_nif(rx, tx, tx_controller, node):
     })
 
 
-def test_create_node(rx, tx, tx_controller, nodes, node_info):
+def test_create_node(rx_client, tx_client, tx_controller, nodes, node_info):
     assert len(nodes.all()) == 0
 
-    rx('CREATE_NODE', node_info)
+    rx_client('CREATE_NODE', node_info)
     assert len(nodes.all()) == 1
-    tx('NODE_UPDATED', humps.camelize(nodes.all()[0]))
+    tx_client('NODE_UPDATED', humps.camelize(nodes.all()[0]))
 
 
-def test_reset(rx, tx, tx_controller, nodes, node):
+def test_reset(rx_client, tx_client, tx_controller, nodes, node):
     assert len(nodes.all()) == 1
 
-    rx('RESET', {})
-    tx('NODES_LIST', {
+    rx_client('RESET', {})
+    tx_client('NODES_LIST', {
         'nodes': []
     })
     assert len(nodes.all()) == 0
-
-

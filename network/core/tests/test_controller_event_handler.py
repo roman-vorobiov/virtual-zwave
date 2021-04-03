@@ -1,19 +1,12 @@
-from .fixture import *
+from .fixtures import *
 
 from network.core.controller_event_handler import ControllerEventHandler
 
 from common import make_command
 
 import humps
-import pytest
 import json
-
-
-@pytest.fixture
-def included_node(node, node_manager, client):
-    node_manager.add_to_network(node, 0xC0000000, 2)
-    client.send_message.reset_mock()
-    yield node
+import pytest
 
 
 @pytest.fixture
@@ -22,7 +15,7 @@ def controller_event_handler(node_manager):
 
 
 @pytest.fixture
-def rx(controller_event_handler):
+def rx_controller(controller_event_handler):
     def inner(message_type: str, message: dict):
         controller_event_handler.handle_message(json.dumps({
             'messageType': message_type,
@@ -36,29 +29,6 @@ def rx(controller_event_handler):
 
 
 @pytest.fixture
-def tx(controller):
-    def inner(message_type: str, message: dict):
-        assert controller.free_buffer() == [{
-            'messageType': message_type,
-            'message': {
-                **message,
-                'destination': {'homeId': 0xC0000000, 'nodeId': 1}
-            }
-        }]
-
-    yield inner
-
-
-@pytest.fixture
-def tx_client(client):
-    def inner(message_type: str, message: dict):
-        client.send_message.assert_called_first_with(message_type, message)
-        client.send_message.pop_first_call()
-
-    return inner
-
-
-@pytest.fixture
 def tx_client_node_updated_broadcast(nodes, tx_client):
     def inner(home_id: int, node_id: int):
         tx_client('NODE_UPDATED', humps.camelize(nodes.find(home_id, node_id).to_dict()))
@@ -66,10 +36,10 @@ def tx_client_node_updated_broadcast(nodes, tx_client):
     return inner
 
 
-def test_add_to_network(rx, tx, tx_client_node_updated_broadcast, nodes, node):
+def test_add_to_network(rx_controller, tx_controller, tx_client_node_updated_broadcast, nodes, node):
     assert nodes.find(0, 1) == node
 
-    rx('ADD_TO_NETWORK', {
+    rx_controller('ADD_TO_NETWORK', {
         'destination': {'homeId': 0, 'nodeId': 1},
         'newNodeId': 2
     })
@@ -77,20 +47,20 @@ def test_add_to_network(rx, tx, tx_client_node_updated_broadcast, nodes, node):
     assert nodes.find(0xC0000000, 2) == node
 
 
-def test_remove_from_network(rx, tx, tx_client_node_updated_broadcast, nodes, included_node):
+def test_remove_from_network(rx_controller, tx_controller, tx_client_node_updated_broadcast, nodes, included_node):
     assert nodes.find(0xC0000000, 2) == included_node
 
-    rx('REMOVE_FROM_NETWORK', {
+    rx_controller('REMOVE_FROM_NETWORK', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
     tx_client_node_updated_broadcast(0, 1)
     assert nodes.find(0, 1) == included_node
 
 
-def test_assign_suc_return_route(rx, tx, tx_client_node_updated_broadcast, nodes, included_node):
+def test_assign_suc_return_route(rx_controller, tx_controller, tx_client_node_updated_broadcast, nodes, included_node):
     assert nodes.find(0xC0000000, 2).suc_node_id is None
 
-    rx('ASSIGN_SUC_RETURN_ROUTE', {
+    rx_controller('ASSIGN_SUC_RETURN_ROUTE', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
         'sucNodeId': 1
     })
@@ -98,12 +68,13 @@ def test_assign_suc_return_route(rx, tx, tx_client_node_updated_broadcast, nodes
     assert nodes.find(0xC0000000, 2).suc_node_id == 1
 
 
-def test_request_node_info(rx, tx, included_node):
-    rx('REQUEST_NODE_INFO', {
+def test_request_node_info(rx_controller, tx_controller, included_node):
+    rx_controller('REQUEST_NODE_INFO', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
-    tx('APPLICATION_NODE_INFORMATION', {
+    tx_controller('APPLICATION_NODE_INFORMATION', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
+        'destination': {'homeId': 0xC0000000, 'nodeId': 1},
         'nodeInfo': {
             'basic': 0x04,
             'generic': 0x10,
@@ -114,8 +85,8 @@ def test_request_node_info(rx, tx, included_node):
     })
 
 
-def test_application_command(rx, tx, included_node):
-    rx('APPLICATION_COMMAND', {
+def test_application_command(rx_controller, tx_controller, included_node):
+    rx_controller('APPLICATION_COMMAND', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
         'classId': 0x20,
         'command': 'BASIC_SET',
@@ -126,9 +97,9 @@ def test_application_command(rx, tx, included_node):
     included_node.handle_command.assert_called_with(1, make_command(0x20, 'BASIC_SET', value=123))
 
 
-def test_add_node_started(rx, tx):
-    rx('ADD_NODE_STARTED', {})
+def test_add_node_started(rx_controller, tx_controller):
+    rx_controller('ADD_NODE_STARTED', {})
 
 
-def test_remove_node_started(rx, tx):
-    rx('REMOVE_NODE_STARTED', {})
+def test_remove_node_started(rx_controller, tx_controller):
+    rx_controller('REMOVE_NODE_STARTED', {})

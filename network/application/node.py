@@ -34,6 +34,7 @@ class Node(Model, BaseNode):
         self.suc_node_id = node_id
 
     def handle_command(self, source_id: int, command: Command):
+        self.send_message_in_current_network(source_id, 'ACK', {})
         self.channels[0].handle_command(source_id, command)
 
     def get_node_info(self) -> Object:

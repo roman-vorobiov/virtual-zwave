@@ -1,6 +1,7 @@
 from .request_manager import RequestManager
 from .node_adding_controller import NodeAddingController
 from .node_removing_controller import NodeRemovingController
+from .send_data_controller import SendDataController
 
 from controller.model import State, NodeInfoRepository
 
@@ -35,6 +36,7 @@ class NetworkController(BaseNode):
 
         self.node_adding_controller = NodeAddingController(self)
         self.node_removing_controller = NodeRemovingController(self)
+        self.send_data_controller = SendDataController(self)
 
         self.restore()
 
@@ -98,24 +100,23 @@ class NetworkController(BaseNode):
     def remove_node_from_network(self, mode: RemoveNodeMode):
         return self.node_removing_controller.remove_node_from_network(mode)
 
-    async def send_data(self, destination_node_id: int, data: List[int]):
+    def send_data(self, destination_node_id: int, data: List[int]):
         node_info = self.node_infos.find(destination_node_id)
         class_versions = {int(class_id): version for class_id, version in node_info.command_class_versions.items()}
         command = self.command_class_serializer.from_bytes(data, class_versions)
 
-        self.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
-            'classId': command.get_meta('class_id'),
-            'command': command.get_meta('name'),
-            'args': command.get_data()
-        })
+        return self.send_data_controller.send_data(destination_node_id, command)
 
-        yield TransmitStatus.OK
+    def on_ack(self, node_id: int):
+        self.send_data_controller.on_ack(node_id)
 
     def on_node_information_frame(self, home_id: int, node_id: int, node_info: Object):
         self.node_adding_controller.on_node_information_frame(home_id, node_id, node_info)
         self.node_removing_controller.on_node_information_frame(home_id, node_id, node_info)
 
     def on_application_command(self, node_id: int, command: Command):
+        self.send_message_in_current_network(node_id, 'ACK', {})
+
         data = self.command_class_serializer.to_bytes(command)
         self.request_manager.send_request('APPLICATION_COMMAND_HANDLER',
                                           rx_status=0,

@@ -1,4 +1,4 @@
-from .fixtures import *
+from .fixtures.components import *
 
 from controller.core.frame_handler import FrameHandler
 

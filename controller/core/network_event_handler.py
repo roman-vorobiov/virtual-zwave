@@ -19,6 +19,10 @@ class NetworkEventHandler(RemoteMessageVisitor):
         message = json.loads(data)
         self.visit(message)
 
+    @visit('ACK')
+    def handle_ack(self, message: dict):
+        self.network_controller.on_ack(message['source']['nodeId'])
+
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
         command = make_command(message['classId'], message['command'], message['classVersion'], **message['args'])
