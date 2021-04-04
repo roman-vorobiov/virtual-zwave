@@ -1,6 +1,5 @@
-from ..packet_serializer import PacketSerializer
-from ..object_from_bytes_converter import PacketFromBytesConverter
-from ..object_to_bytes_converter import PacketToBytesConverter
+from ..object_from_bytes_converter import ObjectFromBytesConverter
+from ..object_to_bytes_converter import ObjectToBytesConverter
 from ..schema import (
     Schema,
     ConstField,
@@ -10,8 +9,7 @@ from ..schema import (
     ListField,
     LengthOfField,
     CopyOfField,
-    MaskedField,
-    ObjectField
+    MaskedField
 )
 
 from ...packet import make_packet
@@ -20,23 +18,13 @@ import pytest
 
 
 @pytest.fixture
-def serializer():
-    yield PacketSerializer({
-        'INNER': [
-            1,
-            "hello"
-        ]
-    })
+def from_bytes_converter():
+    yield ObjectFromBytesConverter()
 
 
 @pytest.fixture
-def from_bytes_converter(serializer):
-    yield PacketFromBytesConverter(serializer)
-
-
-@pytest.fixture
-def to_bytes_converter(serializer):
-    yield PacketToBytesConverter(serializer)
+def to_bytes_converter():
+    yield ObjectToBytesConverter()
 
 
 def test_const_field(from_bytes_converter, to_bytes_converter):
@@ -229,15 +217,5 @@ def test_empty_composite_field(from_bytes_converter, to_bytes_converter):
     packet = from_bytes_converter.create_object(schema, data)
     assert packet.head == 0x01
     assert packet.tail == 0x02
-
-    assert to_bytes_converter.serialize_object(schema, packet) == data
-
-
-def test_object_field(from_bytes_converter, to_bytes_converter):
-    schema = Schema("OUTER", [ObjectField(name="cmd")])
-    data = [0x01, 0x02]
-
-    packet = from_bytes_converter.create_object(schema, data)
-    assert packet.cmd.hello == 0x02
 
     assert to_bytes_converter.serialize_object(schema, packet) == data

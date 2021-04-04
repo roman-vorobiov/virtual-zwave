@@ -1,7 +1,7 @@
 from .schema import Schema
 from .schema_builder import SchemaBuilder
-from .object_from_bytes_converter import CommandClassFromBytesConverter
-from .object_to_bytes_converter import CommandClassToBytesConverter
+from .object_from_bytes_converter import ObjectFromBytesConverter
+from .object_to_bytes_converter import ObjectToBytesConverter
 from .exceptions import SerializationError
 
 from common import Command, make_command
@@ -33,12 +33,11 @@ class CommandClassSerializer:
                 self.schemas_by_id[(class_id, command_id, class_version)] = schema
                 self.schemas_by_name[(command_name, class_version)] = schema
 
-    def from_bytes(self, data: List[int], class_versions: Dict[int, int]) -> Command:
+    def from_bytes(self, data: List[int], class_version: int) -> Command:
         class_id, command_id = self.get_id(data)
-        class_version = class_versions[class_id]
 
         if (schema := self.schemas_by_id.get((class_id, command_id, class_version))) is not None:
-            command = CommandClassFromBytesConverter(self, class_versions).create_object(schema, data)
+            command = ObjectFromBytesConverter().create_object(schema, data)
             command.set_meta('name', schema.name)
             command.set_meta('class_id', class_id)
             command.set_meta('class_version', class_version)
@@ -51,7 +50,7 @@ class CommandClassSerializer:
         class_version = command.get_meta('class_version')
 
         if (schema := self.schemas_by_name.get((command_name, class_version))) is not None:
-            return CommandClassToBytesConverter(self).serialize_object(schema, command)
+            return ObjectToBytesConverter().serialize_object(schema, command)
 
         raise SerializationError(f"Unknown command '{command_name}'")
 

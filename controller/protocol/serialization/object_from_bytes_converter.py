@@ -7,18 +7,13 @@ from .schema import (
     ListField,
     LengthOfField,
     CopyOfField,
-    MaskedField,
-    ObjectField
+    MaskedField
 )
 
 from tools import Object, Visitor, visit
 
 import pampy
-from typing import TYPE_CHECKING, List, Dict, Optional, Union
-
-if TYPE_CHECKING:
-    from .packet_serializer import PacketSerializer
-    from .command_class_serializer import CommandClassSerializer
+from typing import List, Dict, Optional, Union
 
 
 class ObjectFromBytesConverter(Visitor):
@@ -96,14 +91,11 @@ class ObjectFromBytesConverter(Visitor):
         begin = self.idx
         end = self.idx + self.get_field_length(field)
         if begin != end:
-            converter = self.new_instance()
+            converter = ObjectFromBytesConverter()
             yield field.name, converter.create_object(field, self.data[begin:end])
             self.idx += converter.idx
 
-    def new_instance(self):
-        return ObjectFromBytesConverter()
-
-    def get_field_length(self, field: Union[ListField, StringField, Schema, ObjectField]):
+    def get_field_length(self, field: Union[ListField, StringField, Schema]):
         # Size of the field is specified by value of another field
         if (length := self.field_lengths.get(field.name)) is not None:
             return length
@@ -119,36 +111,3 @@ class ObjectFromBytesConverter(Visitor):
         # Current field is the last one - consume the rest of the packet
         else:
             return len(self.data) - self.idx
-
-
-class PacketFromBytesConverter(ObjectFromBytesConverter):
-    def __init__(self, serializer: 'PacketSerializer'):
-        super().__init__()
-        self.serializer = serializer
-
-    @visit(ObjectField)
-    def visit_object_field(self, field: ObjectField):
-        begin = self.idx
-        end = self.idx + self.get_field_length(field)
-        yield field.name, self.serializer.from_bytes(self.data[begin:end])
-        self.idx = end
-
-    def new_instance(self):
-        return PacketFromBytesConverter(self.serializer)
-
-
-class CommandClassFromBytesConverter(ObjectFromBytesConverter):
-    def __init__(self, serializer: 'CommandClassSerializer', class_versions: Dict[int, int]):
-        super().__init__()
-        self.serializer = serializer
-        self.class_versions = class_versions
-
-    @visit(ObjectField)
-    def visit_object_field(self, field: ObjectField):
-        begin = self.idx
-        end = self.idx + self.get_field_length(field)
-        yield field.name, self.serializer.from_bytes(self.data[begin:end], self.class_versions)
-        self.idx = end
-
-    def new_instance(self):
-        return CommandClassFromBytesConverter(self.serializer, self.class_versions)
