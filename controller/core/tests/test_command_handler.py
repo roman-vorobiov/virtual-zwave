@@ -239,6 +239,12 @@ async def test_send_data_unreachable(rx, tx_req, tx_res, tx_network, included_no
 
 
 @pytest.mark.asyncio
+async def test_send_data_unknown(rx, tx_req, tx_res, tx_network, included_node):
+    rx('SEND_DATA', node_id=3, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
+    tx_res('SEND_DATA', result=False)
+
+
+@pytest.mark.asyncio
 async def test_assign_suc_return_route(rx, tx_req, tx_res, tx_network):
     rx('ASSIGN_SUC_RETURN_ROUTE', node_id=2, function_id=123)
     tx_res('ASSIGN_SUC_RETURN_ROUTE', result=True)

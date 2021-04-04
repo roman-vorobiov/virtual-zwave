@@ -98,8 +98,13 @@ class CommandHandler(PacketVisitor):
 
     @visit('SEND_DATA')
     def handle_send_data(self, command: Packet):
+        known_node = self.network_controller.node_infos.find(command.node_id) is not None
         self.request_manager.send_response('SEND_DATA',
-                                           result=True)
+                                           result=known_node)
+
+        if not known_node:
+            log_warning(f"Unknown node {command.node_id}")
+            return
 
         async def flow():
             async for tx_status in self.network_controller.send_data(command.node_id, command.data):
