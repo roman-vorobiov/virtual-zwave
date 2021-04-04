@@ -1,18 +1,23 @@
+from .serializable import Serializable
+
 import humps
 from typing import Any, Optional
 
 
-class Object:
+class Object(Serializable):
     def __init__(self, data: dict, meta: Optional[dict] = None):
         super().__setattr__('_data', data)
         super().__setattr__('_meta', meta or {})
+
+    def __getstate__(self):
+        return self.get_data()
 
     @classmethod
     def from_json(cls, json: dict) -> 'Object':
         return Object(humps.decamelize(json), meta={})
 
     def to_json(self) -> dict:
-        return humps.camelize(self._data)
+        return humps.camelize(self.to_dict())
 
     def __repr__(self):
         if self._meta == {}:

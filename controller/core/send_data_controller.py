@@ -25,7 +25,7 @@ class SendDataController:
         self.network_controller.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
             'classId': command.get_meta('class_id'),
             'command': command.get_meta('name'),
-            'args': command.get_data()
+            'args': command.to_json()
         })
 
         try:

@@ -7,5 +7,5 @@ from .object import Object, make_object
 from .resource_utils import load_yaml, Resources
 from .reusable_future import ReusableFuture
 from .serial_port import SerialPort
-from .serializable import serializable
+from .serializable import Serializable
 from .visitor import Visitor, visit

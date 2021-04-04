@@ -2,7 +2,7 @@ from .command_classes import CommandClass
 
 from common import Command
 
-from tools import serializable, log_warning
+from tools import Serializable, log_warning
 
 from typing import TYPE_CHECKING, Dict
 
@@ -11,8 +11,7 @@ if TYPE_CHECKING:
     from .node import Node
 
 
-@serializable(excluded_fields=['node'])
-class Channel:
+class Channel(Serializable):
     def __init__(self, node: 'Node', generic: int, specific: int):
         self.node = node
 
@@ -20,6 +19,11 @@ class Channel:
         self.specific = specific
 
         self.command_classes: Dict[int, CommandClass] = {}
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['node']
+        return state
 
     @property
     def endpoint(self):

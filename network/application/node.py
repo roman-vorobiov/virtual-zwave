@@ -3,13 +3,12 @@ from .channel import Channel
 
 from common import Command, RemoteInterface, BaseNode, Model
 
-from tools import Object, make_object, serializable
+from tools import Object, make_object, Serializable
 
 from typing import List, Optional
 
 
-@serializable(excluded_fields=['remote_interface', 'repository'])
-class Node(Model, BaseNode):
+class Node(Serializable, Model, BaseNode):
     def __init__(self, controller: RemoteInterface, basic: int):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
@@ -21,6 +20,12 @@ class Node(Model, BaseNode):
         self.basic = basic
 
         self.channels: List[Channel] = []
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['remote_interface']
+        del state['repository']
+        return state
 
     def add_channel(self, channel: Channel):
         self.channels.append(channel)
@@ -62,7 +67,7 @@ class Node(Model, BaseNode):
             'classId': command.get_meta('class_id'),
             'classVersion': command.get_meta('class_version'),
             'command': command.get_meta('name'),
-            'args': command.get_data()
+            'args': command.to_json()
         })
 
     def send_node_information(self, home_id: int, node_id: int):

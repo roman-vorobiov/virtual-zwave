@@ -4,7 +4,7 @@ from network.resources import CONSTANTS
 
 from common import Command, CommandVisitor, make_command
 
-from tools import serializable, log_warning
+from tools import Serializable, log_warning
 
 from typing import TYPE_CHECKING
 
@@ -13,13 +13,17 @@ if TYPE_CHECKING:
     from ..node import Channel
 
 
-@serializable(excluded_fields=['channel'], class_fields=['class_version'])
-class CommandClass(CommandVisitor):
+class CommandClass(Serializable, CommandVisitor):
     class_id: int
     class_version: int
 
     def __init__(self, channel: 'Channel'):
         self.channel = channel
+
+    def __getstate__(self):
+        state = {'class_version': self.class_version, **self.__dict__}
+        del state['channel']
+        return state
 
     @property
     def node(self):
