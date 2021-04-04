@@ -48,6 +48,6 @@ COMMAND_CLASS_MULTI_CHANNEL_3:
     - source_endpoint
     - 0b10000000: { name: bit_address, type: bool }
       0b01111111: destination
-    - { name: command, type: Object }
+    - command[]
 
 #======================================================================================================================#

@@ -223,11 +223,7 @@ async def test_send_data(rx, tx_req, tx_res, tx_network, ack, included_node):
             'homeId': 0xC0000000,
             'nodeId': 2
         },
-        'classId': 0x20,
-        'command': 'BASIC_SET',
-        'args': {
-            'value': 0x10
-        }
+        'command': [0x20, 0x01, 0x10]
     })
 
 
@@ -241,11 +237,7 @@ async def test_send_data_unreachable(rx, tx_req, tx_res, tx_network, included_no
             'homeId': 0xC0000000,
             'nodeId': 2
         },
-        'classId': 0x20,
-        'command': 'BASIC_SET',
-        'args': {
-            'value': 0x10
-        }
+        'command': [0x20, 0x01, 0x10]
     })
 
 

@@ -79,8 +79,7 @@ def test_request_node_info(rx_controller, tx_controller, included_node):
             'basic': 0x04,
             'generic': 0x10,
             'specific': 0x01,
-            'commandClassIds': [0x72, 0x5E, 0x86],
-            'commandClassVersions': {0x72: 1, 0x5E: 2, 0x86: 1, 0x20: 1}
+            'commandClassIds': [0x72, 0x5E, 0x86]
         }
     })
 
@@ -88,13 +87,9 @@ def test_request_node_info(rx_controller, tx_controller, included_node):
 def test_application_command(rx_controller, tx_controller, included_node):
     rx_controller('APPLICATION_COMMAND', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
-        'classId': 0x20,
-        'command': 'BASIC_SET',
-        'args': {
-            'value': 123
-        }
+        'command': [0x20, 0x01, 0x0A]
     })
-    included_node.handle_command.assert_called_with(1, make_command(0x20, 'BASIC_SET', value=123))
+    included_node.handle_command.assert_called_with(1, [0x20, 0x01, 0x0A])
 
 
 def test_add_node_started(rx_controller, tx_controller):

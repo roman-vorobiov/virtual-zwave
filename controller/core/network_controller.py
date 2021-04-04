@@ -8,9 +8,8 @@ from controller.model import State, NodeInfoRepository
 from controller.protocol.commands.add_node_to_network import AddNodeMode
 from controller.protocol.commands.remove_node_from_network import RemoveNodeMode
 from controller.protocol.commands.send_data import TransmitStatus
-from controller.protocol.serialization import CommandClassSerializer
 
-from common import Command, RemoteInterface, BaseNode
+from common import RemoteInterface, BaseNode
 
 from tools import Object
 
@@ -21,7 +20,6 @@ from typing import Optional, List
 class NetworkController(BaseNode):
     def __init__(
         self,
-        command_class_serializer: CommandClassSerializer,
         state: State,
         node_infos: NodeInfoRepository,
         request_manager: RequestManager,
@@ -29,7 +27,6 @@ class NetworkController(BaseNode):
     ):
         super().__init__(network)
 
-        self.command_class_serializer = command_class_serializer
         self.state = state
         self.node_infos = node_infos
         self.request_manager = request_manager
@@ -101,13 +98,7 @@ class NetworkController(BaseNode):
         return self.node_removing_controller.remove_node_from_network(mode)
 
     def send_data(self, destination_node_id: int, data: List[int]):
-        node_info = self.node_infos.find(destination_node_id)
-        class_id = data[0]
-        class_version = node_info.command_class_versions[class_id]
-
-        command = self.command_class_serializer.from_bytes(data, class_version)
-
-        return self.send_data_controller.send_data(destination_node_id, command)
+        return self.send_data_controller.send_data(destination_node_id, data)
 
     def on_ack(self, node_id: int):
         self.send_data_controller.on_ack(node_id)
@@ -116,12 +107,11 @@ class NetworkController(BaseNode):
         self.node_adding_controller.on_node_information_frame(home_id, node_id, node_info)
         self.node_removing_controller.on_node_information_frame(home_id, node_id, node_info)
 
-    def on_application_command(self, node_id: int, command: Command):
+    def on_application_command(self, node_id: int, command: List[int]):
         self.send_message_in_current_network(node_id, 'ACK', {})
 
-        data = self.command_class_serializer.to_bytes(command)
         self.request_manager.send_request('APPLICATION_COMMAND_HANDLER',
                                           rx_status=0,
                                           rx_type=0,
                                           source_node=node_id,
-                                          command=data)
+                                          command=command)

@@ -1,4 +1,4 @@
-from network.application import Node, NodeFactory, NodeBuilder
+from network.application import Node, NodeFactory, NodeBuilder, ChannelFactory
 
 from network.model import NodeRepository
 
@@ -18,9 +18,15 @@ class NodeNotFoundException(Exception):
 class NodeManager:
     DEFAULT_HOME_ID = 0
 
-    def __init__(self, client: Client, node_factory: NodeFactory, nodes: NodeRepository):
+    def __init__(
+        self,
+        client: Client,
+        node_factory: NodeFactory,
+        channel_factory: ChannelFactory,
+        nodes: NodeRepository
+    ):
         self.client = client
-        self.node_builder = NodeBuilder(node_factory)
+        self.node_builder = NodeBuilder(node_factory, channel_factory)
         self.nodes = nodes
 
     def reset(self):

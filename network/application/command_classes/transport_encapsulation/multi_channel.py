@@ -4,6 +4,8 @@ from common import Command
 
 from tools import visit, each_bit
 
+from typing import List
+
 
 @command_class('COMMAND_CLASS_MULTI_CHANNEL', version=3)
 class MultiChannel3(CommandClass):
@@ -43,7 +45,7 @@ class MultiChannel3(CommandClass):
             channel = self.node.channels[command.destination]
             channel.handle_command(source_id, command.command)
 
-    def send_encapsulated_command(self, destination_id: int, source_endpoint: int, command: Command):
+    def send_encapsulated_command(self, destination_id: int, source_endpoint: int, command: List[int]):
         command = self.make_command('MULTI_CHANNEL_CMD_ENCAP',
                                     source_endpoint=source_endpoint,
                                     bit_address=False,

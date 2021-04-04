@@ -10,7 +10,7 @@ from .storage import Storage
 
 from controller.model.tinydb import DatabaseProvider
 
-from controller.protocol.serialization import PacketSerializer, CommandClassSerializer
+from controller.protocol.serialization import PacketSerializer
 
 from common import RemoteInterfaceImpl
 
@@ -25,14 +25,6 @@ def make_packet_serializer(schema_path: str) -> PacketSerializer:
     return PacketSerializer(load_yaml(os.path.join("controller", "protocol", schema_path)))
 
 
-def make_command_class_serializer(*schema_paths: str) -> CommandClassSerializer:
-    data = {}
-    for schema_path in schema_paths:
-        data.update(load_yaml(os.path.join("controller", "protocol", schema_path)))
-
-    return CommandClassSerializer(data)
-
-
 class Core:
     def __init__(self, device: Controller, connection: RemoteConnection):
         self.config = Resources("controller/resources/config.yaml")
@@ -41,9 +33,6 @@ class Core:
         self.requests_from_host_serializer = make_packet_serializer("commands/requests_from_host.yaml")
         self.requests_to_host_serializer = make_packet_serializer("commands/requests_to_host.yaml")
         self.responses_to_host_serializer = make_packet_serializer("commands/responses_to_host.yaml")
-        self.command_class_serializer = make_command_class_serializer("command_classes/management.yaml",
-                                                                      "command_classes/transport_encapsulation.yaml",
-                                                                      "command_classes/application.yaml")
 
         self.repository_provider = DatabaseProvider()
         self.state = self.repository_provider.get_state()
@@ -70,7 +59,6 @@ class Core:
             config=self.config
         )
         self.network_controller = NetworkController(
-            command_class_serializer=self.command_class_serializer,
             state=self.state,
             node_infos=self.node_infos,
             request_manager=self.request_manager,

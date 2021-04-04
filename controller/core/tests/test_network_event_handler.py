@@ -19,12 +19,7 @@ def network_event_handler(network_controller, request_manager):
 async def test_application_command(rx_network, tx_network, tx_req):
     rx_network('APPLICATION_COMMAND', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
-        'classId': 0x20,
-        'classVersion': 1,
-        'command': 'BASIC_SET',
-        'args': {
-            'value': 123
-        }
+        'command': [0x20, 0x01, 123]
     })
     tx_network('ACK', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}

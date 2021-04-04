@@ -1,7 +1,7 @@
 from .command_classes import CommandClass
 from .channel import Channel
 
-from common import Command, RemoteInterface, BaseNode, Model
+from common import RemoteInterface, BaseNode, Model
 
 from tools import Object, make_object, Serializable
 
@@ -38,7 +38,7 @@ class Node(Serializable, Model, BaseNode):
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id
 
-    def handle_command(self, source_id: int, command: Command):
+    def handle_command(self, source_id: int, command: List[int]):
         self.send_message_in_current_network(source_id, 'ACK', {})
         self.channels[0].handle_command(source_id, command)
 
@@ -49,10 +49,7 @@ class Node(Serializable, Model, BaseNode):
             basic=self.basic,
             generic=self.channels[0].generic,
             specific=self.channels[0].specific,
-            command_class_ids=[cc.class_id for cc in command_classes if cc.class_id != 0x20],
-
-            # Note: needed on the controller side to correctly deserialize commands
-            command_class_versions={cc.class_id: cc.class_version for cc in command_classes}
+            command_class_ids=[cc.class_id for cc in command_classes if cc.class_id != 0x20]
         )
 
     def collect_command_classes(self) -> List[CommandClass]:
@@ -62,12 +59,9 @@ class Node(Serializable, Model, BaseNode):
         # set does not preserve order, but dict does
         return list(dict.fromkeys(all_command_classes))
 
-    def send_command(self, destination_id: int, command: Command):
+    def send_command(self, destination_id: int, command: List[int]):
         self.send_message_in_current_network(destination_id, 'APPLICATION_COMMAND', {
-            'classId': command.get_meta('class_id'),
-            'classVersion': command.get_meta('class_version'),
-            'command': command.get_meta('name'),
-            'args': command.to_json()
+            'command': command
         })
 
     def send_node_information(self, home_id: int, node_id: int):

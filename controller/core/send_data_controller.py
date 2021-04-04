@@ -1,10 +1,8 @@
 from controller.protocol.commands.send_data import TransmitStatus
 
-from common import Command
-
 import asyncio
 from asyncio import Future
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:
     from .network_controller import NetworkController
@@ -19,13 +17,11 @@ class SendDataController:
         self.network_controller = network_controller
         self.ack: Dict[int, Future] = {}
 
-    async def send_data(self, destination_node_id: int, command: Command):
+    async def send_data(self, destination_node_id: int, command: List[int]):
         self.ack[destination_node_id] = Future()
 
         self.network_controller.send_message_in_current_network(destination_node_id, 'APPLICATION_COMMAND', {
-            'classId': command.get_meta('class_id'),
-            'command': command.get_meta('name'),
-            'args': command.to_json()
+            'command': command
         })
 
         try:

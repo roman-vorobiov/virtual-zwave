@@ -1,4 +1,4 @@
-from ..fixture import *
+from ..fixtures import *
 
 from network.application.command_classes.application import Basic1
 

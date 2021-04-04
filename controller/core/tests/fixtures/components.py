@@ -7,7 +7,7 @@ from controller.core.storage import Storage
 from controller.core.library import Library
 from controller.core.network_controller import NetworkController
 
-from controller.protocol.serialization import PacketSerializer, CommandClassSerializer
+from controller.protocol.serialization import PacketSerializer
 
 from common.tests import FakeRemoteInterface
 
@@ -35,21 +35,6 @@ def requests_to_host_serializer():
 @pytest.fixture
 def responses_to_host_serializer():
     yield PacketSerializer(load_yaml("controller/protocol/commands/responses_to_host.yaml"))
-
-
-@pytest.fixture
-def command_class_serializer():
-    schema_files = [
-        "controller/protocol/command_classes/management.yaml",
-        "controller/protocol/command_classes/transport_encapsulation.yaml",
-        "controller/protocol/command_classes/application.yaml"
-    ]
-
-    data = {}
-    for schema_file in schema_files:
-        data.update(load_yaml(schema_file))
-
-    yield CommandClassSerializer(data)
 
 
 @pytest.fixture
@@ -106,6 +91,6 @@ def storage(config):
 
 
 @pytest.fixture
-def network_controller(command_class_serializer, state, node_info_repository, request_manager, network):
+def network_controller(state, node_info_repository, request_manager, network):
     with mock.patch('random.randint', lambda *args: 0xC0000000):
-        yield NetworkController(command_class_serializer, state, node_info_repository, request_manager, network)
+        yield NetworkController(state, node_info_repository, request_manager, network)

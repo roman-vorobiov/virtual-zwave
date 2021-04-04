@@ -1,6 +1,6 @@
-from ..fixture import *
+from ..fixtures import *
 
-from network.application import make_channel, make_command_class
+from network.application import make_command_class
 
 from network.application.command_classes.management import Version1, Version2, Version3
 
@@ -30,9 +30,9 @@ class TestVersion1:
         rx('VERSION_COMMAND_CLASS_GET', class_id=0x84)
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x84, version=0)
 
-    def test_version_command_class_get_other_channel(self, rx, tx, node):
-        channel = make_channel(node, generic=1, specific=2)
-        make_command_class(0x20, 1, channel)
+    def test_version_command_class_get_other_channel(self, rx, tx, make_channel):
+        channel2 = make_channel()
+        make_command_class(0x20, 1, channel2)
 
         rx('VERSION_COMMAND_CLASS_GET', class_id=0x20)
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x20, version=1)

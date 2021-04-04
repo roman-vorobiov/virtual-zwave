@@ -2,7 +2,7 @@ from .node_manager import NodeManager, NodeNotFoundException
 
 from network.application import Node
 
-from common import RemoteMessageVisitor, make_command
+from common import RemoteMessageVisitor
 
 from tools import visit, log_error
 
@@ -40,9 +40,8 @@ class ControllerEventHandler(RemoteMessageVisitor):
 
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
-        command = make_command(message['classId'], message['command'], **message['args'])
         node = self.get_node(message)
-        node.handle_command(message['source']['nodeId'], command)
+        node.handle_command(message['source']['nodeId'], message['command'])
         node.save()
         # Todo: broadcast changes in command classes
 
