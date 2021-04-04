@@ -35,7 +35,8 @@ class Core:
 
         # Todo: let's pretend that RemoteInterface is not a service and isn't used in the data layer :)
         self.node_factory = NodeFactory(
-            controller=self.controller
+            controller=self.controller,
+            client=client
         )
         self.channel_factory = ChannelFactory(
             serializer=self.command_class_serializer

@@ -42,8 +42,6 @@ class ControllerEventHandler(RemoteMessageVisitor):
     def handle_application_command(self, message: dict):
         node = self.get_node(message)
         node.handle_command(message['source']['nodeId'], message['command'])
-        node.save()
-        # Todo: broadcast changes in command classes
 
     @visit('ADD_TO_NETWORK')
     def handle_add_to_network(self, message: dict):

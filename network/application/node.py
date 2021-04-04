@@ -1,17 +1,22 @@
 from .command_classes import CommandClass
 from .channel import Channel
 
+from network.client import Client
+
 from common import RemoteInterface, BaseNode, Model
 
 from tools import Object, make_object, Serializable
 
+import humps
 from typing import List, Optional
 
 
 class Node(Serializable, Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, basic: int):
+    def __init__(self, controller: RemoteInterface, client: Client, basic: int):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
+
+        self.client = client
 
         self.home_id: Optional[int] = None
         self.node_id: Optional[int] = None
@@ -24,6 +29,7 @@ class Node(Serializable, Model, BaseNode):
     def __getstate__(self):
         state = self.__dict__.copy()
         del state['remote_interface']
+        del state['client']
         del state['repository']
         return state
 
@@ -73,3 +79,6 @@ class Node(Serializable, Model, BaseNode):
         self.broadcast_message('APPLICATION_NODE_INFORMATION', {
             'nodeInfo': self.get_node_info().to_json()
         })
+
+    def notify_updated(self):
+        self.client.send_message('NODE_UPDATED', humps.camelize(self.to_dict()))

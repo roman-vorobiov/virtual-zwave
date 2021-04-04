@@ -53,7 +53,7 @@ class NodeManager:
     def add_to_network(self, node: Node, home_id: int, node_id: int):
         node.add_to_network(home_id, node_id)
         node.save()
-        self.notify_node_updated(node)
+        node.notify_updated()
 
     def remove_from_network(self, node: Node):
         self.put_node_in_default_home(node)
@@ -62,13 +62,10 @@ class NodeManager:
         node = self.find_node(home_id, node_id)
         node.set_suc_node_id(suc_node_id)
         node.save()
-        self.notify_node_updated(node)
+        node.notify_updated()
 
     def put_node_in_default_home(self, node: Node):
         self.add_to_network(node, NodeManager.DEFAULT_HOME_ID, self.generate_node_id())
 
     def generate_node_id(self) -> int:
         return max(self.nodes.get_node_ids(NodeManager.DEFAULT_HOME_ID), default=0) + 1
-
-    def notify_node_updated(self, node: Node):
-        self.client.send_message('NODE_UPDATED', humps.camelize(node.to_dict()))

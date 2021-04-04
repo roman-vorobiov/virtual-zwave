@@ -38,8 +38,8 @@ def client():
 
 
 @pytest.fixture
-def node_factory(controller):
-    yield NodeFactory(controller)
+def node_factory(controller, client):
+    yield NodeFactory(controller, client)
 
 
 @pytest.fixture

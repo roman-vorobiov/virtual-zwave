@@ -16,6 +16,7 @@ class Basic1(CommandClass):
     @visit('BASIC_SET')
     def handle_set(self, command: Command, source_id: int):
         self.value = command.value
+        self.on_state_change()
 
     @visit('BASIC_GET')
     def handle_get(self, command: Command, source_id: int):

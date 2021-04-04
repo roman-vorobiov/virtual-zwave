@@ -34,6 +34,10 @@ class CommandClass(Serializable, CommandVisitor):
     def send_command(self, destination_id: int, command: Command):
         self.channel.send_command(destination_id, command)
 
+    def on_state_change(self):
+        self.node.save()
+        self.node.notify_updated()
+
     def visit_default(self, command: Command, *args, **kwargs):
         log_warning(f"Unhandled command: {command.get_meta('name')}")
 

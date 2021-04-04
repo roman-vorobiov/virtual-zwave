@@ -8,8 +8,13 @@ import pytest
 
 
 @pytest.fixture
-def node():
-    node = Node(Mock(), basic=0x04)
+def client():
+    yield Mock()
+
+
+@pytest.fixture
+def node(client):
+    node = Node(Mock(), client, basic=0x04)
     node.add_to_network(123, 2)
     yield node
 
