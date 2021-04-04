@@ -32,9 +32,12 @@ class NodeAddingController:
         self.network_controller.broadcast_message('ADD_NODE_STARTED', {})
 
         try:
-            # Todo: ignore included nodes
             old_home_id, old_node_id, node_info = await self.node_info
             yield AddNodeStatus.NODE_FOUND, 0, None
+
+            if old_home_id == self.network_controller.home_id:
+                yield AddNodeStatus.FAILED, 0, None
+                return
 
             self.new_node_id = self.generate_node_id()
             self.network_controller.node_infos.add(self.new_node_id, node_info)
