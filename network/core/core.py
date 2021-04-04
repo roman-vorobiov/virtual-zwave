@@ -3,12 +3,9 @@ from .controller_event_handler import ControllerEventHandler
 from .command_handler import CommandHandler
 
 from network.application import NodeFactory, ChannelFactory
-
 from network.model.tinydb import DatabaseProvider
-
 from network.client import Client
-
-from controller.protocol.serialization import CommandClassSerializer
+from network.protocol import CommandClassSerializer
 
 from common import RemoteInterfaceImpl
 
@@ -21,7 +18,7 @@ import os
 def make_command_class_serializer(*schema_paths: str) -> CommandClassSerializer:
     data = {}
     for schema_path in schema_paths:
-        data.update(load_yaml(os.path.join("controller", "protocol", schema_path)))
+        data.update(load_yaml(os.path.join("network", "protocol", schema_path)))
 
     return CommandClassSerializer(data)
 

@@ -1,7 +1,7 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
 
-from common import Command
+from network.protocol import Command
 
 from tools import visit
 

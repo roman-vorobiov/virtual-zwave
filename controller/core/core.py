@@ -9,8 +9,7 @@ from .network_controller import NetworkController
 from .storage import Storage
 
 from controller.model.tinydb import DatabaseProvider
-
-from controller.protocol.serialization import PacketSerializer
+from controller.protocol import PacketSerializer
 
 from common import RemoteInterfaceImpl
 

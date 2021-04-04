@@ -1,8 +1,6 @@
 from .command_classes import CommandClass
 
-from controller.protocol.serialization import CommandClassSerializer
-
-from common import Command
+from network.protocol import Command, CommandClassSerializer
 
 from tools import Serializable, log_warning
 

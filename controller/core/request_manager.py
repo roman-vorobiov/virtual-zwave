@@ -1,8 +1,7 @@
 from .host import Host
 
-from controller.protocol import make_packet
+from controller.protocol import PacketSerializer, make_packet
 from controller.protocol.frames.data import FrameType
-from controller.protocol.serialization import PacketSerializer
 
 
 class RequestManager:

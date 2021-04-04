@@ -1,8 +1,7 @@
 from .command_class_factory import command_class_factory
 
 from network.resources import CONSTANTS
-
-from common import Command, CommandVisitor, make_command
+from network.protocol import Command, CommandVisitor, make_command
 
 from tools import Serializable, log_warning
 

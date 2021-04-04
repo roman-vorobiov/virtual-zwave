@@ -3,8 +3,7 @@ from .storage import Storage
 from .network_controller import NetworkController
 from .library import Library
 
-from controller.protocol import Packet, PacketVisitor
-from controller.protocol.serialization import PacketSerializer
+from controller.protocol import Packet, PacketVisitor, PacketSerializer
 
 from tools import visit, log_warning
 

@@ -1,9 +1,8 @@
 from .controller import Controller
 from .utils import calculate_checksum
 
-from controller.protocol import Packet, make_packet
+from controller.protocol import Packet, PacketSerializer, make_packet
 from controller.protocol.frames.data import FrameType
-from controller.protocol.serialization import PacketSerializer
 
 from collections import deque
 from typing import List

@@ -1,7 +1,7 @@
 from .channel import Channel
 from .node import Node
 
-from controller.protocol.serialization import CommandClassSerializer
+from network.protocol import CommandClassSerializer
 
 
 class ChannelFactory:

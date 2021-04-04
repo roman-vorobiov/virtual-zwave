@@ -1,6 +1,6 @@
 from network.application import Node, Channel, ChannelFactory
 
-from controller.protocol.serialization import CommandClassSerializer
+from network.protocol import CommandClassSerializer
 
 from tools import Mock, load_yaml
 
@@ -10,9 +10,9 @@ import pytest
 @pytest.fixture
 def command_class_serializer():
     schema_files = [
-        "controller/protocol/command_classes/management.yaml",
-        "controller/protocol/command_classes/transport_encapsulation.yaml",
-        "controller/protocol/command_classes/application.yaml"
+        "network/protocol/command_classes/management.yaml",
+        "network/protocol/command_classes/transport_encapsulation.yaml",
+        "network/protocol/command_classes/application.yaml"
     ]
 
     data = {}

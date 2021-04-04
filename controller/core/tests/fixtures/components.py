@@ -7,7 +7,7 @@ from controller.core.storage import Storage
 from controller.core.library import Library
 from controller.core.network_controller import NetworkController
 
-from controller.protocol.serialization import PacketSerializer
+from controller.protocol import PacketSerializer
 
 from common.tests import FakeRemoteInterface
 

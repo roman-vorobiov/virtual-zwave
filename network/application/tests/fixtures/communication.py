@@ -1,7 +1,7 @@
 from .components import *
 from .seed import *
 
-from common import make_command
+from network.protocol import make_command
 
 import pytest
 

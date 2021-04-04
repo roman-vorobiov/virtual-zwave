@@ -12,7 +12,7 @@ from ..schema import (
     MaskedField
 )
 
-from ...packet import make_packet
+from tools import make_object
 
 import pytest
 
@@ -41,7 +41,7 @@ def test_extra_field(to_bytes_converter):
     schema = Schema("", [IntField(name="hello")])
     data = [0x11]
 
-    packet = make_packet("", hello=0x11, bye=0x22)
+    packet = make_object(hello=0x11, bye=0x22)
     assert to_bytes_converter.serialize_object(schema, packet) == data
 
 

@@ -3,7 +3,7 @@ from .in_memory_repository_provider import InMemoryRepositoryProvider
 from network.core.node_manager import NodeManager
 from network.application import NodeFactory, ChannelFactory
 
-from controller.protocol.serialization import CommandClassSerializer
+from network.protocol import CommandClassSerializer
 
 from common.tests import FakeRemoteInterface
 
@@ -15,9 +15,9 @@ import pytest
 @pytest.fixture
 def command_class_serializer():
     schema_files = [
-        "controller/protocol/command_classes/management.yaml",
-        "controller/protocol/command_classes/transport_encapsulation.yaml",
-        "controller/protocol/command_classes/application.yaml"
+        "network/protocol/command_classes/management.yaml",
+        "network/protocol/command_classes/transport_encapsulation.yaml",
+        "network/protocol/command_classes/application.yaml"
     ]
 
     data = {}

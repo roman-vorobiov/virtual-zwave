@@ -2,7 +2,7 @@ from .fixtures import *
 
 from network.core.controller_event_handler import ControllerEventHandler
 
-from common import make_command
+from network.protocol import make_command
 
 import humps
 import json

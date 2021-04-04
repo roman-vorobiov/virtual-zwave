@@ -2,8 +2,7 @@ from .host import Host
 from .command_handler import CommandHandler
 from .utils import is_valid_checksum
 
-from controller.protocol import Packet, PacketVisitor
-from controller.protocol.serialization import PacketSerializer
+from controller.protocol import Packet, PacketVisitor, PacketSerializer
 
 from tools import visit, log_warning
 
