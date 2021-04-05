@@ -81,4 +81,6 @@ class Node(Serializable, Model, BaseNode):
         })
 
     def notify_updated(self):
-        self.client.send_message('NODE_UPDATED', humps.camelize(self.to_dict()))
+        self.client.send_message('NODE_UPDATED', {
+            'node': humps.camelize(self.to_dict())
+        })

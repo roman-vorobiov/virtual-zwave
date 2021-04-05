@@ -43,9 +43,13 @@ def test_send_nif(rx_client, tx_client, tx_controller, node):
 def test_create_node(rx_client, tx_client, tx_controller, nodes, node_info):
     assert len(nodes.all()) == 0
 
-    rx_client('CREATE_NODE', node_info)
+    rx_client('CREATE_NODE', {
+        'node': node_info
+    })
     assert len(nodes.all()) == 1
-    tx_client('NODE_UPDATED', humps.camelize(nodes.all()[0]))
+    tx_client('NODE_UPDATED', {
+        'node': humps.camelize(nodes.all()[0])
+    })
 
 
 def test_reset(rx_client, tx_client, tx_controller, nodes, node):

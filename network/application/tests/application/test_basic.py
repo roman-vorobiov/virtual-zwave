@@ -17,7 +17,9 @@ def test_basic_get(rx, tx):
 
 def test_basic_set(rx, tx, tx_client, node, command_class):
     rx('BASIC_SET', value=123)
-    tx_client('NODE_UPDATED', humps.camelize(node.to_dict()))
+    tx_client('NODE_UPDATED', {
+        'node': humps.camelize(node.to_dict())
+    })
     assert command_class.value == 123
 
     rx('BASIC_GET')

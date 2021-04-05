@@ -34,7 +34,7 @@ class CommandHandler(RemoteMessageVisitor):
 
     @visit('CREATE_NODE')
     def handle_create_node(self, message: dict):
-        self.node_manager.generate_new_node(message)
+        self.node_manager.generate_new_node(message['node'])
 
     @visit('RESET')
     def handle_reset(self, message: dict):

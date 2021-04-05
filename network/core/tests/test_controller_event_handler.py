@@ -31,7 +31,9 @@ def rx_controller(controller_event_handler):
 @pytest.fixture
 def tx_client_node_updated_broadcast(nodes, tx_client):
     def inner(home_id: int, node_id: int):
-        tx_client('NODE_UPDATED', humps.camelize(nodes.find(home_id, node_id).to_dict()))
+        tx_client('NODE_UPDATED', {
+            'node': humps.camelize(nodes.find(home_id, node_id).to_dict())
+        })
 
     return inner
 
