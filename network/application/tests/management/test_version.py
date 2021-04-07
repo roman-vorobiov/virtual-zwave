@@ -1,7 +1,6 @@
 from ..fixtures import *
 
-from network.application import make_command_class
-
+from network.application.command_classes.application import Basic1
 from network.application.command_classes.management import Version1, Version2, Version3
 
 from tools import make_object
@@ -10,10 +9,10 @@ from tools import make_object
 class TestVersion1:
     @pytest.fixture(autouse=True)
     def command_class(self, channel):
-        yield Version1(channel,
-                       protocol_library_type=0x06,
-                       protocol_version=(1, 2),
-                       application_version=(3, 4))
+        yield channel.add_command_class(Version1,
+                                        protocol_library_type=0x06,
+                                        protocol_version=(1, 2),
+                                        application_version=(3, 4))
 
     def test_version_get(self, rx, tx):
         rx('VERSION_GET')
@@ -30,9 +29,8 @@ class TestVersion1:
         rx('VERSION_COMMAND_CLASS_GET', class_id=0x84)
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x84, version=0)
 
-    def test_version_command_class_get_other_channel(self, rx, tx, make_channel):
-        channel2 = make_channel()
-        make_command_class(0x20, 1, channel2)
+    def test_version_command_class_get_other_channel(self, rx, tx, node):
+        node.add_channel(0x10, 0x01).add_command_class(Basic1)
 
         rx('VERSION_COMMAND_CLASS_GET', class_id=0x20)
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x20, version=1)
@@ -41,12 +39,12 @@ class TestVersion1:
 class TestVersion2:
     @pytest.fixture(autouse=True)
     def command_class(self, channel):
-        yield Version2(channel,
-                       protocol_library_type=0x06,
-                       protocol_version=(1, 2),
-                       application_version=(3, 4),
-                       hardware_version=5,
-                       firmware_versions=[(6, 7), (8, 9)])
+        yield channel.add_command_class(Version2,
+                                        protocol_library_type=0x06,
+                                        protocol_version=(1, 2),
+                                        application_version=(3, 4),
+                                        hardware_version=5,
+                                        firmware_versions=[(6, 7), (8, 9)])
 
     def test_version_get(self, rx, tx):
         rx('VERSION_GET')
@@ -64,15 +62,15 @@ class TestVersion2:
 class TestVersion3NoSoftware:
     @pytest.fixture(autouse=True)
     def command_class(self, channel):
-        yield Version3(channel,
-                       protocol_library_type=0x06,
-                       protocol_version=(1, 2),
-                       application_version=(3, 4),
-                       hardware_version=5,
-                       firmware_versions=[
-                           (6, 7),
-                           (8, 9)
-                       ])
+        yield channel.add_command_class(Version3,
+                                        protocol_library_type=0x06,
+                                        protocol_version=(1, 2),
+                                        application_version=(3, 4),
+                                        hardware_version=5,
+                                        firmware_versions=[
+                                            (6, 7),
+                                            (8, 9)
+                                        ])
 
     def test_capabilities_get(self, rx, tx):
         rx('VERSION_CAPABILITIES_GET')
@@ -85,24 +83,24 @@ class TestVersion3NoSoftware:
 class TestVersion3WithSoftware:
     @pytest.fixture(autouse=True)
     def command_class(self, channel):
-        yield Version3(channel,
-                       protocol_library_type=0x06,
-                       protocol_version=(1, 2),
-                       application_version=(3, 4),
-                       hardware_version=5,
-                       firmware_versions=[
-                           (6, 7),
-                           (8, 9)
-                       ],
-                       sdk_version=(1, 2, 3),
-                       zwave_application_framework_api_version=(2, 3, 4),
-                       zwave_application_framework_build_number=1,
-                       host_interface_api_version=(3, 4, 5),
-                       host_interface_build_number=2,
-                       zwave_protocol_api_version=(4, 5, 6),
-                       zwave_protocol_build_number=3,
-                       application_api_version=(5, 6, 7),
-                       application_build_number=4)
+        yield channel.add_command_class(Version3,
+                                        protocol_library_type=0x06,
+                                        protocol_version=(1, 2),
+                                        application_version=(3, 4),
+                                        hardware_version=5,
+                                        firmware_versions=[
+                                            (6, 7),
+                                            (8, 9)
+                                        ],
+                                        sdk_version=(1, 2, 3),
+                                        zwave_application_framework_api_version=(2, 3, 4),
+                                        zwave_application_framework_build_number=1,
+                                        host_interface_api_version=(3, 4, 5),
+                                        host_interface_build_number=2,
+                                        zwave_protocol_api_version=(4, 5, 6),
+                                        zwave_protocol_build_number=3,
+                                        application_api_version=(5, 6, 7),
+                                        application_build_number=4)
 
     def test_capabilities_get(self, rx, tx):
         rx('VERSION_CAPABILITIES_GET')

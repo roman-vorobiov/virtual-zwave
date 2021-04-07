@@ -7,7 +7,7 @@ import humps
 
 @pytest.fixture(autouse=True)
 def command_class(channel):
-    yield Basic1(channel)
+    yield channel.add_command_class(Basic1)
 
 
 def test_basic_get(rx, tx):

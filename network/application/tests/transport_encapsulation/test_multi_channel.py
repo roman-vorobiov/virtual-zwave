@@ -11,54 +11,52 @@ from network.application.command_classes.transport_encapsulation import MultiCha
 import pytest
 
 
-def make_command_class(cls, channel: Channel, **kwargs):
-    cc = cls(channel, **kwargs)
-    channel.add_command_class(cc)
-    return cc
+@pytest.fixture
+def channel2(node, channel):
+    yield node.add_channel(generic=3, specific=4)
 
 
 @pytest.fixture
-def channel2(make_channel, channel):
-    yield make_channel(generic=3, specific=4)
-
-
-@pytest.fixture
-def channel3(make_channel, channel2):
-    yield make_channel(generic=5, specific=6)
+def channel3(node, channel2):
+    yield node.add_channel(generic=5, specific=6)
 
 
 @pytest.fixture
 def zwaveplus_info(channel):
-    yield make_command_class(ZWavePlusInfo2, channel,
-                             zwave_plus_version=1, role_type=2, node_type=3, installer_icon_type=4, user_icon_type=5)
+    yield channel.add_command_class(ZWavePlusInfo2,
+                                    zwave_plus_version=1,
+                                    role_type=2,
+                                    node_type=3,
+                                    installer_icon_type=4,
+                                    user_icon_type=5)
 
 
 @pytest.fixture
 def manufacturer_specific(channel, zwaveplus_info):
-    yield make_command_class(ManufacturerSpecific1, channel,
-                             manufacturer_id=1, product_type_id=2, product_id=3)
+    yield channel.add_command_class(ManufacturerSpecific1,
+                                    manufacturer_id=1, product_type_id=2, product_id=3)
 
 
 @pytest.fixture
 def version(channel, manufacturer_specific):
-    yield make_command_class(Version1, channel,
-                             protocol_library_type=0x06, protocol_version=(1, 2), application_version=(3, 4))
+    yield channel.add_command_class(Version1,
+                                    protocol_library_type=0x06, protocol_version=(1, 2), application_version=(3, 4))
 
 
 @pytest.fixture
 def basic2(channel2):
-    yield make_command_class(Basic1, channel2, value=10)
+    yield channel2.add_command_class(Basic1, value=10)
 
 
 @pytest.fixture
 def basic3(channel3):
-    yield make_command_class(Basic1, channel3, value=20)
+    yield channel3.add_command_class(Basic1, value=20)
 
 
 class TestMultiChannel1:
     @pytest.fixture
     def command_class(self, channel, version, basic2, basic3):
-        yield MultiChannel3(channel)
+        yield channel.add_command_class(MultiChannel3)
 
     def test_endpoint_get(self, rx, tx):
         rx('MULTI_CHANNEL_END_POINT_GET')

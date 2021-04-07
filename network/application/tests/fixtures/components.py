@@ -1,8 +1,7 @@
-from network.application import ChannelFactory
-
+from network.application import NodeFactory
 from network.protocol import CommandClassSerializer
 
-from tools import load_yaml
+from tools import load_yaml, Mock
 
 import pytest
 
@@ -23,5 +22,15 @@ def command_class_serializer():
 
 
 @pytest.fixture
-def channel_factory(command_class_serializer):
-    yield ChannelFactory(command_class_serializer)
+def controller():
+    yield Mock()
+
+
+@pytest.fixture
+def client():
+    yield Mock()
+
+
+@pytest.fixture
+def node_factory(controller, client, command_class_serializer):
+    yield NodeFactory(controller, client, command_class_serializer)

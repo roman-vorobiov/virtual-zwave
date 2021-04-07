@@ -56,9 +56,3 @@ def command_class(class_name: str, version=1):
         return cls
 
     return inner
-
-
-def make_command_class(class_id: int, version: int, channel: 'Channel', **kwargs) -> CommandClass:
-    cc = command_class_factory.create_command_class(class_id, version, channel, **kwargs)
-    channel.add_command_class(cc)
-    return cc

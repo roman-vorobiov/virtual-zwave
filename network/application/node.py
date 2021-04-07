@@ -2,6 +2,7 @@ from .command_classes import CommandClass
 from .channel import Channel
 
 from network.client import Client
+from network.protocol import CommandClassSerializer
 
 from common import RemoteInterface, BaseNode, Model
 
@@ -12,11 +13,12 @@ from typing import List, Optional
 
 
 class Node(Serializable, Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, client: Client, basic: int):
+    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer, basic: int):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
         self.client = client
+        self.serializer = serializer
 
         self.home_id: Optional[int] = None
         self.node_id: Optional[int] = None
@@ -30,11 +32,14 @@ class Node(Serializable, Model, BaseNode):
         state = self.__dict__.copy()
         del state['remote_interface']
         del state['client']
+        del state['serializer']
         del state['repository']
         return state
 
-    def add_channel(self, channel: Channel):
+    def add_channel(self, generic: int, specific: int) -> Channel:
+        channel = Channel(self, generic, specific)
         self.channels.append(channel)
+        return channel
 
     def add_to_network(self, home_id: int, node_id: int):
         self.node_id = node_id

@@ -1,7 +1,7 @@
 from .in_memory_repository_provider import InMemoryRepositoryProvider
 
 from network.core.node_manager import NodeManager
-from network.application import NodeFactory, ChannelFactory
+from network.application import NodeFactory
 
 from network.protocol import CommandClassSerializer
 
@@ -38,18 +38,13 @@ def client():
 
 
 @pytest.fixture
-def node_factory(controller, client):
-    yield NodeFactory(controller, client)
+def node_factory(controller, client, command_class_serializer):
+    yield NodeFactory(controller, client, command_class_serializer)
 
 
 @pytest.fixture
-def channel_factory(command_class_serializer):
-    yield ChannelFactory(command_class_serializer)
-
-
-@pytest.fixture
-def repository_provider(node_factory, channel_factory):
-    yield InMemoryRepositoryProvider(node_factory, channel_factory)
+def repository_provider(node_factory):
+    yield InMemoryRepositoryProvider(node_factory)
 
 
 @pytest.fixture
@@ -58,5 +53,5 @@ def nodes(repository_provider):
 
 
 @pytest.fixture
-def node_manager(client, node_factory, channel_factory, nodes):
-    yield NodeManager(client, node_factory, channel_factory, nodes)
+def node_manager(client, node_factory, nodes):
+    yield NodeManager(client, node_factory, nodes)
