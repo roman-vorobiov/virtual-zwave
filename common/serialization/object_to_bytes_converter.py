@@ -66,7 +66,7 @@ class ObjectToBytesConverter(Visitor):
         for mask, subfield in field.fields.items():
             value |= pampy.match(subfield,
                                  BoolField, lambda _: getattr(obj, subfield.name) and mask,
-                                 default=getattr(obj, subfield.name))
+                                 pampy._, lambda _: next(self.visit(subfield, obj)))
 
         yield value
 

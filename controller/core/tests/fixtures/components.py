@@ -17,22 +17,22 @@ import pytest
 from unittest import mock
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def frame_serializer():
     yield PacketSerializer(load_yaml("controller/protocol/frames/frames.yaml"))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def requests_from_host_serializer():
     yield PacketSerializer(load_yaml("controller/protocol/commands/requests_from_host.yaml"))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def requests_to_host_serializer():
     yield PacketSerializer(load_yaml("controller/protocol/commands/requests_to_host.yaml"))
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def responses_to_host_serializer():
     yield PacketSerializer(load_yaml("controller/protocol/commands/responses_to_host.yaml"))
 
@@ -75,7 +75,7 @@ def request_manager(requests_to_host_serializer, responses_to_host_serializer, h
     yield obj
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def config():
     yield Resources("controller/resources/config.yaml")
 

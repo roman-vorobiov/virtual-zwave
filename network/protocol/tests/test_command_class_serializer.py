@@ -1,4 +1,4 @@
-from network.application import ChannelFactory
+from .fixtures import APPLICATION, MANAGEMENT, TRANSPORT_ENCAPSULATION
 
 from network.protocol import CommandClassSerializer
 
@@ -8,7 +8,7 @@ import pytest
 
 
 @pytest.fixture(scope='session')
-def command_class_serializer():
+def serializer():
     schema_files = [
         "network/protocol/command_classes/management.yaml",
         "network/protocol/command_classes/transport_encapsulation.yaml",
@@ -22,6 +22,8 @@ def command_class_serializer():
     yield CommandClassSerializer(data)
 
 
-@pytest.fixture
-def channel_factory(command_class_serializer):
-    yield ChannelFactory(command_class_serializer)
+@pytest.mark.parametrize("data,expected", [*APPLICATION, *MANAGEMENT, *TRANSPORT_ENCAPSULATION])
+def test_serialization(serializer, data, expected):
+    command = serializer.from_bytes(data, expected.get_meta('class_version'))
+    assert command == expected
+    assert serializer.to_bytes(command) == data

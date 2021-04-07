@@ -16,12 +16,12 @@ COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
 
   DEVICE_SPECIFIC_GET:
     - 0x72
-    - 0x05
+    - 0x06
     - 0b00000111: device_id_type
 
   DEVICE_SPECIFIC_REPORT:
     - 0x72
-    - 0x06
+    - 0x07
     - 0b00000111: device_id_type
     - 0b11100000: device_id_data_format
       0b00011111: { length_of: device_id_data }

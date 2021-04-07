@@ -12,7 +12,7 @@ from tools import Mock, load_yaml
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def command_class_serializer():
     schema_files = [
         "network/protocol/command_classes/management.yaml",
