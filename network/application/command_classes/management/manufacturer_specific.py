@@ -22,13 +22,13 @@ class ManufacturerSpecific1(CommandClass):
         self.product_id = product_id
 
     @visit('MANUFACTURER_SPECIFIC_GET')
-    def handle_get(self, command: Command, source_id: int):
-        self.send_report(destination_id=source_id)
+    def handle_get(self, command: Command):
+        self.send_report()
 
-    def send_report(self, destination_id: int):
+    def send_report(self):
         command = self.make_command('MANUFACTURER_SPECIFIC_REPORT',
                                     manufacturer_id=self.manufacturer_id,
                                     product_type_id=self.product_type_id,
                                     product_id=self.product_id)
 
-        self.send_command(destination_id, command)
+        self.send_command(command)

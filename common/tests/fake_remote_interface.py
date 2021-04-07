@@ -13,3 +13,6 @@ class FakeRemoteInterface(RemoteInterface):
     def free_buffer(self) -> List[dict]:
         self.tx_buffer, old_buffer = [], self.tx_buffer
         return old_buffer
+
+    def pop(self) -> dict:
+        return self.tx_buffer.pop(0)

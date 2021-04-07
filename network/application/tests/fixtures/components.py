@@ -1,6 +1,8 @@
 from network.application import NodeFactory
 from network.protocol import CommandClassSerializer
 
+from common.tests import FakeRemoteInterface
+
 from tools import load_yaml, Mock
 
 import pytest
@@ -23,7 +25,7 @@ def command_class_serializer():
 
 @pytest.fixture
 def controller():
-    yield Mock()
+    yield FakeRemoteInterface()
 
 
 @pytest.fixture

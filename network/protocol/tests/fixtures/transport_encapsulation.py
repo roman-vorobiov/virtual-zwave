@@ -1,5 +1,7 @@
 from network.protocol import make_command
 
+from tools import make_object
+
 
 COMMAND_CLASS_MULTI_CHANNEL_3 = [
     (
@@ -51,6 +53,18 @@ COMMAND_CLASS_MULTI_CHANNEL_3 = [
     )
 ]
 
+COMMAND_CLASS_MULTI_CMD_1 = [
+    (
+        [0x8F, 0x01, 0x02, 0x03, 0x01, 0x02, 0x03, 0x02, 0x04, 0x05],
+        make_command(0x60, 'MULTI_CMD_ENCAP', 1,
+                     commands=[
+                         make_object(command=[0x01, 0x02, 0x03]),
+                         make_object(command=[0x04, 0x05])
+                     ])
+    ),
+]
+
 TRANSPORT_ENCAPSULATION = [
-    *COMMAND_CLASS_MULTI_CHANNEL_3
+    *COMMAND_CLASS_MULTI_CHANNEL_3,
+    *COMMAND_CLASS_MULTI_CMD_1
 ]

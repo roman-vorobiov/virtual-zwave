@@ -54,11 +54,15 @@ def node_info():
     }
 
 
+@pytest.fixture(autouse=True)
+def disable_node_command_handling():
+    Node.handle_command = Mock()
+
+
 @pytest.fixture
 def node(node_manager, client, node_info):
     node = node_manager.generate_new_node(node_info)
     client.send_message.reset_mock()
-    Node.handle_command = Mock()
     yield node
 
 

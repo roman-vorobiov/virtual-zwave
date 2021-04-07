@@ -51,3 +51,16 @@ COMMAND_CLASS_MULTI_CHANNEL_3:
     - command[]
 
 #======================================================================================================================#
+
+_EncapsulatedCommand: &EncapsulatedCommand
+  - { length_of: command }
+  - command[]
+
+#----------------------------------------------------------------------------------------------------------------------#
+
+COMMAND_CLASS_MULTI_CMD_1:
+  MULTI_CMD_ENCAP:
+    - 0x8F
+    - 0x01
+    - { number_of: commands }
+    - { name: "commands[]", schema: *EncapsulatedCommand }

@@ -14,16 +14,16 @@ class Basic1(CommandClass):
         self.value = value
 
     @visit('BASIC_SET')
-    def handle_set(self, command: Command, source_id: int):
+    def handle_set(self, command: Command):
         self.value = command.value
         self.on_state_change()
 
     @visit('BASIC_GET')
-    def handle_get(self, command: Command, source_id: int):
-        self.send_report(destination_id=source_id)
+    def handle_get(self, command: Command):
+        self.send_report()
 
-    def send_report(self, destination_id: int):
+    def send_report(self):
         command = self.make_command('BASIC_REPORT',
                                     value=self.value)
 
-        self.send_command(destination_id, command)
+        self.send_command(command)

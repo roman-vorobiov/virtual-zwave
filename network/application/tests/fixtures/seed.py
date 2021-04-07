@@ -1,13 +1,6 @@
 from .components import *
 
-from tools import Mock
-
 import pytest
-
-
-@pytest.fixture
-def client():
-    yield Mock()
 
 
 @pytest.fixture
@@ -19,6 +12,4 @@ def node(node_factory):
 
 @pytest.fixture
 def channel(node):
-    main_channel = node.add_channel(generic=0x10, specific=0x01)
-    main_channel.send_command = Mock()
-    yield main_channel
+    yield node.add_channel(generic=0x10, specific=0x01)

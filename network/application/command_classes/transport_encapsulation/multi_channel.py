@@ -10,48 +10,46 @@ from typing import List
 @command_class('COMMAND_CLASS_MULTI_CHANNEL', version=3)
 class MultiChannel3(CommandClass):
     @visit('MULTI_CHANNEL_END_POINT_GET')
-    def handle_endpoint_get(self, command: Command, source_id: int):
-        self.send_endpoint_report(destination_id=source_id)
+    def handle_endpoint_get(self, command: Command):
+        self.send_endpoint_report()
 
-    def send_endpoint_report(self, destination_id: int):
+    def send_endpoint_report(self):
         command = self.prepare_channel_endpoint_report()
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     @visit('MULTI_CHANNEL_CAPABILITY_GET')
-    def handle_capability_get(self, command: Command, source_id: int):
-        self.send_capability_report(destination_id=source_id, endpoint=command.endpoint)
+    def handle_capability_get(self, command: Command):
+        self.send_capability_report(endpoint=command.endpoint)
 
-    def send_capability_report(self, destination_id: int, endpoint: int):
+    def send_capability_report(self, endpoint: int):
         command = self.prepare_capability_report(endpoint)
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     @visit('MULTI_CHANNEL_END_POINT_FIND')
-    def handle_endpoint_find(self, command: Command, source_id: int):
-        self.send_endpoint_find_report(destination_id=source_id,
-                                       generic=command.generic_device_class,
+    def handle_endpoint_find(self, command: Command):
+        self.send_endpoint_find_report(generic=command.generic_device_class,
                                        specific=command.specific_device_class)
 
-    def send_endpoint_find_report(self, destination_id: int, generic: int, specific: int):
+    def send_endpoint_find_report(self, generic: int, specific: int):
         command = self.prepare_endpoint_find_report(generic, specific)
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     @visit('MULTI_CHANNEL_CMD_ENCAP')
-    def handle_encapsulated_command(self, command: Command, source_id: int):
-        if command.bit_address:
-            for channel_id in each_bit(command.destination):
-                channel = self.node.channels[channel_id]
-                channel.handle_command(source_id, command.command)
-        else:
-            channel = self.node.channels[command.destination]
-            channel.handle_command(source_id, command.command)
+    def handle_encapsulated_command(self, command: Command):
+        def each_channel():
+            if command.bit_address:
+                for channel_id in each_bit(command.destination):
+                    yield self.node.channels[channel_id]
+            else:
+                yield self.node.channels[command.destination]
 
-    def send_encapsulated_command(self, destination_id: int, source_endpoint: int, command: List[int]):
-        command = self.make_command('MULTI_CHANNEL_CMD_ENCAP',
-                                    source_endpoint=source_endpoint,
-                                    bit_address=False,
-                                    destination=0,
-                                    command=command)
-        self.send_command(destination_id, command)
+        with self.update_context(endpoint=command.source_endpoint):
+            for channel in each_channel():
+                channel.handle_command(command.command)
+
+    def send_encapsulated_command(self, source_endpoint: int, data: List[int]):
+        command = self.prepare_encapsulated_command(source_endpoint, data)
+        self.send_command(command)
 
     def prepare_channel_endpoint_report(self) -> Command:
         prototype = self.node.channels[0]
@@ -87,3 +85,10 @@ class MultiChannel3(CommandClass):
                                  generic_device_class=generic,
                                  specific_device_class=specific,
                                  endpoints=endpoints)
+
+    def prepare_encapsulated_command(self, source_endpoint: int, command: List[int]):
+        return self.make_command('MULTI_CHANNEL_CMD_ENCAP',
+                                 source_endpoint=source_endpoint,
+                                 bit_address=False,
+                                 destination=self.context.endpoint,
+                                 command=command)

@@ -26,10 +26,10 @@ class ZWavePlusInfo2(CommandClass):
         self.user_icon_type = user_icon_type
 
     @visit('ZWAVEPLUS_INFO_GET')
-    def handle_info_get(self, command: Command, source_id: int):
-        self.send_info_report(destination_id=source_id)
+    def handle_info_get(self, command: Command):
+        self.send_info_report()
 
-    def send_info_report(self, destination_id: int):
+    def send_info_report(self):
         command = self.make_command('ZWAVEPLUS_INFO_REPORT',
                                     zwave_plus_version=self.zwave_plus_version,
                                     role_type=self.role_type,
@@ -37,4 +37,4 @@ class ZWavePlusInfo2(CommandClass):
                                     installer_icon_type=self.installer_icon_type,
                                     user_icon_type=self.user_icon_type)
 
-        self.send_command(destination_id, command)
+        self.send_command(command)

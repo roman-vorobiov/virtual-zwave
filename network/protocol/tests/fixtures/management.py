@@ -72,18 +72,18 @@ COMMAND_CLASS_VERSION_2 = [
 COMMAND_CLASS_VERSION_3 = [
     (
         [0x86, 0x15],
-        make_command(0x86, 'CAPABILITIES_GET', 3)
+        make_command(0x86, 'VERSION_CAPABILITIES_GET', 3)
     ),
     (
         [0x86, 0x16, 0x05],
-        make_command(0x86, 'CAPABILITIES_REPORT', 3,
+        make_command(0x86, 'VERSION_CAPABILITIES_REPORT', 3,
                      zwave_software=True,
                      command_class=False,
                      version=True)
     ),
     (
         [0x86, 0x17],
-        make_command(0x86, 'SOFTWARE_GET', 3)
+        make_command(0x86, 'VERSION_ZWAVE_SOFTWARE_GET', 3)
     ),
     (
         [
@@ -95,7 +95,7 @@ COMMAND_CLASS_VERSION_3 = [
             0x0E, 0x0F, 0x10, 0x11, 0x12,
             0x13, 0x14, 0x15, 0x16, 0x17
         ],
-        make_command(0x86, 'SOFTWARE_REPORT', 3,
+        make_command(0x86, 'VERSION_ZWAVE_SOFTWARE_REPORT', 3,
                      sdk_version=make_object(major=0x01, minor=0x02, patch=0x03),
                      zwave_application_framework=make_object(api_version=make_object(major=0x04, minor=0x05, patch=0x06),
                                                              build_number=0x0708),

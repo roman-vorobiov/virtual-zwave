@@ -28,11 +28,18 @@ class CommandClass(Serializable, CommandVisitor):
     def node(self):
         return self.channel.node
 
-    def handle_command(self, source_id: int, command: Command):
-        return self.visit(command, source_id=source_id)
+    @property
+    def context(self):
+        return self.node.context
 
-    def send_command(self, destination_id: int, command: Command):
-        self.channel.send_command(destination_id, command)
+    def update_context(self, **kwargs):
+        return self.node.update_context(**kwargs)
+
+    def handle_command(self, command: Command):
+        return self.visit(command)
+
+    def send_command(self, command: Command):
+        self.channel.send_command(command)
 
     def on_state_change(self):
         self.node.save()

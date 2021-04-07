@@ -27,23 +27,23 @@ class Version1(CommandClass):
         self.application_version = application_version
 
     @visit('VERSION_GET')
-    def handle_get(self, command: Command, source_id: int):
-        self.send_report(destination_id=source_id)
+    def handle_get(self, command: Command):
+        self.send_report()
 
-    def send_report(self, destination_id: int):
+    def send_report(self):
         command = self.prepare_version_report()
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     @visit('VERSION_COMMAND_CLASS_GET')
-    def handle_command_class_get(self, command: Command, source_id: int):
-        self.send_command_class_report(destination_id=source_id, class_id=command.class_id)
+    def handle_command_class_get(self, command: Command):
+        self.send_command_class_report(class_id=command.class_id)
 
-    def send_command_class_report(self, destination_id: int, class_id: int):
+    def send_command_class_report(self, class_id: int):
         command = self.make_command('VERSION_COMMAND_CLASS_REPORT',
                                     class_id=class_id,
                                     version=self.get_command_class_version(class_id) or 0)
 
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     def get_command_class_version(self, class_id: int) -> Optional[int]:
         for channel in self.node.channels:
@@ -115,21 +115,21 @@ class Version3(Version2):
         self.application_build_number = application_build_number
 
     @visit('VERSION_CAPABILITIES_GET')
-    def handle_capabilities_get(self, command: Command, source_id: int):
-        self.send_capabilities_report(destination_id=source_id)
+    def handle_capabilities_get(self, command: Command):
+        self.send_capabilities_report()
 
-    def send_capabilities_report(self, destination_id: int):
+    def send_capabilities_report(self):
         command = self.prepare_capabilities_report()
-        self.send_command(destination_id, command)
+        self.send_command(command)
 
     @visit('VERSION_ZWAVE_SOFTWARE_GET')
-    def handle_zwave_software_get(self, command: Command, source_id: int):
-        self.send_zwave_software_report(destination_id=source_id)
+    def handle_zwave_software_get(self, command: Command):
+        self.send_zwave_software_report()
 
-    def send_zwave_software_report(self, destination_id: int):
+    def send_zwave_software_report(self):
         if self.sdk_version is not None:
             command = self.prepare_zwave_software_report()
-            self.send_command(destination_id, command)
+            self.send_command(command)
 
     def prepare_capabilities_report(self):
         return self.make_command('VERSION_CAPABILITIES_REPORT',

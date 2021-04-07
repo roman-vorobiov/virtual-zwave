@@ -1,7 +1,5 @@
 from ..fixtures import *
 
-from network.application import Channel
-
 from network.application.command_classes.application import Basic1
 from network.application.command_classes.management import ManufacturerSpecific1
 from network.application.command_classes.management import Version1

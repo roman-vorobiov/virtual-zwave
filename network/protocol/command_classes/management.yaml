@@ -87,22 +87,22 @@ COMMAND_CLASS_VERSION_2: &COMMAND_CLASS_VERSION_2
 COMMAND_CLASS_VERSION_3:
   <<: *COMMAND_CLASS_VERSION_2
 
-  CAPABILITIES_GET:
+  VERSION_CAPABILITIES_GET:
     - 0x86
     - 0x15
 
-  CAPABILITIES_REPORT:
+  VERSION_CAPABILITIES_REPORT:
     - 0x86
     - 0x16
     - 0b00000100: { name: zwave_software, type: bool }
       0b00000010: { name: command_class, type: bool }
       0b00000001: { name: version, type: bool }
 
-  SOFTWARE_GET:
+  VERSION_ZWAVE_SOFTWARE_GET:
     - 0x86
     - 0x17
 
-  SOFTWARE_REPORT:
+  VERSION_ZWAVE_SOFTWARE_REPORT:
     - 0x86
     - 0x18
     - { name: sdk_version, schema: *MajorMinorPatch }
@@ -126,5 +126,3 @@ COMMAND_CLASS_ZWAVEPLUS_INFO_2:
     - node_type
     - { name: installer_icon_type, type: int, size: 2 }
     - { name: user_icon_type, type: int, size: 2 }
-
-#======================================================================================================================#

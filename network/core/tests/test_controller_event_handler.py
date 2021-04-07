@@ -2,8 +2,6 @@ from .fixtures import *
 
 from network.core.controller_event_handler import ControllerEventHandler
 
-from network.protocol import make_command
-
 import humps
 import json
 import pytest

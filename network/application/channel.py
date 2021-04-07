@@ -37,20 +37,20 @@ class Channel(Serializable):
         self.command_classes[cc.class_id] = cc
         return cc
 
-    def handle_command(self, source_id: int, data: List[int]):
+    def handle_command(self, data: List[int]):
         class_id = data[0]
 
         if (command_class := self.command_classes.get(class_id)) is not None:
             command = self.node.serializer.from_bytes(data, command_class.class_version)
-            command_class.handle_command(source_id, command)
+            command_class.handle_command(command)
         else:
             log_warning(f"Channel does not support command class {class_id}")
 
-    def send_command(self, destination_id: int, command: Command):
+    def send_command(self, command: Command):
         data = self.node.serializer.to_bytes(command)
 
         if self.endpoint == 0:
-            self.node.send_command(destination_id, data)
+            self.node.send_command(data)
         else:
             multi_channel_cc = self.node.channels[0].command_classes[0x60]
-            multi_channel_cc.send_encapsulated_command(destination_id, self.endpoint, data)
+            multi_channel_cc.send_encapsulated_command(self.endpoint, data)

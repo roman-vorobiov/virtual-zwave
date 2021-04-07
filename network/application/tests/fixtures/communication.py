@@ -7,20 +7,37 @@ import pytest
 
 
 @pytest.fixture
-def rx(command_class):
+def rx(controller, node, command_class, command_class_serializer):
     def inner(name: str, **kwargs):
-        command = make_command(command_class.class_id, name, **kwargs)
-        command_class.handle_command(1, command)
+        command = make_command(command_class.class_id, name, command_class.class_version, **kwargs)
+        data = command_class_serializer.to_bytes(command)
+
+        node.handle_command(source_id=1, command=data)
+        assert controller.pop() == {
+            'messageType': 'ACK',
+            'message': {
+                'destination': {'homeId': 123, 'nodeId': 1},
+                'source': {'homeId': 123, 'nodeId': 2}
+            }
+        }
 
     yield inner
 
 
 @pytest.fixture
-def tx(channel, command_class):
+def tx(controller, command_class, command_class_serializer):
     def inner(name: str, **kwargs):
-        command = make_command(command_class.class_id, name, **kwargs)
-        channel.send_command.assert_called_first_with(1, command)
-        channel.send_command.pop_first_call()
+        command = make_command(command_class.class_id, name, command_class.class_version, **kwargs)
+        data = command_class_serializer.to_bytes(command)
+
+        assert controller.pop() == {
+            'messageType': 'APPLICATION_COMMAND',
+            'message': {
+                'destination': {'homeId': 123, 'nodeId': 1},
+                'source': {'homeId': 123, 'nodeId': 2},
+                'command': data
+            }
+        }
 
     yield inner
 
@@ -35,7 +52,7 @@ def tx_client(client):
 
 
 @pytest.fixture(autouse=True)
-def check_communication(channel, client):
+def check_communication(controller, client):
     yield
-    channel.send_command.assert_not_called()
+    assert controller.free_buffer() == []
     client.send_message.assert_not_called()
