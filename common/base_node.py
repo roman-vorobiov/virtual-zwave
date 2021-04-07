@@ -1,7 +1,5 @@
 from .remote_interface import RemoteInterface
 
-from typing import Optional
-
 
 class BaseNode:
     def __init__(self, remote_interface: RemoteInterface):

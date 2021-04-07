@@ -18,7 +18,7 @@ class NodeRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, id: int) -> Optional[Node]:
+    def get(self, id: str) -> Optional[Node]:
         pass
 
     @abstractmethod
