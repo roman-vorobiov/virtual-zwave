@@ -6,11 +6,12 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
+    NumberOfField,
     CopyOfField,
     MaskedField
 )
 
-from tools import Object, Visitor, visit
+from tools import Object, make_object, Visitor, visit
 
 import pampy
 from typing import List, Union, Any
@@ -45,9 +46,15 @@ class ObjectToBytesConverter(Visitor):
     def visit_length_of_field(self, field: LengthOfField, obj: Object):
         yield self.get_field_length(getattr(obj, field.field_name)) + field.offset
 
+    @visit(NumberOfField)
+    def visit_number_of_field(self, field: NumberOfField, obj: Object):
+        yield len(getattr(obj, field.field_name))
+
     @visit(ListField)
     def visit_list_field(self, field: ListField, obj: Object):
-        yield from getattr(obj, field.name)
+        for value in getattr(obj, field.name):
+            proxy = make_object(_=value)
+            yield from self.visit(field.element_type, proxy)
 
     @visit(CopyOfField)
     def visit_copy_of_field(self, field: CopyOfField, obj: Object):
@@ -70,7 +77,9 @@ class ObjectToBytesConverter(Visitor):
 
     def get_field_length(self, field: Any):
         return pampy.match(field,
-                           Union[list, str], lambda f: len(f),
+                           [], 0,
+                           List[Object], lambda f: sum(self.get_field_length(element) for element in f),
+                           Union[List[int], str], lambda f: len(f),
                            Object, lambda f: sum(self.get_field_length(subfield) for subfield in f.get_data().values()),
                            None, 0,
                            default=1)

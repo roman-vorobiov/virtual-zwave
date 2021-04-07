@@ -8,6 +8,7 @@ from ..schema import (
     StringField,
     ListField,
     LengthOfField,
+    NumberOfField,
     CopyOfField,
     MaskedField
 )
@@ -96,18 +97,32 @@ def test_list_field(from_bytes_converter, to_bytes_converter):
     assert to_bytes_converter.serialize_object(schema, packet) == data
 
 
-def test_list_field_in_the_middle(from_bytes_converter, to_bytes_converter):
-    schema = Schema("", [
-        IntField(name="head"),
-        ListField(name="command"),
-        IntField(name="tail", size=2)
-    ])
-    data = [0x01, 0x02, 0x03, 0x04, 0x05]
+def test_list_of_ints_field(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [ListField(name="values", element_type=IntField(name="_", size=2))])
+    data = [0x01, 0x02, 0x03, 0x04]
 
     packet = from_bytes_converter.create_object(schema, data)
-    assert packet.head == 0x01
-    assert packet.command == [0x02, 0x03]
-    assert packet.tail == 0x0405
+    assert packet.values == [0x0102, 0x0304]
+
+    assert to_bytes_converter.serialize_object(schema, packet) == data
+
+
+def test_list_of_composites_field(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [
+        NumberOfField(field_name="commands"),
+        ListField(name="commands", element_type=Schema("_", [
+            LengthOfField(field_name="command"),
+            ListField(name="command")
+        ]))
+    ])
+    data = [0x03, 0x01, 0x0A, 0x03, 0x0A, 0x0B, 0x0C, 0x02, 0x0A, 0x0B]
+
+    packet = from_bytes_converter.create_object(schema, data)
+    assert packet.commands == [
+        make_object(command=[0x0A]),
+        make_object(command=[0x0A, 0x0B, 0x0C]),
+        make_object(command=[0x0A, 0x0B]),
+    ]
 
     assert to_bytes_converter.serialize_object(schema, packet) == data
 

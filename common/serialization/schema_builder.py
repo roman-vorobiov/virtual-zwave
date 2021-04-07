@@ -1,4 +1,5 @@
 from .schema import (
+    NamedField,
     Schema,
     ConstField,
     IntField,
@@ -6,6 +7,7 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
+    NumberOfField,
     CopyOfField,
     MaskedField
 )
@@ -31,10 +33,7 @@ class SchemaBuilder(Visitor):
 
     @visit(str)
     def visit_str(self, field: str):
-        if field.endswith("[]"):
-            return ListField(name=field[:-2])
-        else:
-            return IntField(name=field)
+        return self.make_named_field(IntField(name=field))
 
     def visit_mask(self, fields: Dict[int, Any]):
         return MaskedField(fields={mask: self.visit(field) for mask, field in fields.items()})
@@ -47,18 +46,30 @@ class SchemaBuilder(Visitor):
         if (length_of := field.get('length_of')) is not None:
             return LengthOfField(field_name=length_of, offset=field.get('offset', 0))
 
+        if (number_of := field.get('number_of')) is not None:
+            return NumberOfField(field_name=number_of)
+
         if (copy_of := field.get('copy_of')) is not None:
             return CopyOfField(field_name=copy_of)
 
         if (schema := field.get('schema')) is not None:
-            return self.create_schema(field['name'], schema)
+            return self.make_named_field(self.create_schema(field['name'], schema))
 
         if (type_str := field.get('type')) is not None:
-            return pampy.match(
+            return self.make_named_field(pampy.match(
                 type_str,
                 'str', lambda _: StringField(name=field['name']),
                 'bool', lambda _: BoolField(name=field['name']),
                 'int', lambda _: IntField(name=field['name'], size=field.get('size', 1))
-            )
+            ))
 
         raise SerializationError(f"Invalid schema field: {field}")
+
+    @classmethod
+    def make_named_field(cls, field: NamedField) -> NamedField:
+        if field.name.endswith("[]"):
+            field_name = field.name[:-2]
+            field.name = "_"
+            return ListField(name=field_name, element_type=field)
+        else:
+            return field

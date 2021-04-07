@@ -7,6 +7,7 @@ from ..schema import (
     StringField,
     ListField,
     LengthOfField,
+    NumberOfField,
     CopyOfField,
     MaskedField
 )
@@ -49,9 +50,36 @@ def test_list_field(factory):
     assert schema.fields == [ListField(name="hello")]
 
 
+def test_list_of_int_field(factory):
+    schema = factory.create_schema("", [{'name': "hello[]", 'type': 'int', 'size': 4}])
+    assert schema.fields == [ListField(name="hello", element_type=IntField(name="_", size=4))]
+
+
+def test_list_of_composite_field(factory):
+    schema = factory.create_schema("", [{'name': "hello[]", 'schema': ["a", "b"]}])
+    assert schema.fields == [
+        ListField(name="hello", element_type=Schema(name="_", fields=[IntField(name="a"), IntField(name="b")]))
+    ]
+
+
+def test_nested_list_field(factory):
+    schema = factory.create_schema("", [{'name': "outer[]", 'schema': [{'length_of': "inner"}, "inner[]"]}])
+    assert schema.fields == [
+        ListField(name="outer", element_type=Schema(name="_", fields=[
+            LengthOfField(field_name="inner"),
+            ListField(name="inner")
+        ]))
+    ]
+
+
 def test_length_of_field(factory):
     schema = factory.create_schema("", [{'length_of': "hello"}])
     assert schema.fields == [LengthOfField(field_name="hello")]
+
+
+def test_number_of_field(factory):
+    schema = factory.create_schema("", [{'number_of': "hello"}])
+    assert schema.fields == [NumberOfField(field_name="hello")]
 
 
 def test_length_of_field_with_offset(factory):

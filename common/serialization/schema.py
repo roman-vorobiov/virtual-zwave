@@ -1,5 +1,5 @@
 from abc import ABC
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Dict
 
 
@@ -17,6 +17,11 @@ class ConstField(Field):
 class LengthOfField(Field):
     field_name: str
     offset: int = 0
+
+
+@dataclass
+class NumberOfField(Field):
+    field_name: str
 
 
 @dataclass
@@ -46,7 +51,7 @@ class BoolField(NamedField):
 
 @dataclass
 class ListField(NamedField):
-    pass
+    element_type: Field = field(default_factory=lambda: IntField(name="_"))
 
 
 @dataclass

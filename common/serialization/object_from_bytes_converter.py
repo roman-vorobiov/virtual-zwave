@@ -6,108 +6,84 @@ from .schema import (
     StringField,
     ListField,
     LengthOfField,
+    NumberOfField,
     CopyOfField,
     MaskedField
 )
 
-from tools import Object, Visitor, visit
+from tools import Object, Visitor, visit, until_exhausted
 
-import pampy
-from typing import List, Dict, Optional, Union
+import itertools
+from typing import Dict, Optional, Iterable, Iterator, Tuple, Any
+
+
+class Context:
+    def __init__(self):
+        self.field_lengths: Dict[str, int] = {}
+        self.list_lengths: Dict[str, int] = {}
 
 
 class ObjectFromBytesConverter(Visitor):
-    def __init__(self):
-        self.schema: Optional[Schema] = None
-        self.data: List[int] = []
-        self.idx = 0
-        self.field_lengths: Dict[str, int] = {}
+    def create_object(self, schema: Schema, data: Iterable[int]) -> Object:
+        return Object(dict(self.collect_fields(schema, iter(data), Context())))
 
-    def reset(self, schema: Schema, data: List[int]):
-        self.schema = schema
-        self.data = data
-        self.idx = 0
-        self.field_lengths = {}
-
-    def create_object(self, schema: Schema, data: List[int]) -> Object:
-        self.reset(schema, data)
-        return Object(dict(self.collect_fields()))
-
-    def collect_fields(self):
-        for field in self.schema.fields:
-            yield from self.visit(field)
+    def collect_fields(self, schema: Schema, it: Iterator[int], context: Context) -> Iterator[Tuple[str, Any]]:
+        for field in schema.fields:
+            yield from self.visit(field, it, context)
 
     @visit(ConstField, CopyOfField)
-    def visit_const_field(self, field: ConstField):
+    def visit_const_field(self, field: ConstField, it: Iterator[int], context: Context):
+        next(it)
         yield from []
-        self.idx += 1
 
     @visit(IntField)
-    def visit_int_field(self, field: IntField):
-        yield field.name, int.from_bytes(self.data[self.idx:self.idx + field.size], byteorder='big')
-        self.idx += field.size
+    def visit_int_field(self, field: IntField, it: Iterator[int], context: Context):
+        data = list(itertools.islice(it, field.size))
+        yield field.name, int.from_bytes(data, byteorder='big')
 
     @visit(StringField)
-    def visit_string_field(self, field: StringField):
-        begin = self.idx
-        end = self.idx + self.get_field_length(field)
-        # Note: ignore null termination
-        yield field.name, bytes(self.data[begin:end - 1]).decode('utf-8')
-        self.idx = end
+    def visit_string_field(self, field: StringField, it: Iterator[int], context: Context):
+        data = bytes(itertools.takewhile(lambda byte: byte != 0, it))
+        yield field.name, data.decode('utf-8')
 
     @visit(BoolField)
-    def visit_bool_field(self, field: BoolField):
-        yield field.name, bool(self.data[self.idx])
-        self.idx += 1
+    def visit_bool_field(self, field: BoolField, it: Iterator[int], context: Context):
+        yield field.name, bool(next(it))
 
     @visit(LengthOfField)
-    def visit_length_of_field(self, field: LengthOfField):
+    def visit_length_of_field(self, field: LengthOfField, it: Iterator[int], context: Context):
+        context.field_lengths[field.field_name] = next(it) - field.offset
         yield from []
-        self.field_lengths[field.field_name] = self.data[self.idx] - field.offset
-        self.idx += 1
+
+    @visit(NumberOfField)
+    def visit_number_of_field(self, field: LengthOfField, it: Iterator[int], context: Context):
+        context.list_lengths[field.field_name] = next(it)
+        yield from []
 
     @visit(ListField)
-    def visit_list_field(self, field: ListField):
-        begin = self.idx
-        end = self.idx + self.get_field_length(field)
-        yield field.name, self.data[begin:end]
-        self.idx = end
+    def visit_list_field(self, field: ListField, it: Iterator[int], context: Context):
+        def element(iterator: Iterator):
+            return [value for _, value in self.visit(field.element_type, iterator, Context())][0]
+
+        it = self.get_range(field.name, it, context)
+        yield field.name, [element(i) for i in until_exhausted(it, context.list_lengths.get(field.name))]
 
     @visit(MaskedField)
-    def visit_masked_field(self, field: MaskedField):
-        value = self.data[self.idx]
-        current_idx = self.idx
-
+    def visit_masked_field(self, field: MaskedField, it: Iterator[int], context: Context):
+        value = next(it)
         for mask, subfield in field.fields.items():
-            self.data[self.idx] = value & mask
-            yield from self.visit(subfield)
-            self.idx = current_idx
-
-        self.data[self.idx] = value
-        self.idx += 1
+            # Todo: handle multi-byte masks
+            yield from self.visit(subfield, iter((value & mask,)), context)
 
     @visit(Schema)
-    def visit_composite_field(self, field: Schema):
-        begin = self.idx
-        end = self.idx + self.get_field_length(field)
-        if begin != end:
-            converter = ObjectFromBytesConverter()
-            yield field.name, converter.create_object(field, self.data[begin:end])
-            self.idx += converter.idx
+    def visit_composite_field(self, field: Schema, it: Iterator[int], context: Context):
+        if (it := self.get_range(field.name, it, context)) is not None:
+            yield field.name, self.create_object(field, it)
 
-    def get_field_length(self, field: Union[ListField, StringField, Schema]):
-        # Size of the field is specified by value of another field
-        if (length := self.field_lengths.get(field.name)) is not None:
-            return length
-
-        # Current field is not the last one - calculate the length of the rest
-        elif (field_idx := self.schema.fields.index(field)) != len(self.schema.fields) - 1:
-            rest_length = sum(pampy.match(field,
-                                          IntField, lambda f: f.size,
-                                          default=1)
-                              for field in self.schema.fields[field_idx + 1:])
-            return len(self.data) - self.idx - rest_length
-
-        # Current field is the last one - consume the rest of the packet
-        else:
-            return len(self.data) - self.idx
+    @classmethod
+    def get_range(cls, field_name: str, it: Iterator[int], context: Context) -> Optional[Iterator[int]]:
+        length = context.field_lengths.get(field_name)
+        if length is None:
+            return it
+        elif length != 0:
+            return itertools.islice(it, length)

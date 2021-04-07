@@ -79,7 +79,7 @@ COMMAND_CLASS_VERSION_2: &COMMAND_CLASS_VERSION_2
     - { name: protocol_version, schema: *MajorMinor }
     - { name: application_version, schema: *MajorMinor }
     - hardware_version
-    - { length_of: firmware_versions }
+    - { number_of: firmware_versions }
     - { name: "firmware_versions[]", schema: *MajorMinor }
 
 #----------------------------------------------------------------------------------------------------------------------#
