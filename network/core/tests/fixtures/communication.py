@@ -1,4 +1,4 @@
-from .components import *
+from network.tests.fixtures.components import *
 
 import pytest
 

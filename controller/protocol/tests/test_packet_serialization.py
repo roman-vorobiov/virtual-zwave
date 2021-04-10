@@ -1,28 +1,15 @@
-from controller.protocol import PacketSerializer, make_packet
+from controller.tests.fixtures.components import (
+    frame_serializer,
+    requests_from_host_serializer,
+    requests_to_host_serializer,
+    responses_to_host_serializer
+)
 
-from tools import make_object, load_yaml
+from controller.protocol import make_packet
+
+from tools import make_object
 
 import pytest
-
-
-@pytest.fixture(scope='session')
-def frame_serializer():
-    yield PacketSerializer(load_yaml("controller/protocol/frames/frames.yaml"))
-
-
-@pytest.fixture(scope='session')
-def requests_from_host_serializer():
-    yield PacketSerializer(load_yaml("controller/protocol/commands/requests_from_host.yaml"))
-
-
-@pytest.fixture(scope='session')
-def requests_to_host_serializer():
-    yield PacketSerializer(load_yaml("controller/protocol/commands/requests_to_host.yaml"))
-
-
-@pytest.fixture(scope='session')
-def responses_to_host_serializer():
-    yield PacketSerializer(load_yaml("controller/protocol/commands/responses_to_host.yaml"))
 
 
 @pytest.mark.parametrize("data,expected", [

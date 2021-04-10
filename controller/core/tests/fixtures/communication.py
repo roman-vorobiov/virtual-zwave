@@ -1,4 +1,4 @@
-from .components import *
+from controller.tests.fixtures.components import *
 
 from controller.protocol import make_packet
 

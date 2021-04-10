@@ -1,4 +1,4 @@
-from .components import *
+from network.tests.fixtures.components import *
 from .seed import *
 
 from network.protocol import make_command
