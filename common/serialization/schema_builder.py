@@ -1,4 +1,5 @@
 from .schema import (
+    Field,
     NamedField,
     Schema,
     ConstField,
@@ -11,65 +12,66 @@ from .schema import (
     CopyOfField,
     MaskedField
 )
-from .exceptions import SerializationError
+from .utils import SchemaValidator
 
-from tools import Visitor, visit
 from typing import Dict, Any
 
 import pampy
+from pampy import _
 
 
-class SchemaBuilder(Visitor):
+class SchemaBuilder:
+    def __init__(self):
+        self.validator = SchemaValidator()
+
     def create_schema(self, name: str, data: list) -> Schema:
-        return Schema(name, list(self.collect_fields(data)))
+        schema = Schema(name, [self.create_field(field) for field in data])
+        self.validator.validate_schema(schema)
+        return schema
 
-    def collect_fields(self, data: list):
-        for field in data:
-            yield self.visit(field)
+    def create_field(self, field: Any) -> Field:
+        return pampy.match(
+            field,
 
-    @visit(int)
-    def visit_int(self, field: int):
-        return ConstField(value=field)
+            int,
+            lambda value: ConstField(value=value),
 
-    @visit(str)
-    def visit_str(self, field: str):
-        return self.make_named_field(IntField(name=field))
+            str,
+            lambda name: self.make_named_field(IntField(name=name)),
 
-    def visit_mask(self, fields: Dict[int, Any]):
-        return MaskedField(fields={mask: self.visit(field) for mask, field in fields.items()})
+            Dict[int, Any],
+            lambda _: MaskedField(fields={mask: self.create_field(subfield) for mask, subfield in field.items()}),
 
-    @visit(dict)
-    def visit_object(self, field: dict):
-        if type(next(iter(field))) is int:
-            return self.visit_mask(field)
+            {'length_of': _},
+            lambda length_of: LengthOfField(field_name=length_of, offset=field.get('offset', 0)),
 
-        if (length_of := field.get('length_of')) is not None:
-            return LengthOfField(field_name=length_of, offset=field.get('offset', 0))
+            {'number_of': _},
+            lambda number_of: NumberOfField(field_name=number_of),
 
-        if (number_of := field.get('number_of')) is not None:
-            return NumberOfField(field_name=number_of)
+            {'copy_of': _},
+            lambda copy_of: CopyOfField(field_name=copy_of),
 
-        if (copy_of := field.get('copy_of')) is not None:
-            return CopyOfField(field_name=copy_of)
+            {'schema': _, 'name': _},
+            lambda schema, name: self.make_named_field(self.create_schema(name, schema)),
 
-        if (schema := field.get('schema')) is not None:
-            return self.make_named_field(self.create_schema(field['name'], schema))
+            {'type': 'str', 'name': _},
+            lambda name: StringField(name=name),
 
-        if (type_str := field.get('type')) is not None:
-            return self.make_named_field(pampy.match(
-                type_str,
-                'str', lambda _: StringField(name=field['name']),
-                'bool', lambda _: BoolField(name=field['name']),
-                'int', lambda _: IntField(name=field['name'], size=field.get('size', 1))
-            ))
+            {'type': 'bool', 'name': _},
+            lambda name: BoolField(name=name),
 
-        raise SerializationError(f"Invalid schema field: {field}")
+            {'type': 'int', 'name': _, 'size': _},
+            lambda name, size: self.make_named_field(IntField(name=name, size=size)),
+
+            {'name': _, 'length': _},
+            lambda name, length: self.make_named_field(IntField(name=name), length)
+        )
 
     @classmethod
-    def make_named_field(cls, field: NamedField) -> NamedField:
+    def make_named_field(cls, field: NamedField, length=None) -> NamedField:
         if field.name.endswith("[]"):
             field_name = field.name[:-2]
             field.name = "_"
-            return ListField(name=field_name, element_type=field)
+            return ListField(name=field_name, element_type=field, length=length)
         else:
             return field

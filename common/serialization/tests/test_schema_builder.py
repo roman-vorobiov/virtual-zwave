@@ -1,4 +1,5 @@
 from ..schema_builder import SchemaBuilder
+from ..exceptions import SerializationError
 from ..schema import (
     Schema,
     ConstField,
@@ -50,6 +51,16 @@ def test_list_field(factory):
     assert schema.fields == [ListField(name="hello")]
 
 
+def test_list_field_with_length(factory):
+    schema = factory.create_schema("", [{'name': "hello[]", 'length': 8}])
+    assert schema.fields == [ListField(name="hello", length=8)]
+
+
+def test_list_field_in_the_middle(factory):
+    schema = factory.create_schema("", ["hello[]", {'name': "tail", 'type': 'int', 'size': 4}])
+    assert schema.fields == [ListField(name="hello", stop=-4), IntField(name="tail", size=4)]
+
+
 def test_list_of_int_field(factory):
     schema = factory.create_schema("", [{'name': "hello[]", 'type': 'int', 'size': 4}])
     assert schema.fields == [ListField(name="hello", element_type=IntField(name="_", size=4))]
@@ -60,6 +71,17 @@ def test_list_of_composite_field(factory):
     assert schema.fields == [
         ListField(name="hello", element_type=Schema(name="_", fields=[IntField(name="a"), IntField(name="b")]))
     ]
+
+
+def test_list_of_invalid_composite_field_in_the_middle(factory):
+    with pytest.raises(SerializationError):
+        factory.create_schema("", [
+            {'name': "outer[]", 'schema': [
+                "inner[]",
+                {'name': "tail", 'type': 'int', 'size': 4}
+            ]},
+            {'name': "tail", 'type': 'int', 'size': 2}
+        ])
 
 
 def test_nested_list_field(factory):
@@ -77,14 +99,14 @@ def test_length_of_field(factory):
     assert schema.fields == [LengthOfField(field_name="hello")]
 
 
-def test_number_of_field(factory):
-    schema = factory.create_schema("", [{'number_of': "hello"}])
-    assert schema.fields == [NumberOfField(field_name="hello")]
-
-
 def test_length_of_field_with_offset(factory):
     schema = factory.create_schema("", [{'length_of': "hello", 'offset': 123}])
     assert schema.fields == [LengthOfField(field_name="hello", offset=123)]
+
+
+def test_number_of_field(factory):
+    schema = factory.create_schema("", [{'number_of': "hello"}])
+    assert schema.fields == [NumberOfField(field_name="hello")]
 
 
 def test_copy_of_field(factory):
@@ -109,7 +131,7 @@ def test_masked_field(factory):
     ]
 
 
-def test_composite_field(factory):
+def test_composite_field_1(factory):
     schema = factory.create_schema("", [
         "a",
         {
@@ -120,9 +142,28 @@ def test_composite_field(factory):
     ])
     assert schema.fields == [
         IntField(name="a"),
-        Schema(name="b", fields=[
+        Schema(name="b", stop=-1, fields=[
             IntField(name="b1"),
             ListField(name="b2")
+        ]),
+        IntField(name="c")
+    ]
+
+
+def test_composite_field_2(factory):
+    schema = factory.create_schema("", [
+        "a",
+        {
+            'name': "b",
+            'schema': ["b1[]", "b2"]
+        },
+        "c"
+    ])
+    assert schema.fields == [
+        IntField(name="a"),
+        Schema(name="b", stop=-1, fields=[
+            ListField(name="b1", stop=-1),
+            IntField(name="b2")
         ]),
         IntField(name="c")
     ]

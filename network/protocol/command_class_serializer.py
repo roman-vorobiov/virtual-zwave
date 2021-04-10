@@ -39,7 +39,7 @@ class CommandClassSerializer:
         class_id, command_id = self.get_id(data)
 
         if (schema := self.schemas_by_id.get((class_id, command_id, class_version))) is not None:
-            command = ObjectFromBytesConverter().create_object(schema, data)
+            command = ObjectFromBytesConverter().convert(schema, data)
             command.set_meta('name', schema.name)
             command.set_meta('class_id', class_id)
             command.set_meta('class_version', class_version)
@@ -52,7 +52,7 @@ class CommandClassSerializer:
         class_version = command.get_meta('class_version')
 
         if (schema := self.schemas_by_name.get((command_name, class_version))) is not None:
-            return ObjectToBytesConverter().serialize_object(schema, command)
+            return ObjectToBytesConverter().convert(schema, command)
 
         raise SerializationError(f"Unknown command '{command_name}'")
 

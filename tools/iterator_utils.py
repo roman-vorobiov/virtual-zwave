@@ -1,43 +1,47 @@
-from typing import Iterator, Optional
+from dataclasses import dataclass
+from typing import List, Optional, TypeVar, Generic
 
 
-class LookaheadIterator:
-    def __init__(self, iterable):
-        self.iterator = iter(iterable)
-        self.buffer = []
+T = TypeVar('T')
+
+
+class RangeIterator(Generic[T]):
+    @dataclass
+    class State:
+        idx: int
+
+    def __init__(self, data: List[T], stop=None, state: Optional[State] = None):
+        self.data = data
+        self.stop = stop or len(data)
+        self.state = state or RangeIterator.State(idx=0)
 
     def __iter__(self):
         return self
 
-    def __next__(self):
-        if self.buffer:
-            return self.buffer.pop()
+    def __next__(self) -> T:
+        value = self.current()
+        self.state.idx += 1
+        return value
+
+    def current(self) -> T:
+        if self.state.idx >= self.stop:
+            raise StopIteration()
+
+        return self.data[self.state.idx]
+
+    @property
+    def exhausted(self) -> bool:
+        return self.state.idx == self.stop
+
+    def slice(self, stop: Optional[T]) -> 'RangeIterator':
+        if stop is None:
+            stop = self.stop
+        elif stop >= 0:
+            stop += self.state.idx
         else:
-            return next(self.iterator)
+            stop += self.stop
 
-    def has_next(self):
-        if self.buffer:
-            return True
-
-        try:
-            self.buffer = [next(self.iterator)]
-        except StopIteration:
-            return False
-        else:
-            return True
-
-
-def until_exhausted(it: Optional[Iterator], stop: Optional[int] = None) -> Iterator[Iterator]:
-    if it is None:
-        return
-
-    if stop is not None:
-        for _ in range(stop):
-            yield it
-    else:
-        i = LookaheadIterator(it)
-        while i.has_next():
-            yield i
+        return RangeIterator(self.data, stop, self.state)
 
 
 def empty_async_generator(fn):

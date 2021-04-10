@@ -11,10 +11,10 @@ from .schema import (
     MaskedField
 )
 
-from tools import Object, Visitor, visit, until_exhausted
+from tools import Object, RangeIterator, Visitor, visit
 
 import itertools
-from typing import Dict, Optional, Iterable, Iterator, Tuple, Any
+from typing import Dict, Optional, List, Iterator, Tuple, Any, Union
 
 
 class Context:
@@ -24,66 +24,68 @@ class Context:
 
 
 class ObjectFromBytesConverter(Visitor):
-    def create_object(self, schema: Schema, data: Iterable[int]) -> Object:
-        return Object(dict(self.collect_fields(schema, iter(data), Context())))
+    def convert(self, schema: Schema, data: List[int]) -> Object:
+        return self.create_object(schema, RangeIterator(data))
 
-    def collect_fields(self, schema: Schema, it: Iterator[int], context: Context) -> Iterator[Tuple[str, Any]]:
+    def create_object(self, schema: Schema, it: RangeIterator[int]) -> Object:
+        return Object(dict(self.collect_fields(schema, it)))
+
+    def collect_fields(self, schema: Schema, it: RangeIterator[int]) -> Iterator[Tuple[str, Any]]:
+        context = Context()
         for field in schema.fields:
             yield from self.visit(field, it, context)
 
     @visit(ConstField, CopyOfField)
-    def visit_const_field(self, field: ConstField, it: Iterator[int], context: Context):
+    def visit_const_field(self, field: ConstField, it: RangeIterator[int], context: Context):
         next(it)
         yield from []
 
     @visit(IntField)
-    def visit_int_field(self, field: IntField, it: Iterator[int], context: Context):
-        data = list(itertools.islice(it, field.size))
+    def visit_int_field(self, field: IntField, it: RangeIterator[int], context: Context):
+        data = it.slice(field.size)
         yield field.name, int.from_bytes(data, byteorder='big')
 
     @visit(StringField)
-    def visit_string_field(self, field: StringField, it: Iterator[int], context: Context):
+    def visit_string_field(self, field: StringField, it: RangeIterator[int], context: Context):
         data = bytes(itertools.takewhile(lambda byte: byte != 0, it))
         yield field.name, data.decode('utf-8')
 
     @visit(BoolField)
-    def visit_bool_field(self, field: BoolField, it: Iterator[int], context: Context):
+    def visit_bool_field(self, field: BoolField, it: RangeIterator[int], context: Context):
         yield field.name, bool(next(it))
 
     @visit(LengthOfField)
-    def visit_length_of_field(self, field: LengthOfField, it: Iterator[int], context: Context):
+    def visit_length_of_field(self, field: LengthOfField, it: RangeIterator[int], context: Context):
         context.field_lengths[field.field_name] = next(it) - field.offset
         yield from []
 
     @visit(NumberOfField)
-    def visit_number_of_field(self, field: LengthOfField, it: Iterator[int], context: Context):
+    def visit_number_of_field(self, field: LengthOfField, it: RangeIterator[int], context: Context):
         context.list_lengths[field.field_name] = next(it)
         yield from []
 
     @visit(ListField)
-    def visit_list_field(self, field: ListField, it: Iterator[int], context: Context):
-        def element(iterator: Iterator):
-            return [value for _, value in self.visit(field.element_type, iterator, Context())][0]
+    def visit_list_field(self, field: ListField, it: RangeIterator[int], context: Context):
+        def elements():
+            while not it.exhausted:
+                (_, value), *_ = list(self.visit(field.element_type, it, Context()))
+                yield value
 
-        it = self.get_range(field.name, it, context)
-        yield field.name, [element(i) for i in until_exhausted(it, context.list_lengths.get(field.name))]
+        it = it.slice(self.get_length(field, context))
+        yield field.name, list(itertools.islice(elements(), context.list_lengths.get(field.name)))
 
     @visit(MaskedField)
-    def visit_masked_field(self, field: MaskedField, it: Iterator[int], context: Context):
+    def visit_masked_field(self, field: MaskedField, it: RangeIterator[int], context: Context):
         value = next(it)
         for mask, subfield in field.fields.items():
             # Todo: handle multi-byte masks
-            yield from self.visit(subfield, iter((value & mask,)), context)
+            yield from self.visit(subfield, RangeIterator([value & mask]), context)
 
     @visit(Schema)
-    def visit_composite_field(self, field: Schema, it: Iterator[int], context: Context):
-        if (it := self.get_range(field.name, it, context)) is not None:
-            yield field.name, self.create_object(field, it)
+    def visit_composite_field(self, field: Schema, it: RangeIterator[int], context: Context):
+        if (length := self.get_length(field, context)) != 0:
+            yield field.name, self.create_object(field, it.slice(length))
 
     @classmethod
-    def get_range(cls, field_name: str, it: Iterator[int], context: Context) -> Optional[Iterator[int]]:
-        length = context.field_lengths.get(field_name)
-        if length is None:
-            return it
-        elif length != 0:
-            return itertools.islice(it, length)
+    def get_length(cls, field: Union[ListField, Schema], context: Context) -> Optional[int]:
+        return field.length or field.stop or context.field_lengths.get(field.name)

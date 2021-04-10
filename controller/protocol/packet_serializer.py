@@ -33,7 +33,7 @@ class PacketSerializer:
         packet_id = packet[0]
 
         if (schema := self.schemas_by_id.get(packet_id)) is not None:
-            packet = ObjectFromBytesConverter().create_object(schema, packet)
+            packet = ObjectFromBytesConverter().convert(schema, packet)
             packet.set_meta('name', schema.name)
             return packet
 
@@ -43,6 +43,6 @@ class PacketSerializer:
         packet_name = packet.get_meta('name')
 
         if (schema := self.schemas_by_name.get(packet_name)) is not None:
-            return ObjectToBytesConverter().serialize_object(schema, packet)
+            return ObjectToBytesConverter().convert(schema, packet)
 
         raise SerializationError(f"Unknown packet '{packet_name}'")

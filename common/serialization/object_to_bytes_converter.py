@@ -18,7 +18,7 @@ from typing import List, Union, Any
 
 
 class ObjectToBytesConverter(Visitor):
-    def serialize_object(self, schema: Schema, obj: Object) -> List[int]:
+    def convert(self, schema: Schema, obj: Object) -> List[int]:
         return list(self.collect_bytes(schema, obj))
 
     def collect_bytes(self, schema: Schema, obj: Object):
