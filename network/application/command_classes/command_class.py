@@ -5,7 +5,7 @@ from network.protocol import Command, CommandVisitor, make_command
 
 from tools import Serializable, log_warning
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 
 if TYPE_CHECKING:
@@ -38,8 +38,11 @@ class CommandClass(Serializable, CommandVisitor):
     def handle_command(self, command: Command):
         return self.visit(command)
 
-    def send_command(self, command: Command):
-        self.channel.send_command(command)
+    def send_command(self, _command: Union[Command, str], **kwargs):
+        if type(_command) is str:
+            _command = self.make_command(_command, **kwargs)
+
+        self.channel.send_command(_command)
 
     def on_state_change(self):
         self.node.save()

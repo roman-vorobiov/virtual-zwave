@@ -26,9 +26,7 @@ class ManufacturerSpecific1(CommandClass):
         self.send_report()
 
     def send_report(self):
-        command = self.make_command('MANUFACTURER_SPECIFIC_REPORT',
-                                    manufacturer_id=self.manufacturer_id,
-                                    product_type_id=self.product_type_id,
-                                    product_id=self.product_id)
-
-        self.send_command(command)
+        self.send_command('MANUFACTURER_SPECIFIC_REPORT',
+                          manufacturer_id=self.manufacturer_id,
+                          product_type_id=self.product_type_id,
+                          product_id=self.product_id)

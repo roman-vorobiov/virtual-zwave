@@ -30,11 +30,9 @@ class ZWavePlusInfo2(CommandClass):
         self.send_info_report()
 
     def send_info_report(self):
-        command = self.make_command('ZWAVEPLUS_INFO_REPORT',
-                                    zwave_plus_version=self.zwave_plus_version,
-                                    role_type=self.role_type,
-                                    node_type=self.node_type,
-                                    installer_icon_type=self.installer_icon_type,
-                                    user_icon_type=self.user_icon_type)
-
-        self.send_command(command)
+        self.send_command('ZWAVEPLUS_INFO_REPORT',
+                          zwave_plus_version=self.zwave_plus_version,
+                          role_type=self.role_type,
+                          node_type=self.node_type,
+                          installer_icon_type=self.installer_icon_type,
+                          user_icon_type=self.user_icon_type)

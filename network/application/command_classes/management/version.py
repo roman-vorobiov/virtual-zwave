@@ -30,20 +30,18 @@ class Version1(CommandClass):
     def handle_get(self, command: Command):
         self.send_report()
 
-    def send_report(self):
-        command = self.prepare_version_report()
-        self.send_command(command)
-
     @visit('VERSION_COMMAND_CLASS_GET')
     def handle_command_class_get(self, command: Command):
         self.send_command_class_report(class_id=command.class_id)
 
-    def send_command_class_report(self, class_id: int):
-        command = self.make_command('VERSION_COMMAND_CLASS_REPORT',
-                                    class_id=class_id,
-                                    version=self.get_command_class_version(class_id) or 0)
-
+    def send_report(self):
+        command = self.prepare_version_report()
         self.send_command(command)
+
+    def send_command_class_report(self, class_id: int):
+        self.send_command('VERSION_COMMAND_CLASS_REPORT',
+                          class_id=class_id,
+                          version=self.get_command_class_version(class_id) or 0)
 
     def get_command_class_version(self, class_id: int) -> Optional[int]:
         for channel in self.node.channels:
@@ -118,36 +116,30 @@ class Version3(Version2):
     def handle_capabilities_get(self, command: Command):
         self.send_capabilities_report()
 
-    def send_capabilities_report(self):
-        command = self.prepare_capabilities_report()
-        self.send_command(command)
-
     @visit('VERSION_ZWAVE_SOFTWARE_GET')
     def handle_zwave_software_get(self, command: Command):
         self.send_zwave_software_report()
 
+    def send_capabilities_report(self):
+        self.send_command('VERSION_CAPABILITIES_REPORT',
+                          zwave_software=self.sdk_version is not None,
+                          command_class=True,
+                          version=True)
+
     def send_zwave_software_report(self):
-        if self.sdk_version is not None:
-            command = self.prepare_zwave_software_report()
-            self.send_command(command)
+        if self.sdk_version is None:
+            return
 
-    def prepare_capabilities_report(self):
-        return self.make_command('VERSION_CAPABILITIES_REPORT',
-                                 zwave_software=self.sdk_version is not None,
-                                 command_class=True,
-                                 version=True)
-
-    def prepare_zwave_software_report(self):
-        return self.make_command('VERSION_ZWAVE_SOFTWARE_REPORT',
-                                 sdk_version=self.to_major_minor_patch(self.sdk_version),
-                                 zwave_application_framework=self.to_software_info(self.zwave_application_framework_api_version,
-                                                                                   self.zwave_application_framework_build_number),
-                                 host_interface=self.to_software_info(self.host_interface_api_version,
-                                                                      self.host_interface_build_number),
-                                 zwave_protocol=self.to_software_info(self.zwave_protocol_api_version,
-                                                                      self.zwave_protocol_build_number),
-                                 application=self.to_software_info(self.application_api_version,
-                                                                   self.application_build_number))
+        self.send_command('VERSION_ZWAVE_SOFTWARE_REPORT',
+                          sdk_version=self.to_major_minor_patch(self.sdk_version),
+                          zwave_application_framework=self.to_software_info(self.zwave_application_framework_api_version,
+                                                                            self.zwave_application_framework_build_number),
+                          host_interface=self.to_software_info(self.host_interface_api_version,
+                                                               self.host_interface_build_number),
+                          zwave_protocol=self.to_software_info(self.zwave_protocol_api_version,
+                                                               self.zwave_protocol_build_number),
+                          application=self.to_software_info(self.application_api_version,
+                                                            self.application_build_number))
 
     @classmethod
     def to_software_info(cls, data: MajorMinorPatch, build_number: int) -> Object:

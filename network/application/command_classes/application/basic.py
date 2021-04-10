@@ -23,7 +23,4 @@ class Basic1(CommandClass):
         self.send_report()
 
     def send_report(self):
-        command = self.make_command('BASIC_REPORT',
-                                    value=self.value)
-
-        self.send_command(command)
+        self.send_command('BASIC_REPORT', value=self.value)
