@@ -32,7 +32,6 @@ async def test_application_node_information(rx_network, tx_req):
     rx_network('APPLICATION_NODE_INFORMATION', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
         'nodeInfo': {
-            'basic': 0x04,
             'generic': 0x10,
             'specific': 0x01,
             'commandClassIds': [0x72, 0x5E]

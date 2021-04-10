@@ -1,4 +1,5 @@
 from ..command_class import CommandClass, command_class
+from ..application import Basic1
 from ...channel import Channel
 
 from network.protocol import Command
@@ -44,12 +45,16 @@ class MultiChannel3(CommandClass):
 
     def send_capability_report(self, endpoint: int):
         channel = self.node.channels[endpoint]
+
+        def key(class_id: int) -> bool:
+            return class_id not in {Basic1.class_id, MultiChannel3.class_id}
+
         self.send_command('MULTI_CHANNEL_CAPABILITY_REPORT',
                           dynamic=False,
                           endpoint=endpoint,
                           generic_device_class=channel.generic,
                           specific_device_class=channel.specific,
-                          command_class_ids=[cc_id for cc_id in channel.command_classes if cc_id != 0x20])
+                          command_class_ids=list(filter(key, channel.command_classes)))
 
     def send_endpoint_find_report(self, generic: int, specific: int):
         self.send_command('MULTI_CHANNEL_END_POINT_FIND_REPORT',

@@ -12,5 +12,5 @@ class NodeFactory:
         self.client = client
         self.serializer = serializer
 
-    def create_node(self, basic: int) -> Node:
-        return Node(self.controller, self.client, self.serializer, basic)
+    def create_node(self) -> Node:
+        return Node(self.controller, self.client, self.serializer)

@@ -1,4 +1,3 @@
-from .command_classes import CommandClass
 from .channel import Channel
 
 from network.client import Client
@@ -22,7 +21,7 @@ class Context:
 
 
 class Node(Serializable, Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer, basic: int):
+    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
@@ -32,8 +31,6 @@ class Node(Serializable, Model, BaseNode):
         self.home_id: Optional[int] = None
         self.node_id: Optional[int] = None
         self.suc_node_id: Optional[int] = None
-
-        self.basic = basic
 
         self.channels: List[Channel] = []
 
@@ -78,21 +75,16 @@ class Node(Serializable, Model, BaseNode):
             self.channels[0].handle_command(command)
 
     def get_node_info(self) -> Object:
-        command_classes = self.collect_command_classes()
+        def key(class_id: int) -> bool:
+            return class_id not in {0x20}
+
+        root_channel = self.channels[0]
 
         return make_object(
-            basic=self.basic,
-            generic=self.channels[0].generic,
-            specific=self.channels[0].specific,
-            command_class_ids=[cc.class_id for cc in command_classes if cc.class_id != 0x20]
+            generic=root_channel.generic,
+            specific=root_channel.specific,
+            command_class_ids=list(filter(key, root_channel.command_classes))
         )
-
-    def collect_command_classes(self) -> List[CommandClass]:
-        all_command_classes = (command_class for channel in self.channels
-                               for command_class in channel.command_classes.values())
-
-        # set does not preserve order, but dict does
-        return list(dict.fromkeys(all_command_classes))
 
     def send_command(self, command: List[int]):
         # Todo: associations

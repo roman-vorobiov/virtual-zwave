@@ -1,5 +1,4 @@
 export default {
-    basic: 0x04,
     channels: [
         {
             generic: 0x10,

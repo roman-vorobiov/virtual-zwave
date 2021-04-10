@@ -67,7 +67,7 @@ class TestMultiChannel1:
            endpoint=0,
            generic_device_class=0x10,
            specific_device_class=0x01,
-           command_class_ids=[0x5E, 0x72, 0x86, 0x60])
+           command_class_ids=[0x5E, 0x72, 0x86])
 
         rx('MULTI_CHANNEL_CAPABILITY_GET', endpoint=1)
         tx('MULTI_CHANNEL_CAPABILITY_REPORT',

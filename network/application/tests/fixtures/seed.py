@@ -5,7 +5,7 @@ import pytest
 
 @pytest.fixture
 def node(node_factory):
-    node = node_factory.create_node(basic=0x04)
+    node = node_factory.create_node()
     node.add_to_network(123, 2)
     yield node
 

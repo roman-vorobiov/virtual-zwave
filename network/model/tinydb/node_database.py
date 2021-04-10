@@ -51,7 +51,7 @@ class NodeDatabase(NodeRepository):
         self.table.truncate()
 
     def from_record(self, record: dict) -> Node:
-        node = self.node_factory.create_node(record['basic'])
+        node = self.node_factory.create_node()
         node.id = record['id']
         node.repository = self
 

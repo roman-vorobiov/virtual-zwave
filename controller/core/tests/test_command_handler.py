@@ -19,18 +19,15 @@ def command_handler(requests_from_host_serializer, request_manager, storage, lib
 
 
 @pytest.fixture
-def node():
-    yield make_object(basic=1,
-                      generic=2,
-                      specific=3,
-                      command_class_ids=[0x72, 0x5E, 0x20],
-                      command_class_versions={0x72: 1, 0x5E: 1, 0x20: 1})
+def nif():
+    yield make_object(generic=2, specific=3, command_class_ids=[0x72, 0x5E, 0x20])
 
 
 @pytest.fixture
-def included_node(node, node_info_repository):
-    node_info_repository.add(2, node)
-    yield node
+def included_node(nif, node_info_repository):
+    node_info = make_object(basic=0x04, generic=nif.generic, specific=nif.specific)
+    node_info_repository.add(2, node_info)
+    yield node_info
 
 
 @pytest.fixture
@@ -86,14 +83,14 @@ async def test_add_node_to_network_no_node(rx, tx_req, tx_res, tx_network):
 
 
 @pytest.mark.asyncio
-async def test_add_node_to_network_with_node(rx, tx_req, tx_res, tx_network, network_controller, node):
+async def test_add_node_to_network_with_node(rx, tx_req, tx_res, tx_network, network_controller, nif):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
     tx_network('ADD_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(0, 1, node)
+    network_controller.on_node_information_frame(0, 1, nif)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
-    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=nif)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
     tx_network('ADD_TO_NETWORK', {
         'destination': {
@@ -108,12 +105,12 @@ async def test_add_node_to_network_with_node(rx, tx_req, tx_res, tx_network, net
 
 
 @pytest.mark.asyncio
-async def test_add_node_to_network_twice(rx, tx_req, tx_res, tx_network, network_controller, included_node):
+async def test_add_node_to_network_twice(rx, tx_req, tx_res, tx_network, network_controller, nif, included_node):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
     tx_network('ADD_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(network_controller.home_id, 2, included_node)
+    network_controller.on_node_information_frame(network_controller.home_id, 2, nif)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.FAILED, source=0, node_info=None)
 
@@ -125,7 +122,7 @@ async def test_add_node_to_network_stop(rx, tx_req, tx_res):
 
 
 @pytest.mark.asyncio
-async def test_add_node_to_network_after_stop(rx, tx_req, tx_res, tx_network, network_controller, node):
+async def test_add_node_to_network_after_stop(rx, tx_req, tx_res, tx_network, network_controller, nif):
     rx('ADD_NODE_TO_NETWORK', mode=AddNodeMode.ANY, options=0, function_id=0)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
     tx_network('ADD_NODE_STARTED', {})
@@ -137,9 +134,9 @@ async def test_add_node_to_network_after_stop(rx, tx_req, tx_res, tx_network, ne
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.LEARN_READY, source=0, node_info=None)
     tx_network('ADD_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(0, 1, node)
+    network_controller.on_node_information_frame(0, 1, nif)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.NODE_FOUND, source=0, node_info=None)
-    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=node)
+    await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.ADDING_SLAVE, source=2, node_info=nif)
     await tx_req('ADD_NODE_TO_NETWORK', function_id=0, status=AddNodeStatus.PROTOCOL_DONE, source=2, node_info=None)
     tx_network('ADD_TO_NETWORK', {
         'destination': {
@@ -168,12 +165,12 @@ async def test_remove_node_from_network_no_node(rx, tx_req, tx_res, tx_network):
 
 
 @pytest.mark.asyncio
-async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, tx_network, network_controller, included_node):
+async def test_remove_node_from_network_with_node(rx, tx_req, tx_res, tx_network, network_controller, nif, included_node):
     rx('REMOVE_NODE_FROM_NETWORK', mode=RemoveNodeMode.ANY, options=0, function_id=0)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.LEARN_READY, source=0, node_info=None)
     tx_network('REMOVE_NODE_STARTED', {})
 
-    network_controller.on_node_information_frame(network_controller.home_id, 2, included_node)
+    network_controller.on_node_information_frame(network_controller.home_id, 2, nif)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.NODE_FOUND, source=0, node_info=None)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.REMOVING_SLAVE, source=2, node_info=included_node)
     await tx_req('REMOVE_NODE_FROM_NETWORK', function_id=0, status=RemoveNodeStatus.DONE, source=2, node_info=included_node)
@@ -198,7 +195,7 @@ def test_get_node_protocol_info_no_node(rx, tx_req, tx_res, network):
 
 def test_get_node_protocol_info_with_node(rx, tx_req, tx_res, included_node):
     rx('GET_NODE_PROTOCOL_INFO', node_id=2)
-    tx_res('GET_NODE_PROTOCOL_INFO', basic=1, generic=2, specific=3)
+    tx_res('GET_NODE_PROTOCOL_INFO', basic=0x04, generic=2, specific=3)
 
 
 def test_request_node_info(rx, tx_req, tx_res, tx_network):

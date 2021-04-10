@@ -8,7 +8,6 @@ import pytest
 @pytest.fixture
 def node_info():
     yield {
-        'basic': 0x04,
         'channels': [
             {
                 'generic': 0x10,

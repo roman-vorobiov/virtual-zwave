@@ -1,6 +1,6 @@
 from controller.protocol.commands.add_node_to_network import AddNodeMode, AddNodeStatus
 
-from tools import Object, ReusableFuture, empty_async_generator
+from tools import Object, make_object, ReusableFuture, empty_async_generator
 
 from asyncio import CancelledError
 from typing import TYPE_CHECKING
@@ -40,7 +40,11 @@ class NodeAddingController:
                 return
 
             self.new_node_id = self.generate_node_id()
-            self.network_controller.node_infos.add(self.new_node_id, node_info)
+            self.network_controller.node_infos.add(self.new_node_id, make_object(
+                basic=node_info.basic,
+                generic=node_info.generic,
+                specific=node_info.specific
+            ))
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, node_info
 
             self.network_controller.send_message(old_home_id, old_node_id, 'ADD_TO_NETWORK', {

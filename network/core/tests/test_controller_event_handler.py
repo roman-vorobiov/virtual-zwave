@@ -76,7 +76,6 @@ def test_request_node_info(rx_controller, tx_controller, included_node):
         'source': {'homeId': 0xC0000000, 'nodeId': 2},
         'destination': {'homeId': 0xC0000000, 'nodeId': 1},
         'nodeInfo': {
-            'basic': 0x04,
             'generic': 0x10,
             'specific': 0x01,
             'commandClassIds': [0x72, 0x5E, 0x86]

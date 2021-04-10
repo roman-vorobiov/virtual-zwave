@@ -31,6 +31,9 @@ class NetworkEventHandler(RemoteMessageVisitor):
     def handle_node_information(self, message: dict):
         node_info = Object.from_json(message['nodeInfo'])
 
+        # Todo: support controller nodes
+        node_info.basic = 0x04
+
         home_id = message['source']['homeId']
         node_id = message['source']['nodeId']
 

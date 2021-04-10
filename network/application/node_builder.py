@@ -10,7 +10,7 @@ class NodeBuilder:
         self.node_factory = node_factory
 
     def from_json(self, node_info: dict) -> Node:
-        node = self.node_factory.create_node(basic=node_info['basic'])
+        node = self.node_factory.create_node()
 
         for channel_info in node_info['channels']:
             channel = node.add_channel(channel_info['generic'], channel_info['specific'])
