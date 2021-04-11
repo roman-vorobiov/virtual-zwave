@@ -11,6 +11,7 @@ from tools import make_object
 
 import asyncio
 import pytest
+from aiofastforward import FastForward
 
 
 @pytest.fixture
@@ -225,17 +226,36 @@ async def test_send_data(rx, tx_req, tx_res, tx_network, ack, included_node):
 
 
 @pytest.mark.asyncio
-async def test_send_data_unreachable(rx, tx_req, tx_res, tx_network, included_node):
-    rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
-    tx_res('SEND_DATA', result=True)
-    await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.NO_ACK)
-    tx_network('APPLICATION_COMMAND', {
-        'destination': {
-            'homeId': 0xC0000000,
-            'nodeId': 2
-        },
-        'command': [0x20, 0x01, 0x10]
-    })
+async def test_send_data_unreachable(rx, tx_req, tx_res, tx_network, included_node, event_loop):
+    with FastForward(event_loop) as forward:
+        rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
+        tx_res('SEND_DATA', result=True)
+        await forward(1)
+        await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.NO_ACK)
+        tx_network('APPLICATION_COMMAND', {
+            'destination': {
+                'homeId': 0xC0000000,
+                'nodeId': 2
+            },
+            'command': [0x20, 0x01, 0x10]
+        })
+
+
+@pytest.mark.asyncio
+async def test_send_data_too_late(rx, tx_req, tx_res, tx_network, ack, included_node, event_loop):
+    with FastForward(event_loop) as forward:
+        rx('SEND_DATA', node_id=2, data=[0x20, 0x01, 0x10], tx_options=0, function_id=123)
+        tx_res('SEND_DATA', result=True)
+        await forward(1)
+        asyncio.create_task(ack(node_id=2))
+        await tx_req('SEND_DATA', function_id=123, tx_status=TransmitStatus.NO_ACK)
+        tx_network('APPLICATION_COMMAND', {
+            'destination': {
+                'homeId': 0xC0000000,
+                'nodeId': 2
+            },
+            'command': [0x20, 0x01, 0x10]
+        })
 
 
 @pytest.mark.asyncio
