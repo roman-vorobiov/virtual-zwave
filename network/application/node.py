@@ -15,7 +15,7 @@ from typing import List, Optional
 
 
 class Node(Serializable, Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer, secure=False):
+    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
@@ -29,17 +29,27 @@ class Node(Serializable, Model, BaseNode):
 
         self.channels: List[Channel] = []
 
-        self.secure = secure
+        self.secure = False
 
     def __getstate__(self):
-        # Todo: save network key
         state = self.__dict__.copy()
+        state['network_key'] = self.security_utils.network_key
         del state['remote_interface']
         del state['client']
         del state['serializer']
         del state['security_utils']
         del state['repository']
         return state
+
+    def __setstate__(self, state: dict):
+        if (network_key := state.get('network_key')) is not None:
+            self.security_utils.set_network_key(network_key)
+
+        self.node_id = state.get('node_id')
+        self.home_id = state.get('home_id')
+        self.suc_node_id = state.get('suc_node_id')
+
+        self.secure = state.get('secure', False)
 
     def add_channel(self, generic: int, specific: int) -> Channel:
         channel = Channel(self, generic, specific)

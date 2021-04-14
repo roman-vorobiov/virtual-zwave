@@ -55,8 +55,7 @@ class NodeDatabase(NodeRepository):
         node.id = record['id']
         node.repository = self
 
-        node.add_to_network(record['home_id'], record['node_id'])
-        node.set_suc_node_id(record['suc_node_id'])
+        node.__setstate__(record)
 
         for channel_record in record['channels']:
             channel = node.add_channel(channel_record['generic'], channel_record['specific'])

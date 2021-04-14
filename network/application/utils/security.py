@@ -22,14 +22,16 @@ def calculate_authentication_tag(key: Bytes, payload: Bytes) -> Bytes:
 
 class SecurityUtils:
     def __init__(self):
+        self.network_key = None
         self.authentication_key = None
         self.encryption_key = None
 
         self.set_network_key([0x00] * BLOCK_SIZE)
 
     def set_network_key(self, network_key: Bytes):
-        self.authentication_key = ecb_encrypt(network_key, [0x55] * BLOCK_SIZE)
-        self.encryption_key = ecb_encrypt(network_key, [0xAA] * BLOCK_SIZE)
+        self.network_key = network_key
+        self.authentication_key = ecb_encrypt(self.network_key, [0x55] * BLOCK_SIZE)
+        self.encryption_key = ecb_encrypt(self.network_key, [0xAA] * BLOCK_SIZE)
 
     def encrypt_and_sign(
         self,

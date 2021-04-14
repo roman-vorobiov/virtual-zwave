@@ -23,7 +23,8 @@ class CommandClass(Serializable, CommandVisitor):
         self.secure = False
 
     def __getstate__(self):
-        state = {'class_version': self.class_version, **self.__dict__}
+        state = self.__dict__.copy()
+        state['class_version'] = self.class_version
         del state['channel']
         return state
 
