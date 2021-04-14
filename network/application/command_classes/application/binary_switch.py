@@ -1,5 +1,6 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
+from ...request_context import Context
 
 from network.protocol import Command
 
@@ -14,13 +15,13 @@ class BinarySwitch1(CommandClass):
         self.value = value
 
     @visit('SWITCH_BINARY_SET')
-    def handle_set(self, command: Command):
+    def handle_set(self, command: Command, context: Context):
         self.value = command.value
         self.on_state_change()
 
     @visit('SWITCH_BINARY_GET')
-    def handle_get(self, command: Command):
-        self.send_report()
+    def handle_get(self, command: Command, context: Context):
+        self.send_report(context)
 
-    def send_report(self):
-        self.send_command('SWITCH_BINARY_REPORT', value=self.value)
+    def send_report(self, context: Context):
+        self.send_command(context, 'SWITCH_BINARY_REPORT', value=self.value)

@@ -1,4 +1,5 @@
 from .command_classes import CommandClass
+from .request_context import Context
 
 from network.protocol import Command
 from network.resources import CONSTANTS
@@ -52,20 +53,20 @@ class Channel(Serializable):
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_SECURITY']
         return self.command_classes[class_id]
 
-    def handle_command(self, data: List[int]):
+    def handle_command(self, data: List[int], context: Context):
         class_id = data[0]
 
         if (command_class := self.command_classes.get(class_id)) is not None:
             command = self.node.serializer.from_bytes(data, command_class.class_version)
-            command_class.handle_command(command)
+            command_class.handle_command(command, context)
         else:
             log_warning(f"Channel does not support command class {class_id}")
 
-    def send_command(self, command: Command):
+    def send_command(self, command: Command, context: Context):
         data = self.node.serializer.to_bytes(command)
 
         if self.endpoint == 0:
-            self.node.send_command(data)
+            self.node.send_command(data, context)
         else:
             multi_channel_cc = self.node.channels[0].get_multi_channel_command_class()
-            multi_channel_cc.send_encapsulated_command(self.endpoint, data)
+            multi_channel_cc.send_encapsulated_command(context, self.endpoint, data)

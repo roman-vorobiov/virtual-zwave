@@ -1,5 +1,6 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
+from ...request_context import Context
 
 from network.protocol import Command
 
@@ -67,68 +68,65 @@ class Security1(CommandClass):
         return {}
 
     @visit('SECURITY_SCHEME_GET')
-    def handle_scheme_get(self, command: Command):
-        self.send_scheme_report()
+    def handle_scheme_get(self, command: Command, context: Context):
+        self.send_scheme_report(context)
 
     @visit('NETWORK_KEY_SET')
-    def handle_network_key_set(self, command: Command):
+    def handle_network_key_set(self, command: Command, context: Context):
         self.node.secure = True
         self.node.security_utils.set_network_key(command.network_key)
-        self.send_network_key_verify()
+        self.send_network_key_verify(context)
 
     @visit('SECURITY_NONCE_GET')
-    def handle_nonce_get(self, command: Command):
-        self.send_nonce_report()
+    def handle_nonce_get(self, command: Command, context: Context):
+        self.send_nonce_report(context)
 
     @visit('SECURITY_NONCE_REPORT')
-    def handle_nonce_report(self, command: Command):
-        self.external_nonce_table[self.context.node_id].set(command.nonce)
+    def handle_nonce_report(self, command: Command, context: Context):
+        self.external_nonce_table[context.node_id].set(command.nonce)
 
     @visit('SECURITY_MESSAGE_ENCAPSULATION')
-    def handle_message_encapsulation(self, command: Command):
-        self.handle_encapsulated_command(command, header=0x81)
+    def handle_message_encapsulation(self, command: Command, context: Context):
+        self.handle_encapsulated_command(command, context, header=0x81)
 
     @visit('SECURITY_MESSAGE_ENCAPSULATION_NONCE_GET')
-    def handle_message_encapsulation_nonce_get(self, command: Command):
-        self.send_nonce_report()
-        self.handle_encapsulated_command(command, header=0xC1)
+    def handle_message_encapsulation_nonce_get(self, command: Command, context: Context):
+        self.send_nonce_report(context)
+        self.handle_encapsulated_command(command, context, header=0xC1)
 
     @visit('SECURITY_COMMANDS_SUPPORTED_GET')
-    def handle_commands_supported_get(self, command: Command):
-        self.send_commands_supported_report()
+    def handle_commands_supported_get(self, command: Command, context: Context):
+        self.send_commands_supported_report(context)
 
-    def send_scheme_report(self):
-        self.send_command('SECURITY_SCHEME_REPORT',
+    def send_scheme_report(self, context: Context):
+        self.send_command(context, 'SECURITY_SCHEME_REPORT',
                           supported_security_schemes=SecuritySchemes.SECURITY_0)
 
-    def send_network_key_verify(self):
-        self.send_command('NETWORK_KEY_VERIFY')
+    def send_network_key_verify(self, context: Context):
+        self.send_command(context, 'NETWORK_KEY_VERIFY')
 
-    def send_nonce_get(self):
-        with self.update_context(force_unsecure=True):
-            self.send_command('SECURITY_NONCE_GET')
+    def send_nonce_get(self, context: Context):
+        self.send_command(context.copy(force_unsecure=True), 'SECURITY_NONCE_GET')
 
-    def send_nonce_report(self):
+    def send_nonce_report(self, context: Context):
         nonce = self.generate_nonce()
-        self.internal_nonce_table[self.context.node_id].set(nonce)
+        self.internal_nonce_table[context.node_id].set(nonce)
 
-        with self.update_context(force_unsecure=True):
-            self.send_command('SECURITY_NONCE_REPORT', nonce=nonce)
+        self.send_command(context.copy(force_unsecure=True), 'SECURITY_NONCE_REPORT', nonce=nonce)
 
-    def send_commands_supported_report(self):
+    def send_commands_supported_report(self, context: Context):
         # Todo: make sure command classes list fits
-        self.send_command('SECURITY_COMMANDS_SUPPORTED_REPORT',
+        self.send_command(context, 'SECURITY_COMMANDS_SUPPORTED_REPORT',
                           reports_to_follow=0,
                           command_class_ids=[cc.class_id for cc in self.channel.command_classes.values()
                                              if cc.advertise_in_nif and cc.secure and cc is not self])
 
-    async def send_encapsulated_command(self, command: List[int]):
+    async def send_encapsulated_command(self, context: Context, command: List[int]):
         # Todo: split long commands
         payload = make_object(sequenced=False, second=False, sequence_counter=0, command=command)
-        receiver = self.context.node_id or self.node.lifeline
 
-        self.send_nonce_get()
-        nonce, identifier = await self.external_nonce_table[receiver].get()
+        self.send_nonce_get(context)
+        nonce, identifier = await self.external_nonce_table[context.node_id].get()
         if nonce is None:
             return
 
@@ -140,18 +138,17 @@ class Security1(CommandClass):
             receiver_nonce=nonce,
             header=0x81,
             sender=self.node.node_id,
-            receiver=receiver
+            receiver=context.node_id
         )
 
-        with self.update_context(force_unsecure=True):
-            self.send_command('SECURITY_MESSAGE_ENCAPSULATION',
-                              initialization_vector=initialization_vector,
-                              encrypted_payload=encrypted,
-                              receiver_nonce_id=identifier,
-                              message_authentication_code=tag)
+        self.send_command(context.copy(force_unsecure=True), 'SECURITY_MESSAGE_ENCAPSULATION',
+                          initialization_vector=initialization_vector,
+                          encrypted_payload=encrypted,
+                          receiver_nonce_id=identifier,
+                          message_authentication_code=tag)
 
-    def handle_encapsulated_command(self, command: Command, header: int):
-        nonce = self.internal_nonce_table[self.context.node_id].get()
+    def handle_encapsulated_command(self, command: Command, context: Context, header: int):
+        nonce = self.internal_nonce_table[context.node_id].get()
         if nonce is None:
             log_warning("Failed to decrypt the message: nonce expired")
             return
@@ -161,25 +158,25 @@ class Security1(CommandClass):
             sender_nonce=command.initialization_vector,
             receiver_nonce=nonce,
             header=header,
-            sender=self.context.node_id,
+            sender=context.node_id,
             receiver=self.node.node_id,
             mac=command.message_authentication_code
         )
 
         if decrypted is not None:
             payload = self.node.serializer.to_object('EncryptedPayload', decrypted)
-            if (command := self.get_command(payload)) is not None:
-                self.channel.handle_command(command)
+            if (command := self.get_command(context, payload)) is not None:
+                self.channel.handle_command(command, context)
         else:
             log_warning("Failed to decrypt the message: unable to verify")
 
-    def get_command(self, payload: Object) -> Optional[List[int]]:
+    def get_command(self, context: Context, payload: Object) -> Optional[List[int]]:
         if not payload.sequenced:
             return payload.command
         elif not payload.second:
-            self.sequence_table[(self.context.node_id, payload.sequence_counter)] = payload.command
+            self.sequence_table[(context.node_id, payload.sequence_counter)] = payload.command
         else:
-            first = self.sequence_table.pop((self.context.node_id, payload.sequence_counter))
+            first = self.sequence_table.pop((context.node_id, payload.sequence_counter))
             return first + payload.command
 
     @classmethod

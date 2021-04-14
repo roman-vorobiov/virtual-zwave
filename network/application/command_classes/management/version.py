@@ -1,5 +1,6 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
+from ...request_context import Context
 
 from network.protocol import Command
 
@@ -27,19 +28,19 @@ class Version1(CommandClass):
         self.application_version = application_version
 
     @visit('VERSION_GET')
-    def handle_get(self, command: Command):
-        self.send_report()
+    def handle_get(self, command: Command, context: Context):
+        self.send_report(context)
 
     @visit('VERSION_COMMAND_CLASS_GET')
-    def handle_command_class_get(self, command: Command):
-        self.send_command_class_report(class_id=command.class_id)
+    def handle_command_class_get(self, command: Command, context: Context):
+        self.send_command_class_report(context, class_id=command.class_id)
 
-    def send_report(self):
+    def send_report(self, context: Context):
         command = self.prepare_version_report()
-        self.send_command(command)
+        self.send_command(context, command)
 
-    def send_command_class_report(self, class_id: int):
-        self.send_command('VERSION_COMMAND_CLASS_REPORT',
+    def send_command_class_report(self, context: Context, class_id: int):
+        self.send_command(context, 'VERSION_COMMAND_CLASS_REPORT',
                           class_id=class_id,
                           version=self.get_command_class_version(class_id) or 0)
 
@@ -113,24 +114,24 @@ class Version3(Version2):
         self.application_build_number = application_build_number
 
     @visit('VERSION_CAPABILITIES_GET')
-    def handle_capabilities_get(self, command: Command):
-        self.send_capabilities_report()
+    def handle_capabilities_get(self, command: Command, context: Context):
+        self.send_capabilities_report(context)
 
     @visit('VERSION_ZWAVE_SOFTWARE_GET')
-    def handle_zwave_software_get(self, command: Command):
-        self.send_zwave_software_report()
+    def handle_zwave_software_get(self, command: Command, context: Context):
+        self.send_zwave_software_report(context)
 
-    def send_capabilities_report(self):
-        self.send_command('VERSION_CAPABILITIES_REPORT',
+    def send_capabilities_report(self, context: Context):
+        self.send_command(context, 'VERSION_CAPABILITIES_REPORT',
                           zwave_software=self.sdk_version is not None,
                           command_class=True,
                           version=True)
 
-    def send_zwave_software_report(self):
+    def send_zwave_software_report(self, context: Context):
         if self.sdk_version is None:
             return
 
-        self.send_command('VERSION_ZWAVE_SOFTWARE_REPORT',
+        self.send_command(context, 'VERSION_ZWAVE_SOFTWARE_REPORT',
                           sdk_version=self.to_major_minor_patch(self.sdk_version),
                           zwave_application_framework=self.to_software_info(self.zwave_application_framework_api_version,
                                                                             self.zwave_application_framework_build_number),

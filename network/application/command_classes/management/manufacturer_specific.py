@@ -1,5 +1,6 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
+from ...request_context import Context
 
 from network.protocol import Command
 
@@ -22,11 +23,11 @@ class ManufacturerSpecific1(CommandClass):
         self.product_id = product_id
 
     @visit('MANUFACTURER_SPECIFIC_GET')
-    def handle_get(self, command: Command):
-        self.send_report()
+    def handle_get(self, command: Command, context: Context):
+        self.send_report(context)
 
-    def send_report(self):
-        self.send_command('MANUFACTURER_SPECIFIC_REPORT',
+    def send_report(self, context: Context):
+        self.send_command(context, 'MANUFACTURER_SPECIFIC_REPORT',
                           manufacturer_id=self.manufacturer_id,
                           product_type_id=self.product_type_id,
                           product_id=self.product_id)

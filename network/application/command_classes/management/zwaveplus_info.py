@@ -1,5 +1,6 @@
 from ..command_class import CommandClass, command_class
 from ...channel import Channel
+from ...request_context import Context
 
 from network.protocol import Command
 
@@ -26,11 +27,11 @@ class ZWavePlusInfo2(CommandClass):
         self.user_icon_type = user_icon_type
 
     @visit('ZWAVEPLUS_INFO_GET')
-    def handle_info_get(self, command: Command):
-        self.send_info_report()
+    def handle_info_get(self, command: Command, context: Context):
+        self.send_info_report(context)
 
-    def send_info_report(self):
-        self.send_command('ZWAVEPLUS_INFO_REPORT',
+    def send_info_report(self, context: Context):
+        self.send_command(context, 'ZWAVEPLUS_INFO_REPORT',
                           zwave_plus_version=self.zwave_plus_version,
                           role_type=self.role_type,
                           node_type=self.node_type,

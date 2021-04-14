@@ -1,4 +1,5 @@
 from .command_class_factory import command_class_factory
+from ..request_context import Context
 
 from network.resources import CONSTANTS
 from network.protocol import Command, CommandVisitor, make_command
@@ -33,21 +34,14 @@ class CommandClass(Serializable, CommandVisitor):
     def node(self):
         return self.channel.node
 
-    @property
-    def context(self):
-        return self.node.context
+    def handle_command(self, command: Command, context: Context):
+        self.visit(command, context)
 
-    def update_context(self, **kwargs):
-        return self.node.update_context(**kwargs)
-
-    def handle_command(self, command: Command):
-        self.visit(command)
-
-    def send_command(self, _command: Union[Command, str], **kwargs):
+    def send_command(self, _context: Context, _command: Union[Command, str], **kwargs):
         if type(_command) is str:
             _command = self.make_command(_command, **kwargs)
 
-        self.channel.send_command(_command)
+        self.channel.send_command(_command, _context)
 
     def on_state_change(self):
         self.node.save()
