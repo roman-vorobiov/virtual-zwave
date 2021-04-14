@@ -8,21 +8,26 @@ from common.serialization import (
     SerializationError
 )
 
+from tools import Object
+
 import re
 from pampy import match, _, TAIL
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class CommandClassSerializer:
-    def __init__(self, command_data: Dict[str, Dict[str, list]]):
+    def __init__(self, command_data: Dict[str, Union[Dict[str, list], list]]):
         self.schemas_by_id: Dict[Tuple[int, int, Optional[int]], Schema] = {}
         self.schemas_by_name: Dict[Tuple[str, int], Schema] = {}
+        self.object_schemas: Dict[str, Schema] = {}
 
         factory = SchemaBuilder()
         pattern = re.compile(r".+(\d+)")
 
         for name, commands in command_data.items():
             if name.startswith("_"):
+                schema_name = name[1:]
+                self.object_schemas[schema_name] = factory.create_schema(schema_name, commands)
                 continue
 
             class_version = int(pattern.match(name).group(1))
@@ -34,6 +39,14 @@ class CommandClassSerializer:
 
                 self.schemas_by_id[(class_id, command_id, class_version)] = schema
                 self.schemas_by_name[(command_name, class_version)] = schema
+
+    def to_object(self, object_name: str, data: List[int]) -> Object:
+        schema = self.object_schemas[object_name]
+        return ObjectFromBytesConverter().convert(schema, data)
+
+    def from_object(self, object_name: str, obj: Object) -> List[int]:
+        schema = self.object_schemas[object_name]
+        return ObjectToBytesConverter().convert(schema, obj)
 
     def from_bytes(self, data: List[int], class_version: int) -> Command:
         class_id, command_id = self.get_id(data)

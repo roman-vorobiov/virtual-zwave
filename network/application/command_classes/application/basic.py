@@ -8,6 +8,8 @@ from tools import visit
 
 @command_class('COMMAND_CLASS_BASIC', version=1)
 class Basic1(CommandClass):
+    advertise_in_nif = False
+
     def __init__(self, channel: Channel, value=0xFE):
         super().__init__(channel)
 

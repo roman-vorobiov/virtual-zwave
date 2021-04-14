@@ -15,14 +15,19 @@ if TYPE_CHECKING:
 class CommandClass(Serializable, CommandVisitor):
     class_id: int
     class_version: int
+    advertise_in_nif = True
 
     def __init__(self, channel: 'Channel'):
         self.channel = channel
+        self.secure = False
 
     def __getstate__(self):
         state = {'class_version': self.class_version, **self.__dict__}
         del state['channel']
         return state
+
+    def mark_as_secure(self):
+        self.secure = True
 
     @property
     def node(self):
@@ -36,7 +41,7 @@ class CommandClass(Serializable, CommandVisitor):
         return self.node.update_context(**kwargs)
 
     def handle_command(self, command: Command):
-        return self.visit(command)
+        self.visit(command)
 
     def send_command(self, _command: Union[Command, str], **kwargs):
         if type(_command) is str:

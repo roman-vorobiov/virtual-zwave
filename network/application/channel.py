@@ -1,6 +1,7 @@
 from .command_classes import CommandClass
 
 from network.protocol import Command
+from network.resources import CONSTANTS
 
 from tools import Serializable, log_warning
 
@@ -9,6 +10,8 @@ from typing import TYPE_CHECKING, Dict, List, Type, TypeVar
 
 if TYPE_CHECKING:
     from .node import Node
+    from .command_classes.transport_encapsulation import MultiChannel3
+    from .command_classes.transport_encapsulation import Security1
 
 
 T = TypeVar('T', bound=CommandClass)
@@ -21,7 +24,7 @@ class Channel(Serializable):
         self.generic = generic
         self.specific = specific
 
-        self.command_classes: Dict[int, CommandClass] = {}
+        self.command_classes: Dict[int, T] = {}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -32,10 +35,22 @@ class Channel(Serializable):
     def endpoint(self):
         return self.node.channels.index(self)
 
-    def add_command_class(self, cls: Type[T], **kwargs) -> T:
+    def add_command_class(self, cls: Type[T], secure=False, **kwargs) -> T:
         cc = cls(self, **kwargs)
         self.command_classes[cc.class_id] = cc
+
+        if secure:
+            cc.mark_as_secure()
+
         return cc
+
+    def get_multi_channel_command_class(self) -> 'MultiChannel3':
+        class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_MULTI_CHANNEL']
+        return self.command_classes[class_id]
+
+    def get_security_command_class(self) -> 'Security1':
+        class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_SECURITY']
+        return self.command_classes[class_id]
 
     def handle_command(self, data: List[int]):
         class_id = data[0]
@@ -52,5 +67,5 @@ class Channel(Serializable):
         if self.endpoint == 0:
             self.node.send_command(data)
         else:
-            multi_channel_cc = self.node.channels[0].command_classes[0x60]
+            multi_channel_cc = self.node.channels[0].get_multi_channel_command_class()
             multi_channel_cc.send_encapsulated_command(self.endpoint, data)
