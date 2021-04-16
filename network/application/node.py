@@ -10,7 +10,6 @@ from common import RemoteInterface, BaseNode, Model
 from tools import Object, make_object, Serializable
 
 import humps
-import asyncio
 from typing import List, Optional
 
 
@@ -83,9 +82,9 @@ class Node(Serializable, Model, BaseNode):
     def send_command(self, command: List[int], context: Context):
         if (queue := context.multi_cmd_response_queue) is not None:
             queue.append(command)
-        elif self.secure and not context.force_unsecure:
+        elif context.secure:
             security_cc = self.channels[0].get_security_command_class()
-            asyncio.create_task(security_cc.send_encapsulated_command(context, command))
+            security_cc.send_encapsulated_command(context, command)
         else:
             self.send_message_in_current_network(context.node_id, 'APPLICATION_COMMAND', {
                 'command': command

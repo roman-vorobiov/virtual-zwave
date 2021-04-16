@@ -40,16 +40,12 @@ class ExternalNonce:
 
     def __init__(self):
         self.value = ReusableFuture()
-        self.identifier = 0
 
-    async def get(self) -> Tuple[Optional[List[int]], int]:
+    async def get(self) -> Optional[List[int]]:
         try:
-            identifier = self.identifier
-            value = await asyncio.wait_for(self.value, timeout=self.LIFESPAN)
-            self.identifier += 1
-            return value, identifier
+            return await asyncio.wait_for(self.value, timeout=self.LIFESPAN)
         except asyncio.TimeoutError:
-            return None, self.identifier
+            pass
 
     def set(self, value: List[int]):
         self.value.set_result(value)
@@ -65,7 +61,11 @@ class Security1(CommandClass):
         self.sequence_table: Dict[Tuple[int, int], List[int]] = {}
 
     def __getstate__(self):
-        return {}
+        state = super().__getstate__()
+        del state['internal_nonce_table']
+        del state['external_nonce_table']
+        del state['sequence_table']
+        return state
 
     @visit('SECURITY_SCHEME_GET')
     def handle_scheme_get(self, command: Command, context: Context):
@@ -106,13 +106,13 @@ class Security1(CommandClass):
         self.send_command(context, 'NETWORK_KEY_VERIFY')
 
     def send_nonce_get(self, context: Context):
-        self.send_command(context.copy(force_unsecure=True), 'SECURITY_NONCE_GET')
+        self.send_command(context.copy(secure=False), 'SECURITY_NONCE_GET')
 
     def send_nonce_report(self, context: Context):
         nonce = self.generate_nonce()
         self.internal_nonce_table[context.node_id].set(nonce)
 
-        self.send_command(context.copy(force_unsecure=True), 'SECURITY_NONCE_REPORT', nonce=nonce)
+        self.send_command(context.copy(secure=False), 'SECURITY_NONCE_REPORT', nonce=nonce)
 
     def send_commands_supported_report(self, context: Context):
         # Todo: make sure command classes list fits
@@ -121,12 +121,15 @@ class Security1(CommandClass):
                           command_class_ids=[cc.class_id for cc in self.channel.command_classes.values()
                                              if cc.advertise_in_nif and cc.secure and cc is not self])
 
-    async def send_encapsulated_command(self, context: Context, command: List[int]):
+    def send_encapsulated_command(self, context: Context, command: List[int]):
+        asyncio.create_task(self.secure_flow(context, command))
+
+    async def secure_flow(self, context: Context, command: List[int]):
         # Todo: split long commands
         payload = make_object(sequenced=False, second=False, sequence_counter=0, command=command)
 
         self.send_nonce_get(context)
-        nonce, identifier = await self.external_nonce_table[context.node_id].get()
+        nonce = await self.external_nonce_table[context.node_id].get()
         if nonce is None:
             return
 
@@ -141,15 +144,15 @@ class Security1(CommandClass):
             receiver=context.node_id
         )
 
-        self.send_command(context.copy(force_unsecure=True), 'SECURITY_MESSAGE_ENCAPSULATION',
+        self.send_command(context.copy(secure=False), 'SECURITY_MESSAGE_ENCAPSULATION',
                           initialization_vector=initialization_vector,
                           encrypted_payload=encrypted,
-                          receiver_nonce_id=identifier,
+                          receiver_nonce_id=nonce[0],
                           message_authentication_code=tag)
 
     def handle_encapsulated_command(self, command: Command, context: Context, header: int):
         nonce = self.internal_nonce_table[context.node_id].get()
-        if nonce is None:
+        if nonce is None or nonce[0] != command.receiver_nonce_id:
             log_warning("Failed to decrypt the message: nonce expired")
             return
 
@@ -166,7 +169,7 @@ class Security1(CommandClass):
         if decrypted is not None:
             payload = self.node.serializer.to_object('EncryptedPayload', decrypted)
             if (command := self.get_command(context, payload)) is not None:
-                self.channel.handle_command(command, context)
+                self.channel.handle_command(command, context.copy(secure=True))
         else:
             log_warning("Failed to decrypt the message: unable to verify")
 

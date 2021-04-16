@@ -1,7 +1,7 @@
 from .command_classes import CommandClass
 from .request_context import Context
 
-from network.protocol import Command
+from network.protocol import Command, log_command
 from network.resources import CONSTANTS
 
 from tools import Serializable, log_warning
@@ -58,11 +58,13 @@ class Channel(Serializable):
 
         if (command_class := self.command_classes.get(class_id)) is not None:
             command = self.node.serializer.from_bytes(data, command_class.class_version)
+            log_command(context.node_id, context.endpoint, self.node.node_id, self.endpoint, command)
             command_class.handle_command(command, context)
         else:
             log_warning(f"Channel does not support command class {class_id}")
 
     def send_command(self, command: Command, context: Context):
+        log_command(self.node.node_id, self.endpoint, context.node_id, context.endpoint, command)
         data = self.node.serializer.to_bytes(command)
 
         if self.endpoint == 0:

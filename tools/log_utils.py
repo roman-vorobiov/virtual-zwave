@@ -29,7 +29,7 @@ def log_error(message: str):
 
 
 def dump_hex(data: List[int]):
-    return "[{}]".format(" ".join("{:02x}".format(byte) for byte in data))
+    return " ".join("{:02x}".format(byte) for byte in data)
 
 
 def flags_to_names_list(enum: IntFlag) -> List[str]:

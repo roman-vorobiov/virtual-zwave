@@ -86,7 +86,7 @@ def rx_encrypted(rx, tx, generate_nonce, get_last_nonce, encrypt):
         rx('SECURITY_MESSAGE_ENCAPSULATION',
            initialization_vector=nonce,
            encrypted_payload=encrypted,
-           receiver_nonce_id=0,
+           receiver_nonce_id=get_last_nonce()[0],
            message_authentication_code=tag)
 
     yield inner
@@ -110,7 +110,7 @@ def tx_encrypted(rx, tx, generate_nonce, get_last_nonce, encrypt):
         tx('SECURITY_MESSAGE_ENCAPSULATION',
            initialization_vector=get_last_nonce(),
            encrypted_payload=encrypted,
-           receiver_nonce_id=0,
+           receiver_nonce_id=nonce[0],
            message_authentication_code=tag)
 
     yield inner

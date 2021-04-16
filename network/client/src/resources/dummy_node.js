@@ -37,6 +37,16 @@ export default {
                     id: 0x20, // COMMAND_CLASS_BASIC
                     version: 1,
                     args: {}
+                },
+                {
+                    id: 0x20, // COMMAND_CLASS_SWITCH_BINARY
+                    version: 1,
+                    args: {}
+                },
+                {
+                    id: 0x98, // COMMAND_CLASS_SECURITY
+                    version: 1,
+                    args: {}
                 }
             ]
         }
