@@ -1,4 +1,5 @@
 from ..command_class import CommandClass, command_class
+from ..security_level import SecurityLevel
 from ...channel import Channel
 from ...request_context import Context
 
@@ -12,11 +13,12 @@ class ManufacturerSpecific1(CommandClass):
     def __init__(
         self,
         channel: Channel,
+        required_security: SecurityLevel,
         manufacturer_id: int,
         product_type_id: int,
         product_id: int
     ):
-        super().__init__(channel)
+        super().__init__(channel, required_security)
 
         self.manufacturer_id = manufacturer_id
         self.product_type_id = product_type_id

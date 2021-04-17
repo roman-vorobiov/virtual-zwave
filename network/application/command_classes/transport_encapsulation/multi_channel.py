@@ -53,7 +53,7 @@ class MultiChannel3(CommandClass):
                           generic_device_class=channel.generic,
                           specific_device_class=channel.specific,
                           command_class_ids=[cc.class_id for cc in channel.command_classes.values()
-                                             if cc.advertise_in_nif and not cc.secure and cc is not self])
+                                             if cc.advertise_in_nif and cc.supported_non_securely and cc is not self])
 
     def send_endpoint_find_report(self, context: Context, generic: int, specific: int):
         self.send_command(context, 'MULTI_CHANNEL_END_POINT_FIND_REPORT',

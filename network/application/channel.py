@@ -1,4 +1,4 @@
-from .command_classes import CommandClass
+from .command_classes import CommandClass, SecurityLevel
 from .request_context import Context
 
 from network.protocol import Command, log_command
@@ -6,7 +6,7 @@ from network.resources import CONSTANTS
 
 from tools import Serializable, log_warning
 
-from typing import TYPE_CHECKING, Dict, List, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar
 
 
 if TYPE_CHECKING:
@@ -36,22 +36,18 @@ class Channel(Serializable):
     def endpoint(self):
         return self.node.channels.index(self)
 
-    def add_command_class(self, cls: Type[T], secure=False, **kwargs) -> T:
-        cc = cls(self, **kwargs)
+    def add_command_class(self, cls: Type[T], required_security=SecurityLevel.NONE, /, **kwargs) -> T:
+        cc = cls(self, required_security, **kwargs)
         self.command_classes[cc.class_id] = cc
-
-        if secure:
-            cc.mark_as_secure()
-
         return cc
 
-    def get_multi_channel_command_class(self) -> 'MultiChannel3':
+    def get_multi_channel_command_class(self) -> Optional['MultiChannel3']:
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_MULTI_CHANNEL']
-        return self.command_classes[class_id]
+        return self.command_classes.get(class_id)
 
-    def get_security_command_class(self) -> 'Security1':
+    def get_security_command_class(self) -> Optional['Security1']:
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_SECURITY']
-        return self.command_classes[class_id]
+        return self.command_classes.get(class_id)
 
     def handle_command(self, data: List[int], context: Context):
         class_id = data[0]

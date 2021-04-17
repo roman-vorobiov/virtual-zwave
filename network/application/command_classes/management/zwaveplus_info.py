@@ -1,4 +1,5 @@
 from ..command_class import CommandClass, command_class
+from ..security_level import SecurityLevel
 from ...channel import Channel
 from ...request_context import Context
 
@@ -12,13 +13,14 @@ class ZWavePlusInfo2(CommandClass):
     def __init__(
         self,
         channel: Channel,
+        required_security: SecurityLevel,
         zwave_plus_version: int,
         role_type: int,
         node_type: int,
         installer_icon_type: int,
         user_icon_type: int
     ):
-        super().__init__(channel)
+        super().__init__(channel, required_security)
 
         self.zwave_plus_version = zwave_plus_version
         self.role_type = role_type

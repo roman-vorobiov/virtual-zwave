@@ -1,4 +1,5 @@
 from ..command_class import CommandClass, command_class
+from ..security_level import SecurityLevel
 from ...channel import Channel
 from ...request_context import Context
 
@@ -63,19 +64,15 @@ def require_secure(fn):
 
 @command_class('COMMAND_CLASS_SECURITY', version=1)
 class Security1(CommandClass):
-    def __init__(self, channel: Channel):
-        super().__init__(channel)
+    def __init__(self, channel: Channel, required_security: SecurityLevel):
+        super().__init__(channel, SecurityLevel.NONE)
 
         self.internal_nonce_table = defaultdict(InternalNonce)
         self.external_nonce_table = defaultdict(ExternalNonce)
         self.sequence_table: Dict[Tuple[int, int], List[int]] = {}
 
-    def __getstate__(self):
-        state = super().__getstate__()
-        del state['internal_nonce_table']
-        del state['external_nonce_table']
-        del state['sequence_table']
-        return state
+    def __getstate_impl__(self):
+        return {}
 
     @visit('SECURITY_SCHEME_GET')
     def handle_scheme_get(self, command: Command, context: Context):
@@ -131,7 +128,7 @@ class Security1(CommandClass):
         self.send_command(context, 'SECURITY_COMMANDS_SUPPORTED_REPORT',
                           reports_to_follow=0,
                           command_class_ids=[cc.class_id for cc in self.channel.command_classes.values()
-                                             if cc.advertise_in_nif and cc.secure and cc is not self])
+                                             if cc.advertise_in_nif and not cc.supported_non_securely])
 
     def send_encapsulated_command(self, context: Context, command: List[int]):
         asyncio.create_task(self.secure_flow(context, command))

@@ -1,4 +1,5 @@
 from .command_class_factory import command_class_factory
+from .security_level import SecurityLevel
 from ..request_context import Context
 
 from network.resources import CONSTANTS
@@ -18,25 +19,36 @@ class CommandClass(Serializable, CommandVisitor):
     class_version: int
     advertise_in_nif = True
 
-    def __init__(self, channel: 'Channel'):
+    def __init__(self, channel: 'Channel', required_security: SecurityLevel):
         self.channel = channel
-        self.secure = False
+        self.required_security = required_security
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        state['class_version'] = self.class_version
-        del state['channel']
-        return state
+        return {
+            'class_id': self.class_id,
+            'class_version': self.class_version,
+            'required_security': self.required_security,
+            'state': self.__getstate_impl__()
+        }
 
-    def mark_as_secure(self):
-        self.secure = True
+    def __getstate_impl__(self) -> dict:
+        return {key: value for key, value in self.__dict__.items() if key not in {'channel', 'required_security'}}
+
+    @property
+    def supported_non_securely(self):
+        if self.required_security == SecurityLevel.NONE:
+            return True
+        elif self.required_security == SecurityLevel.GRANTED:
+            return not self.node.secure
+        else:
+            return False
 
     @property
     def node(self):
         return self.channel.node
 
     def handle_command(self, command: Command, context: Context):
-        if not self.secure or context.secure:
+        if self.supported_non_securely or context.secure:
             self.visit(command, context)
         else:
             log_warning("Incorrect security level")

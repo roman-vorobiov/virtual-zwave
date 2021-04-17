@@ -2,9 +2,11 @@ from ..fixtures import *
 
 from ...utils import SecurityUtils
 
+from network.application.command_classes import SecurityLevel
 from network.application.command_classes.application import BinarySwitch1
 from network.application.command_classes.management import ManufacturerSpecific1
 from network.application.command_classes.management import ZWavePlusInfo2
+from network.application.command_classes.management import Version1
 from network.application.command_classes.transport_encapsulation import Security1
 
 from tools import make_object
@@ -138,8 +140,14 @@ def manufacturer_specific(channel, zwaveplus_info):
 
 
 @pytest.fixture
-def binary_switch(channel, manufacturer_specific):
-    yield channel.add_command_class(BinarySwitch1, secure=True)
+def version(channel, manufacturer_specific):
+    yield channel.add_command_class(Version1, SecurityLevel.GRANTED,
+                                    protocol_library_type=1, protocol_version=2, application_version=3)
+
+
+@pytest.fixture
+def binary_switch(channel, version):
+    yield channel.add_command_class(BinarySwitch1, SecurityLevel.SUPPORTED)
 
 
 @pytest.fixture
@@ -175,6 +183,7 @@ async def test_nif(rx, rx_encrypted, tx_encrypted, bootstrap, node):
     assert node.get_node_info().command_class_ids == [
         ZWavePlusInfo2.class_id,
         ManufacturerSpecific1.class_id,
+        Version1.class_id,
         Security1.class_id
     ]
 
@@ -202,11 +211,11 @@ async def test_commands_supported_get(rx, rx_encrypted, tx_encrypted, bootstrap)
     rx_encrypted('SECURITY_COMMANDS_SUPPORTED_GET')
     await tx_encrypted('SECURITY_COMMANDS_SUPPORTED_REPORT',
                        reports_to_follow=0,
-                       command_class_ids=[BinarySwitch1.class_id])
+                       command_class_ids=[Version1.class_id, BinarySwitch1.class_id])
 
 
 @pytest.mark.asyncio
-async def test_secure_command_class(rx, rx_encrypted, tx_encrypted, bootstrap):
+async def test_secure_command_class_highest_supported(rx, rx_encrypted, tx_encrypted, bootstrap):
     # Check before bootstrap
     rx('SWITCH_BINARY_GET', BinarySwitch1.class_id)
 
@@ -217,8 +226,23 @@ async def test_secure_command_class(rx, rx_encrypted, tx_encrypted, bootstrap):
 
     # Check after bootstrap encrypted
     rx_encrypted('SWITCH_BINARY_GET', BinarySwitch1.class_id)
-    await tx_encrypted('SWITCH_BINARY_REPORT', BinarySwitch1.class_id,
-                       value=0xFE)
+    await tx_encrypted('SWITCH_BINARY_REPORT', BinarySwitch1.class_id, value=0xFE)
+
+
+@pytest.mark.asyncio
+async def test_secure_command_class_highest_granted(rx, tx, rx_encrypted, tx_encrypted, bootstrap):
+    # Check before bootstrap
+    rx('VERSION_COMMAND_CLASS_GET', Version1.class_id, class_id=Security1.class_id)
+    tx('VERSION_COMMAND_CLASS_REPORT', Version1.class_id, class_id=Security1.class_id, version=1)
+
+    await bootstrap()
+
+    # Check after bootstrap unencrypted
+    rx('VERSION_COMMAND_CLASS_GET', Version1.class_id, class_id=Security1.class_id)
+
+    # Check after bootstrap encrypted
+    rx_encrypted('VERSION_COMMAND_CLASS_GET', Version1.class_id, class_id=Security1.class_id)
+    await tx_encrypted('VERSION_COMMAND_CLASS_REPORT', Version1.class_id, class_id=Security1.class_id, version=1)
 
 
 @pytest.mark.asyncio

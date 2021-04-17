@@ -1,6 +1,6 @@
 from ..node_repository import NodeRepository
 
-from network.application import Node, NodeFactory, command_class_factory
+from network.application import Node, NodeFactory, NodeBuilder
 
 import uuid
 from tinydb import TinyDB, Query
@@ -14,7 +14,7 @@ def where(**kwargs) -> Query:
 class NodeDatabase(NodeRepository):
     def __init__(self, db: TinyDB, node_factory: NodeFactory):
         self.table = db.table('nodes')
-        self.node_factory = node_factory
+        self.node_builder = NodeBuilder(node_factory)
         self.cache = {node_info['id']: self.from_record(node_info) for node_info in self.all()}
 
     def add(self, node: Node):
@@ -52,20 +52,9 @@ class NodeDatabase(NodeRepository):
         self.cache.clear()
 
     def from_record(self, record: dict) -> Node:
-        node = self.node_factory.create_node()
+        node = self.node_builder.from_dict(record)
         node.id = record['id']
         node.repository = self
-
-        node.__setstate__(record)
-
-        for channel_record in record['channels']:
-            channel = node.add_channel(channel_record['generic'], channel_record['specific'])
-
-            for class_id, args in channel_record['command_classes'].items():
-                version = args.pop('class_version')
-                cls = command_class_factory.find_command_class(int(class_id), version)
-                channel.add_command_class(cls, **args)
-                args['class_version'] = version
 
         return node
 

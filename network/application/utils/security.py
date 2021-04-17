@@ -8,16 +8,9 @@ Bytes = List[int]
 BLOCK_SIZE = 16
 
 
-def pad_with_zeros(payload: Bytes, block_size: int):
-    if (extra := len(payload) % block_size) != 0:
-        payload.extend([0x00] * (block_size - extra))
-
-
-def calculate_authentication_tag(key: Bytes, payload: Bytes) -> Bytes:
-    pad_with_zeros(payload, BLOCK_SIZE)
-    ciphertext = cbc_encrypt(key, payload, [0x00] * BLOCK_SIZE)
-    # Authentication tag is the last iteration of a CBC cypher truncated to 8 bytes
-    return ciphertext[-BLOCK_SIZE:-(BLOCK_SIZE // 2)]
+def pad_with_zeros(payload: Bytes):
+    if (extra := len(payload) % BLOCK_SIZE) != 0:
+        payload.extend([0x00] * (BLOCK_SIZE - extra))
 
 
 class SecurityUtils:
@@ -72,7 +65,9 @@ class SecurityUtils:
 
     def sign(self, payload: Bytes, iv: Bytes, header: int, sender: int, receiver: int) -> Bytes:
         auth_data = [*iv, header, sender, receiver, len(payload), *payload]
-        pad_with_zeros(auth_data, BLOCK_SIZE)
+        pad_with_zeros(auth_data)
+
+        # Authentication tag is the last iteration of a CBC cypher truncated to 8 bytes
         ciphertext = cbc_encrypt(self.authentication_key, auth_data, [0x00] * BLOCK_SIZE)
         return ciphertext[-BLOCK_SIZE:-(BLOCK_SIZE // 2)]
 

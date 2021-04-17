@@ -1,4 +1,5 @@
 from ..command_class import CommandClass, command_class
+from ..security_level import SecurityLevel
 from ...channel import Channel
 from ...request_context import Context
 
@@ -18,11 +19,12 @@ class Version1(CommandClass):
     def __init__(
         self,
         channel: Channel,
+        required_security: SecurityLevel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor
     ):
-        super().__init__(channel)
+        super().__init__(channel, SecurityLevel.GRANTED)
         self.protocol_library_type = protocol_library_type
         self.protocol_version = protocol_version
         self.application_version = application_version
@@ -65,13 +67,16 @@ class Version2(Version1):
     def __init__(
         self,
         channel: Channel,
+        required_security: SecurityLevel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor,
         hardware_version: int,
         firmware_versions: List[MajorMinor]
     ):
-        super().__init__(channel, protocol_library_type, protocol_version, application_version)
+        super().__init__(channel, required_security,
+                         protocol_library_type, protocol_version, application_version)
+
         self.hardware_version = hardware_version
         self.firmware_versions = firmware_versions
 
@@ -87,6 +92,7 @@ class Version3(Version2):
     def __init__(
         self,
         channel: Channel,
+        required_security: SecurityLevel,
         protocol_library_type: int,
         protocol_version: MajorMinor,
         application_version: MajorMinor,
@@ -102,7 +108,9 @@ class Version3(Version2):
         application_api_version: Optional[MajorMinorPatch] = None,
         application_build_number: Optional[int] = None
     ):
-        super().__init__(channel, protocol_library_type, protocol_version, application_version, hardware_version, firmware_versions)
+        super().__init__(channel, required_security,
+                         protocol_library_type, protocol_version, application_version, hardware_version, firmware_versions)
+
         self.sdk_version = sdk_version
         self.zwave_application_framework_api_version = zwave_application_framework_api_version
         self.zwave_application_framework_build_number = zwave_application_framework_build_number

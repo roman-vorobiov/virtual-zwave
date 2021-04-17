@@ -1,6 +1,7 @@
 from .channel import Channel
 from .request_context import Context
 from .utils import SecurityUtils
+from .command_classes import SecurityLevel
 
 from network.client import Client
 from network.protocol import CommandClassSerializer
@@ -77,7 +78,7 @@ class Node(Serializable, Model, BaseNode):
             generic=root_channel.generic,
             specific=root_channel.specific,
             command_class_ids=[cc.class_id for cc in root_channel.command_classes.values()
-                               if cc.advertise_in_nif and not cc.secure]
+                               if cc.advertise_in_nif and cc.supported_non_securely]
         )
 
     def send_command(self, command: List[int], context: Context):
