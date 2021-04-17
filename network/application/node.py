@@ -66,6 +66,10 @@ class Node(Serializable, Model, BaseNode):
         self.secure = False
         self.security_utils.reset()
 
+        for channel in self.channels:
+            for cc in channel.command_classes.values():
+                cc.reset_state()
+
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id
 

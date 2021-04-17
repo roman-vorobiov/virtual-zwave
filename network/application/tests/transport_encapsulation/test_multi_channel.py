@@ -9,50 +9,43 @@ from network.application.command_classes.transport_encapsulation import MultiCha
 import pytest
 
 
-@pytest.fixture
-def channel2(node, channel):
-    yield node.add_channel(generic=3, specific=4)
-
-
-@pytest.fixture
-def channel3(node, channel2):
-    yield node.add_channel(generic=5, specific=6)
-
-
-@pytest.fixture
-def zwaveplus_info(channel):
-    yield channel.add_command_class(ZWavePlusInfo2,
-                                    zwave_plus_version=1,
-                                    role_type=2,
-                                    node_type=3,
-                                    installer_icon_type=4,
-                                    user_icon_type=5)
-
-
-@pytest.fixture
-def manufacturer_specific(channel, zwaveplus_info):
-    yield channel.add_command_class(ManufacturerSpecific1,
-                                    manufacturer_id=1, product_type_id=2, product_id=3)
-
-
-@pytest.fixture
-def version(channel, manufacturer_specific):
-    yield channel.add_command_class(Version1,
-                                    protocol_library_type=0x06, protocol_version=(1, 2), application_version=(3, 4))
-
-
-@pytest.fixture
-def basic2(channel2):
-    yield channel2.add_command_class(Basic1, value=10)
-
-
-@pytest.fixture
-def basic3(channel3):
-    yield channel3.add_command_class(Basic1, value=20)
-
-
 class TestMultiChannel1:
-    @pytest.fixture
+    @pytest.fixture(scope='class')
+    def channel2(self, node, channel):
+        yield node.add_channel(generic=3, specific=4)
+
+    @pytest.fixture(scope='class')
+    def channel3(self, node, channel2):
+        yield node.add_channel(generic=5, specific=6)
+
+    @pytest.fixture(scope='class')
+    def zwaveplus_info(self, channel):
+        yield channel.add_command_class(ZWavePlusInfo2,
+                                        zwave_plus_version=1,
+                                        role_type=2,
+                                        node_type=3,
+                                        installer_icon_type=4,
+                                        user_icon_type=5)
+
+    @pytest.fixture(scope='class')
+    def manufacturer_specific(self, channel, zwaveplus_info):
+        yield channel.add_command_class(ManufacturerSpecific1,
+                                        manufacturer_id=1, product_type_id=2, product_id=3)
+
+    @pytest.fixture(scope='class')
+    def version(self, channel, manufacturer_specific):
+        yield channel.add_command_class(Version1,
+                                        protocol_library_type=0x06, protocol_version=(1, 2), application_version=(3, 4))
+
+    @pytest.fixture(scope='class')
+    def basic2(self, channel2):
+        yield channel2.add_command_class(Basic1, value=10)
+
+    @pytest.fixture(scope='class')
+    def basic3(self, channel3):
+        yield channel3.add_command_class(Basic1, value=20)
+
+    @pytest.fixture(scope='class', autouse=True)
     def command_class(self, channel, version, basic2, basic3):
         yield channel.add_command_class(MultiChannel3)
 

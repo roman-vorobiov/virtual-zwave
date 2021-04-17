@@ -48,6 +48,12 @@ class Security1(CommandClass):
     def __getstate_impl__(self):
         return {}
 
+    def reset_state(self):
+        self.internal_nonce_table.clear()
+        self.external_nonce_table.clear()
+        self.sequence_table.clear()
+        self.sequence_counter = itertools.cycle(range(0x10))
+
     @visit('SECURITY_SCHEME_GET')
     def handle_scheme_get(self, command: Command, context: Context):
         self.send_scheme_report(context)

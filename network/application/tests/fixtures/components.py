@@ -5,6 +5,6 @@ from ...utils import SecurityUtils
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope='class')
 def security_utils():
     yield SecurityUtils()

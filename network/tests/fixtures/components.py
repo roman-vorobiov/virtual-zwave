@@ -27,17 +27,17 @@ def command_class_serializer():
     yield CommandClassSerializer(data)
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def controller():
     yield FakeRemoteInterface()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def client():
     yield Mock()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def node_factory(controller, client, command_class_serializer):
     yield NodeFactory(controller, client, command_class_serializer)
 

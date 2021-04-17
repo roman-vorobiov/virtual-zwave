@@ -7,7 +7,7 @@ from tools import make_object
 
 
 class TestVersion1:
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(scope='class', autouse=True)
     def command_class(self, channel):
         yield channel.add_command_class(Version1,
                                         protocol_library_type=0x06,

@@ -1,7 +1,5 @@
 from ..fixtures import *
 
-from ...utils import SecurityUtils
-
 from network.application.command_classes.transport_encapsulation import Security1
 from network.protocol import make_command
 
@@ -14,13 +12,8 @@ from typing import List
 
 
 @pytest.fixture
-def security_utils():
-    yield SecurityUtils()
-
-
-@pytest.fixture
 def network_key():
-    yield random.randbytes(16)
+    yield list(random.randbytes(16))
 
 
 @pytest.fixture
@@ -221,3 +214,8 @@ def bootstrap(rx, tx, rx_encrypted, tx_encrypted, node, security_utils, network_
         assert node.secure
 
     yield inner
+
+    node.add_to_network(home_id=123, node_id=2)
+    node.set_suc_node_id(1)
+
+    security_utils.reset()

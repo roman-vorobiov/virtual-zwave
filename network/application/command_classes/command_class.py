@@ -34,6 +34,9 @@ class CommandClass(Serializable, CommandVisitor):
     def __getstate_impl__(self) -> dict:
         return {key: value for key, value in self.__dict__.items() if key not in {'channel', 'required_security'}}
 
+    def reset_state(self):
+        pass
+
     @property
     def supported_non_securely(self):
         if self.required_security == SecurityLevel.NONE:
@@ -53,11 +56,11 @@ class CommandClass(Serializable, CommandVisitor):
         else:
             log_warning("Incorrect security level")
 
-    def send_command(self, _context: Context, _command: Union[Command, str], **kwargs):
-        if type(_command) is str:
-            _command = self.make_command(_command, **kwargs)
+    def send_command(self, context: Context, command: Union[Command, str], /, **kwargs):
+        if type(command) is str:
+            command = self.make_command(command, **kwargs)
 
-        self.channel.send_command(_command, _context)
+        self.channel.send_command(command, context)
 
     def on_state_change(self):
         self.node.save()
