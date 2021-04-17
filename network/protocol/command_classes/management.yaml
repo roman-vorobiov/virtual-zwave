@@ -1,6 +1,6 @@
 ---
 
-#======================================================================================================================#
+#==============================================================================#
 
 COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
   MANUFACTURER_SPECIFIC_GET:
@@ -27,7 +27,7 @@ COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
       0b00011111: { length_of: device_id_data }
     - device_id_data[]
 
-#======================================================================================================================#
+#==============================================================================#
 
 _MajorMinor: &MajorMinor
   - major
@@ -42,7 +42,7 @@ _SoftwareInformation: &SoftwareInformation
   - { name: api_version, schema: *MajorMinorPatch }
   - { name: build_number, type: int, size: 2 }
 
-#----------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
 
 COMMAND_CLASS_VERSION_1: &COMMAND_CLASS_VERSION_1
   VERSION_GET:
@@ -67,7 +67,7 @@ COMMAND_CLASS_VERSION_1: &COMMAND_CLASS_VERSION_1
     - class_id
     - version
 
-#----------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
 
 COMMAND_CLASS_VERSION_2: &COMMAND_CLASS_VERSION_2
   <<: *COMMAND_CLASS_VERSION_1
@@ -82,7 +82,7 @@ COMMAND_CLASS_VERSION_2: &COMMAND_CLASS_VERSION_2
     - { number_of: firmware_versions }
     - { name: "firmware_versions[]", schema: *MajorMinor }
 
-#----------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
 
 COMMAND_CLASS_VERSION_3:
   <<: *COMMAND_CLASS_VERSION_2
@@ -111,7 +111,7 @@ COMMAND_CLASS_VERSION_3:
     - { name: zwave_protocol, schema: *SoftwareInformation }
     - { name: application, schema: *SoftwareInformation }
 
-#======================================================================================================================#
+#==============================================================================#
 
 COMMAND_CLASS_ZWAVEPLUS_INFO_2:
   ZWAVEPLUS_INFO_GET:

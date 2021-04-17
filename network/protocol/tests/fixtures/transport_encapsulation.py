@@ -119,7 +119,7 @@ COMMAND_CLASS_SECURITY_1 = [
         ],
         make_command(0x98, 'SECURITY_MESSAGE_ENCAPSULATION', 1,
                      initialization_vector=[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08],
-                     command=[0x09, 0x0A],
+                     encrypted_payload=[0x09, 0x0A],
                      receiver_nonce_id=0x0B,
                      message_authentication_code=[0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13])
     ),
@@ -134,7 +134,7 @@ COMMAND_CLASS_SECURITY_1 = [
         ],
         make_command(0x98, 'SECURITY_MESSAGE_ENCAPSULATION_NONCE_GET', 1,
                      initialization_vector=[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08],
-                     command=[0x09, 0x0A],
+                     encrypted_payload=[0x09, 0x0A],
                      receiver_nonce_id=0x0B,
                      message_authentication_code=[0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13])
     )

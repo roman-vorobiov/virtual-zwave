@@ -7,6 +7,7 @@ import pytest
 def node(node_factory):
     node = node_factory.create_node()
     node.add_to_network(123, 2)
+    node.set_suc_node_id(1)
     yield node
 
 

@@ -1,4 +1,6 @@
 from .command_class_factory import command_class_factory
+from .security_level import SecurityLevel
+from ..request_context import Context
 
 from network.resources import CONSTANTS
 from network.protocol import Command, CommandVisitor, make_command
@@ -15,34 +17,47 @@ if TYPE_CHECKING:
 class CommandClass(Serializable, CommandVisitor):
     class_id: int
     class_version: int
+    advertise_in_nif = True
 
-    def __init__(self, channel: 'Channel'):
+    def __init__(self, channel: 'Channel', required_security: SecurityLevel):
         self.channel = channel
+        self.required_security = required_security
 
     def __getstate__(self):
-        state = {'class_version': self.class_version, **self.__dict__}
-        del state['channel']
-        return state
+        return {
+            'class_id': self.class_id,
+            'version': self.class_version,
+            'required_security': self.required_security,
+            'state': self.__getstate_impl__()
+        }
+
+    def __getstate_impl__(self) -> dict:
+        return {key: value for key, value in self.__dict__.items() if key not in {'channel', 'required_security'}}
+
+    @property
+    def supported_non_securely(self):
+        if self.required_security == SecurityLevel.NONE:
+            return True
+        elif self.required_security == SecurityLevel.GRANTED:
+            return not self.node.secure
+        else:
+            return False
 
     @property
     def node(self):
         return self.channel.node
 
-    @property
-    def context(self):
-        return self.node.context
+    def handle_command(self, command: Command, context: Context):
+        if self.supported_non_securely or context.secure:
+            self.visit(command, context)
+        else:
+            log_warning("Incorrect security level")
 
-    def update_context(self, **kwargs):
-        return self.node.update_context(**kwargs)
-
-    def handle_command(self, command: Command):
-        return self.visit(command)
-
-    def send_command(self, _command: Union[Command, str], **kwargs):
+    def send_command(self, _context: Context, _command: Union[Command, str], **kwargs):
         if type(_command) is str:
             _command = self.make_command(_command, **kwargs)
 
-        self.channel.send_command(_command)
+        self.channel.send_command(_command, _context)
 
     def on_state_change(self):
         self.node.save()

@@ -4,8 +4,8 @@ from tools import Object, Visitor
 Packet = Object
 
 
-def make_packet(_name: str, **kwargs) -> Packet:
-    return Packet(data=kwargs, meta={'name': _name})
+def make_packet(name: str, /, **kwargs) -> Packet:
+    return Packet(data=kwargs, meta={'name': name})
 
 
 class PacketVisitor(Visitor):

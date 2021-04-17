@@ -1,6 +1,6 @@
 ---
 
-#======================================================================================================================#
+#==============================================================================#
 
 COMMAND_CLASS_MULTI_CHANNEL_3:
   MULTI_CHANNEL_END_POINT_GET:
@@ -50,13 +50,13 @@ COMMAND_CLASS_MULTI_CHANNEL_3:
       0b01111111: destination
     - command[]
 
-#======================================================================================================================#
+#==============================================================================#
 
 _EncapsulatedCommand: &EncapsulatedCommand
   - { length_of: command }
   - command[]
 
-#----------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
 
 COMMAND_CLASS_MULTI_CMD_1:
   MULTI_CMD_ENCAP:
@@ -65,7 +65,15 @@ COMMAND_CLASS_MULTI_CMD_1:
     - { number_of: commands }
     - { name: "commands[]", schema: *EncapsulatedCommand }
 
-#======================================================================================================================#
+#==============================================================================#
+
+_EncryptedPayload:
+  - 0b00100000: {name: second, type: bool}
+    0b00010000: {name: sequenced, type: bool}
+    0b00001111: sequence_counter
+  - command[]
+
+#------------------------------------------------------------------------------#
 
 COMMAND_CLASS_SECURITY_1:
   SECURITY_COMMANDS_SUPPORTED_GET:
@@ -115,7 +123,7 @@ COMMAND_CLASS_SECURITY_1:
     - 0x98
     - 0x81
     - { name: "initialization_vector[]", length: 8 }
-    - command[]
+    - encrypted_payload[]
     - receiver_nonce_id
     - { name: "message_authentication_code[]", length: 8 }
 
@@ -123,6 +131,6 @@ COMMAND_CLASS_SECURITY_1:
     - 0x98
     - 0xC1
     - { name: "initialization_vector[]", length: 8 }
-    - command[]
+    - encrypted_payload[]
     - receiver_nonce_id
     - { name: "message_authentication_code[]", length: 8 }
