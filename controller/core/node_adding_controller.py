@@ -43,7 +43,9 @@ class NodeAddingController:
             self.network_controller.node_infos.add(self.new_node_id, make_object(
                 basic=node_info.basic,
                 generic=node_info.generic,
-                specific=node_info.specific
+                specific=node_info.specific,
+                # Controller doesn't store command classes, but this field is still required for serialization
+                command_class_ids=[]
             ))
             yield AddNodeStatus.ADDING_SLAVE, self.new_node_id, node_info
 

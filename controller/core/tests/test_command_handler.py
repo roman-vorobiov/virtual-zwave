@@ -26,7 +26,7 @@ def nif():
 
 @pytest.fixture
 def included_node(nif, node_info_repository):
-    node_info = make_object(basic=0x04, generic=nif.generic, specific=nif.specific)
+    node_info = make_object(basic=0x04, generic=nif.generic, specific=nif.specific, command_class_ids=[])
     node_info_repository.add(2, node_info)
     yield node_info
 
