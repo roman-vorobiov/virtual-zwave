@@ -26,11 +26,11 @@ class NodeRepository(ABC):
         pass
 
     @abstractmethod
-    def all(self) -> List[dict]:
+    def all(self) -> List[Node]:
         pass
 
     @abstractmethod
-    def get_node_ids(self, home_id: int) -> List[int]:
+    def get_nodes_in_home(self, home_id: int) -> List[Node]:
         pass
 
     @abstractmethod

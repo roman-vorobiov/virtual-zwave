@@ -15,7 +15,7 @@ class NodeDatabase(NodeRepository):
     def __init__(self, db: TinyDB, node_factory: NodeFactory):
         self.table = db.table('nodes')
         self.node_builder = NodeBuilder(node_factory)
-        self.cache = {node_info['id']: self.from_record(node_info) for node_info in self.all()}
+        self.cache = {node_info['id']: self.from_record(node_info) for node_info in self.load()}
 
     def add(self, node: Node):
         node.id = self.generate_id()
@@ -41,11 +41,11 @@ class NodeDatabase(NodeRepository):
             if node.home_id == home_id and node.node_id == node_id:
                 return node
 
-    def all(self) -> List[dict]:
-        return self.table.all()
+    def all(self) -> List[Node]:
+        return list(self.cache.values())
 
-    def get_node_ids(self, home_id: int) -> List[int]:
-        return [node.node_id for node in self.cache.values() if node.home_id == home_id]
+    def get_nodes_in_home(self, home_id: int) -> List[Node]:
+        return list(filter(lambda node: node.home_id == home_id, self.cache.values()))
 
     def clear(self):
         self.table.truncate()
@@ -57,6 +57,9 @@ class NodeDatabase(NodeRepository):
         node.repository = self
 
         return node
+
+    def load(self) -> List[dict]:
+        return self.table.all()
 
     @classmethod
     def generate_id(cls) -> str:

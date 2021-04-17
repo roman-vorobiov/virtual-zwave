@@ -2,7 +2,6 @@ from .fixtures import *
 
 from network.core.controller_event_handler import ControllerEventHandler
 
-import humps
 import json
 import pytest
 
@@ -30,7 +29,7 @@ def rx_controller(controller_event_handler):
 def tx_client_node_updated_broadcast(nodes, tx_client):
     def inner(home_id: int, node_id: int):
         tx_client('NODE_UPDATED', {
-            'node': humps.camelize(nodes.find(home_id, node_id).to_dict())
+            'node': nodes.find(home_id, node_id).to_json()
         })
 
     return inner

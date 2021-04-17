@@ -51,6 +51,9 @@ class Node(Serializable, Model, BaseNode):
 
         self.secure = state.get('secure', False)
 
+    def to_json(self):
+        return humps.camelize(self.to_dict())
+
     def add_channel(self, generic: int, specific: int) -> Channel:
         channel = Channel(self, generic, specific)
         self.channels.append(channel)

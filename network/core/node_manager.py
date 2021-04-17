@@ -4,7 +4,6 @@ from network.model import NodeRepository
 
 from network.client import Client
 
-import humps
 from typing import List
 
 
@@ -27,7 +26,7 @@ class NodeManager:
         self.nodes.clear()
 
     def get_nodes_as_json(self) -> List[dict]:
-        return humps.camelize(self.nodes.all())
+        return [node.to_json() for node in self.nodes.all()]
 
     def get_node(self, id: str) -> Node:
         return self.nodes.get(id)
@@ -62,4 +61,5 @@ class NodeManager:
         self.add_to_network(node, NodeManager.DEFAULT_HOME_ID, self.generate_node_id())
 
     def generate_node_id(self) -> int:
-        return max(self.nodes.get_node_ids(NodeManager.DEFAULT_HOME_ID), default=0) + 1
+        node_ids = (node.node_id for node in self.nodes.get_nodes_in_home(NodeManager.DEFAULT_HOME_ID))
+        return max(node_ids, default=0) + 1

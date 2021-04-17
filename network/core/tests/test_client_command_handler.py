@@ -2,7 +2,6 @@ from .fixtures import *
 
 from network.core.command_handler import CommandHandler
 
-import humps
 import pytest
 import json
 
@@ -26,7 +25,7 @@ def rx_client(command_handler):
 def test_get_nodes(rx_client, tx_client, included_node):
     rx_client('GET_NODES', {})
     tx_client('NODES_LIST', {
-        'nodes': [humps.camelize(included_node.to_dict())]
+        'nodes': [included_node.to_json()]
     })
 
 
@@ -48,7 +47,7 @@ def test_create_node(rx_client, tx_client, tx_controller, nodes, node_info):
     })
     assert len(nodes.all()) == 1
     tx_client('NODE_UPDATED', {
-        'node': humps.camelize(nodes.all()[0])
+        'node': nodes.all()[0].to_json()
     })
 
 
