@@ -20,8 +20,8 @@ class NodeBuilder:
             channel = node.add_channel(channel_info['generic'], channel_info['specific'])
 
             for class_info in channel_info['command_classes']:
-                required_security = SecurityLevel(class_info.get('required_security', 'none'))
-                cls = command_class_factory.find_command_class(class_info['id'], class_info['version'])
-                channel.add_command_class(cls, required_security, **class_info['args'])
+                required_security = SecurityLevel(class_info.get('required_security', 'NONE'))
+                cls = command_class_factory.find_command_class(class_info['class_id'], class_info['version'])
+                channel.add_command_class(cls, required_security, **class_info['state'])
 
         return node

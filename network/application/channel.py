@@ -28,9 +28,11 @@ class Channel(Serializable):
         self.command_classes: Dict[int, T] = {}
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        del state['node']
-        return state
+        return {
+            'generic': self.generic,
+            'specific': self.specific,
+            'command_classes': list(self.command_classes.values())
+        }
 
     @property
     def endpoint(self):

@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class SecurityLevel(Enum):
-    NONE = "none"
-    GRANTED = "granted"
-    SUPPORTED = "supported"
+    NONE = "NONE"
+    GRANTED = "HIGHEST_GRANTED"
+    SUPPORTED = "HIGHEST_SUPPORTED"

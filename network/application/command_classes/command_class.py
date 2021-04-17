@@ -26,7 +26,7 @@ class CommandClass(Serializable, CommandVisitor):
     def __getstate__(self):
         return {
             'class_id': self.class_id,
-            'class_version': self.class_version,
+            'version': self.class_version,
             'required_security': self.required_security,
             'state': self.__getstate_impl__()
         }

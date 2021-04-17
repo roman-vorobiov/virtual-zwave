@@ -6,8 +6,8 @@ import json
 Command = Object
 
 
-def make_command(_class_id: int, _name: str, _class_version=1, **kwargs) -> Command:
-    return Command(data=kwargs, meta={'name': _name, 'class_id': _class_id, 'class_version': _class_version})
+def make_command(class_id: int, name: str, class_version=1, /, **kwargs) -> Command:
+    return Command(data=kwargs, meta={'name': name, 'class_id': class_id, 'class_version': class_version})
 
 
 class CommandVisitor(Visitor):
