@@ -26,6 +26,9 @@ class SecurityUtils:
         self.authentication_key = None
         self.encryption_key = None
 
+        self.reset()
+
+    def reset(self):
         self.set_network_key([0x00] * BLOCK_SIZE)
 
     def set_network_key(self, network_key: Bytes):

@@ -60,6 +60,7 @@ class Node(Serializable, Model, BaseNode):
         self.home_id = home_id
         self.suc_node_id = None
         self.secure = False
+        self.security_utils.reset()
 
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id

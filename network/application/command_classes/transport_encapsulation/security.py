@@ -51,6 +51,16 @@ class ExternalNonce:
         self.value.set_result(value)
 
 
+def require_secure(fn):
+    def wrapper(self, command: Command, context: Context):
+        if context.secure:
+            fn(self, command, context)
+        else:
+            log_warning("Incorrect security level")
+
+    return wrapper
+
+
 @command_class('COMMAND_CLASS_SECURITY', version=1)
 class Security1(CommandClass):
     def __init__(self, channel: Channel):
@@ -72,6 +82,7 @@ class Security1(CommandClass):
         self.send_scheme_report(context)
 
     @visit('NETWORK_KEY_SET')
+    @require_secure
     def handle_network_key_set(self, command: Command, context: Context):
         self.node.secure = True
         self.node.security_utils.set_network_key(command.network_key)
@@ -95,6 +106,7 @@ class Security1(CommandClass):
         self.handle_encapsulated_command(command, context, header=0xC1)
 
     @visit('SECURITY_COMMANDS_SUPPORTED_GET')
+    @require_secure
     def handle_commands_supported_get(self, command: Command, context: Context):
         self.send_commands_supported_report(context)
 
@@ -126,6 +138,8 @@ class Security1(CommandClass):
 
     async def secure_flow(self, context: Context, command: List[int]):
         # Todo: split long commands
+        assert len(command) <= 28
+
         payload = make_object(sequenced=False, second=False, sequence_counter=0, command=command)
 
         self.send_nonce_get(context)

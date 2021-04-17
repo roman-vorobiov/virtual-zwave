@@ -8,8 +8,8 @@ import pytest
 
 @pytest.fixture
 def rx(controller, node, command_class, command_class_serializer):
-    def inner(name: str, **kwargs):
-        command = make_command(command_class.class_id, name, command_class.class_version, **kwargs)
+    def inner(name: str, class_id=None, /, **kwargs):
+        command = make_command(class_id or command_class.class_id, name, command_class.class_version, **kwargs)
         data = command_class_serializer.to_bytes(command)
 
         node.handle_command(source_id=1, command=data)
@@ -26,8 +26,8 @@ def rx(controller, node, command_class, command_class_serializer):
 
 @pytest.fixture
 def tx(controller, command_class, command_class_serializer):
-    def inner(name: str, **kwargs):
-        command = make_command(command_class.class_id, name, command_class.class_version, **kwargs)
+    def inner(name: str, class_id=None, /, **kwargs):
+        command = make_command(class_id or command_class.class_id, name, command_class.class_version, **kwargs)
         data = command_class_serializer.to_bytes(command)
 
         assert controller.pop() == {

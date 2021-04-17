@@ -36,7 +36,10 @@ class CommandClass(Serializable, CommandVisitor):
         return self.channel.node
 
     def handle_command(self, command: Command, context: Context):
-        self.visit(command, context)
+        if not self.secure or context.secure:
+            self.visit(command, context)
+        else:
+            log_warning("Incorrect security level")
 
     def send_command(self, _context: Context, _command: Union[Command, str], **kwargs):
         if type(_command) is str:
