@@ -77,7 +77,7 @@ def test_request_node_info(rx_controller, tx_controller, included_node):
         'nodeInfo': {
             'generic': 0x10,
             'specific': 0x01,
-            'commandClassIds': [0x72, 0x5E, 0x86]
+            'commandClassIds': [0x72, 0x5E, 0x86, 0x25]
         }
     })
 

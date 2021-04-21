@@ -25,7 +25,14 @@ class NetworkEventHandler(RemoteMessageVisitor):
 
     @visit('APPLICATION_COMMAND')
     def handle_application_command(self, message: dict):
-        self.network_controller.on_application_command(message['source']['nodeId'], message['command'])
+        if message['destination']['nodeId'] == self.network_controller.node_id:
+            self.network_controller.on_application_command(message['source']['nodeId'], message['command'])
+        else:
+            # Todo: Messages should go to the destination directly w/o going through the controller
+            self.network_controller.remote_interface.send_message({
+                'messageType': 'APPLICATION_COMMAND',
+                'message': message
+            })
 
     @visit('APPLICATION_NODE_INFORMATION')
     def handle_node_information(self, message: dict):

@@ -1,14 +1,7 @@
-class VisitorMeta(type):
-    def __init__(cls, name, bases, dct):
-        super().__init__(name, bases, dct)
-        cls.__visit_dispatcher__ = dict(cls.get_visit_methods())
+from .meta import create_marker
 
-    def get_visit_methods(cls):
-        for attribute_name in dir(cls):
-            attribute = getattr(cls, attribute_name)
-            if hasattr(attribute, '__visited_classes__'):
-                for visited_class in attribute.__visited_classes__:
-                    yield visited_class, attribute
+
+VisitorMeta, visit = create_marker('__visit_dispatcher__', '__visited_classes__')
 
 
 class Visitor(metaclass=VisitorMeta):
@@ -21,11 +14,3 @@ class Visitor(metaclass=VisitorMeta):
 
     def visit_default(self, obj, *args, **kwargs):
         raise KeyError(obj.__class__)
-
-
-def visit(*classes):
-    def wrapper(fn):
-        fn.__visited_classes__ = classes
-        return fn
-
-    return wrapper

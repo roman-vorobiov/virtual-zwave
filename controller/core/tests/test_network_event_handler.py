@@ -28,6 +28,18 @@ async def test_application_command(rx_network, tx_network, tx_req):
 
 
 @pytest.mark.asyncio
+async def test_application_command_to_other_node(rx_network, tx_network, tx_req):
+    message = 'APPLICATION_COMMAND', {
+        'source': {'homeId': 0xC0000000, 'nodeId': 2},
+        'destination': {'homeId': 0xC0000000, 'nodeId': 3},
+        'command': [0x20, 0x01, 123]
+    }
+
+    rx_network(*message)
+    tx_network(*message)
+
+
+@pytest.mark.asyncio
 async def test_application_node_information(rx_network, tx_req):
     rx_network('APPLICATION_NODE_INFORMATION', {
         'source': {'homeId': 0xC0000000, 'nodeId': 2},

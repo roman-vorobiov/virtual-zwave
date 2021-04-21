@@ -40,8 +40,8 @@ def rx_network(network_event_handler):
         network_event_handler.process_message(json.dumps({
             'messageType': message_type,
             'message': {
-                **message,
-                'destination': {'homeId': 0xC0000000, 'nodeId': 1}
+                'destination': {'homeId': 0xC0000000, 'nodeId': 1},
+                **message
             }
         }))
 

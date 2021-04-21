@@ -1,7 +1,6 @@
 from .channel import Channel
 from .request_context import Context
-from .utils import SecurityUtils
-from .command_classes import SecurityLevel
+from .utils import SecurityUtils, AssociationGroup
 
 from network.client import Client
 from network.protocol import CommandClassSerializer
@@ -54,8 +53,8 @@ class Node(Serializable, Model, BaseNode):
     def to_json(self):
         return humps.camelize(self.to_dict())
 
-    def add_channel(self, generic: int, specific: int) -> Channel:
-        channel = Channel(self, generic, specific)
+    def add_channel(self, generic: int, specific: int, association_groups: List[AssociationGroup] = None) -> Channel:
+        channel = Channel(self, generic, specific, association_groups or [])
         self.channels.append(channel)
         return channel
 

@@ -1,5 +1,6 @@
 from .command_classes import CommandClass, SecurityLevel
 from .request_context import Context
+from .utils import AssociationsManager, AssociationGroup
 
 from network.protocol import Command, log_command
 from network.resources import CONSTANTS
@@ -19,8 +20,9 @@ T = TypeVar('T', bound=CommandClass)
 
 
 class Channel(Serializable):
-    def __init__(self, node: 'Node', generic: int, specific: int):
+    def __init__(self, node: 'Node', generic: int, specific: int, association_groups: List[AssociationGroup] = None):
         self.node = node
+        self.associations = AssociationsManager(association_groups or [])
 
         self.generic = generic
         self.specific = specific
@@ -31,6 +33,7 @@ class Channel(Serializable):
         return {
             'generic': self.generic,
             'specific': self.specific,
+            'association_groups': self.associations.groups,
             'command_classes': list(self.command_classes.values())
         }
 

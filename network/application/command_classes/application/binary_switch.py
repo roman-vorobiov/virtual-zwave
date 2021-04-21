@@ -1,4 +1,4 @@
-from ..command_class import CommandClass, command_class
+from ..command_class import CommandClass, command_class, signal
 from ..security_level import SecurityLevel
 from ...channel import Channel
 from ...request_context import Context
@@ -15,6 +15,13 @@ class BinarySwitch1(CommandClass):
 
         self.value = value
 
+    def update_state(self, *, value=None):
+        if value is not None:
+            self.value = value
+            self.emit('SWITCH_BINARY_REPORT')
+
+        self.on_state_change()
+
     @visit('SWITCH_BINARY_SET')
     def handle_set(self, command: Command, context: Context):
         self.value = command.value
@@ -24,5 +31,6 @@ class BinarySwitch1(CommandClass):
     def handle_get(self, command: Command, context: Context):
         self.send_report(context)
 
+    @signal('SWITCH_BINARY_REPORT')
     def send_report(self, context: Context):
         self.send_command(context, 'SWITCH_BINARY_REPORT', value=self.value)
