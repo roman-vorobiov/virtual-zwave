@@ -87,7 +87,10 @@ class FieldLengthGetter(Visitor):
 
     @visit(StringField)
     def get_string_length(self, field: StringField):
-        return DYNAMIC
+        if self.find_reference_field(field.name) is not None:
+            return DYNAMIC
+        else:
+            return UNSPECIFIED
 
     def visit_default(self, field: Schema, *args, **kwargs):
         return 1

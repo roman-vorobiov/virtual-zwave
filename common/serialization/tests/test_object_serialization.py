@@ -68,7 +68,7 @@ def test_int_field_with_size(from_bytes_converter, to_bytes_converter):
 
 def test_str_field(from_bytes_converter, to_bytes_converter):
     schema = Schema("", [StringField(name="hello")])
-    data = list(b'hello world\x00')
+    data = list(b'hello world')
 
     packet = from_bytes_converter.convert(schema, data)
     assert packet.hello == "hello world"

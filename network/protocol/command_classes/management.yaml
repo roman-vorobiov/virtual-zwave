@@ -58,6 +58,69 @@ COMMAND_CLASS_ASSOCIATION_3:
 
 #==============================================================================#
 
+_AssociationGroupInfo: &AssociationGroupInfo
+  - group_id
+  - 0x00
+  - { name: profile, schema: [generic, specific] }
+  - 0x00
+  - 0x00
+  - 0x00
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_ASSOCIATION_GRP_INFO_1: &COMMAND_CLASS_ASSOCIATION_GRP_INFO_1
+  ASSOCIATION_GROUP_NAME_GET:
+    - 0x59
+    - 0x01
+    - group_id
+
+  ASSOCIATION_GROUP_NAME_REPORT:
+    - 0x59
+    - 0x02
+    - group_id
+    - { length_of: name }
+    - { name: name, type: str }
+
+  ASSOCIATION_GROUP_INFO_GET:
+    - 0x59
+    - 0x03
+    - 0b10000000: { name: refresh_cache, type: bool }
+      0b01000000: { name: list_mode, type: bool }
+    - group_id
+
+  ASSOCIATION_GROUP_INFO_REPORT:
+    - 0x59
+    - 0x04
+    - 0b10000000: { name: list_mode, type: bool }
+      0b01000000: { name: dynamic_info, type: bool }
+      0b00111111: { number_of: groups }
+    - { name: "groups[]", schema: *AssociationGroupInfo }
+
+  ASSOCIATION_GROUP_COMMAND_LIST_GET:
+    - 0x59
+    - 0x05
+    - 0b10000000: { name: allow_cache, type: bool }
+    - group_id
+
+  ASSOCIATION_GROUP_COMMAND_LIST_REPORT:
+    - 0x59
+    - 0x06
+    - group_id
+    - { length_of: commands }
+    - { name: "commands[]", schema: [class_id, command_id] }
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_ASSOCIATION_GRP_INFO_2: &COMMAND_CLASS_ASSOCIATION_GRP_INFO_2
+  <<: *COMMAND_CLASS_ASSOCIATION_GRP_INFO_1
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_ASSOCIATION_GRP_INFO_3:
+  <<: *COMMAND_CLASS_ASSOCIATION_GRP_INFO_2
+
+#==============================================================================#
+
 COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
   MANUFACTURER_SPECIFIC_GET:
     - 0x72

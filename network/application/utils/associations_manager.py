@@ -2,7 +2,7 @@ from tools import Serializable
 
 from enum import IntEnum
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 
 
 class AgiProfile(IntEnum):
@@ -34,6 +34,17 @@ class AssociationsManager:
     def __init__(self, groups: List[AssociationGroup]):
         self.groups = groups
 
+    @property
+    def group_ids(self) -> Iterator[int]:
+        return range(1, len(self.groups) + 1)
+
+    def get_destinations(self, group_id: int) -> List[int]:
+        group = self.get_group(group_id)
+        return [node_id for node_id, _ in group.targets]
+
+    def get_group(self, group_id: int) -> AssociationGroup:
+        return self.groups[group_id - 1]
+
     def subscribe(self, group_id: int, node_id: int, endpoint=0):
         key = (node_id, endpoint)
         group = self.get_group(group_id)
@@ -51,8 +62,8 @@ class AssociationsManager:
             pass
 
     def unsubscribe_from_all(self, node_id: int):
-        for idx, _ in enumerate(self.groups):
-            self.unsubscribe(idx + 1, node_id)
+        for group_id in self.group_ids:
+            self.unsubscribe(group_id, node_id)
 
     def clear_association_in_group(self, group_id: int):
         self.get_group(group_id).targets.clear()
@@ -60,13 +71,6 @@ class AssociationsManager:
     def clear_all(self):
         for group in self.groups:
             group.targets.clear()
-
-    def get_destinations(self, group_id: int) -> List[int]:
-        group = self.get_group(group_id)
-        return [node_id for node_id, _ in group.targets]
-
-    def get_group(self, group_id: int) -> AssociationGroup:
-        return self.groups[group_id - 1]
 
     def find_targets(self, class_id: int, command_id: int):
         for group in self.groups:

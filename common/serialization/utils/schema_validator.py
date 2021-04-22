@@ -1,5 +1,5 @@
 from .field_length_getter import FieldLengthGetter, UNSPECIFIED
-from ..schema import Schema, ListField
+from ..schema import Schema, ListField, StringField
 from ..exceptions import SerializationError
 
 from tools import RangeIterator, Visitor, visit
@@ -23,6 +23,10 @@ class SchemaValidator(Visitor):
             raise SerializationError(f"Invalid schema field: {field.name}")
 
         self.visit(field, stop)
+
+    @visit(StringField)
+    def set_string_stop(self, field: StringField, stop: int):
+        field.stop = stop
 
     @visit(ListField)
     def set_list_stop(self, field: ListField, stop: int):

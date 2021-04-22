@@ -9,6 +9,7 @@ SEND_DATA:
 VERSION:
   - 0x15
   - { name: buffer, type: str }
+  - 0x00
   - library_type
 
 MEMORY_GET_ID:

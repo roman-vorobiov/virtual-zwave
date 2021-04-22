@@ -47,7 +47,7 @@ class ObjectFromBytesConverter(Visitor):
 
     @visit(StringField)
     def visit_string_field(self, field: StringField, it: RangeIterator[int], context: Context):
-        data = bytes(itertools.takewhile(lambda byte: byte != 0, it))
+        data = bytes(it.slice(self.get_length(field, context)))
         yield field.name, data.decode('utf-8')
 
     @visit(BoolField)
@@ -87,5 +87,5 @@ class ObjectFromBytesConverter(Visitor):
             yield field.name, self.create_object(field, it.slice(length))
 
     @classmethod
-    def get_length(cls, field: Union[ListField, Schema], context: Context) -> Optional[int]:
+    def get_length(cls, field: Union[StringField, ListField, Schema], context: Context) -> Optional[int]:
         return field.length or field.stop or context.field_lengths.get(field.name)

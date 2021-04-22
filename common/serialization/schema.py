@@ -45,7 +45,8 @@ class IntField(NamedField):
 
 @dataclass
 class StringField(NamedField):
-    pass
+    length: Optional[int] = None
+    stop: Optional[int] = None
 
 
 @dataclass

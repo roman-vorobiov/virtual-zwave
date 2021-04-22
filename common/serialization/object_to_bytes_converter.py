@@ -35,8 +35,7 @@ class ObjectToBytesConverter(Visitor):
 
     @visit(StringField)
     def visit_string_field(self, field: StringField, obj: Object):
-        # Manually null-terminate
-        yield from [*getattr(obj, field.name).encode('utf-8'), 0x00]
+        yield from getattr(obj, field.name).encode('utf-8')
 
     @visit(BoolField)
     def visit_bool_field(self, field: BoolField, obj: Object):

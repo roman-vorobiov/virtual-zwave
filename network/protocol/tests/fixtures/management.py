@@ -52,6 +52,58 @@ COMMAND_CLASS_ASSOCIATION_2 = [
     )
 ]
 
+COMMAND_CLASS_ASSOCIATION_GRP_INFO_1 = [
+    (
+        [0x59, 0x01, 0x01],
+        make_command(0x59, 'ASSOCIATION_GROUP_NAME_GET', 1,
+                     group_id=0x01)
+    ),
+    (
+        [0x59, 0x02, 0x01, 0x02, 0x41, 0x42],
+        make_command(0x59, 'ASSOCIATION_GROUP_NAME_REPORT',
+                     group_id=0x01,
+                     name="AB")
+    ),
+    (
+        [0x59, 0x03, 0x80, 0x02],
+        make_command(0x59, 'ASSOCIATION_GROUP_INFO_GET',
+                     refresh_cache=True,
+                     list_mode=False,
+                     group_id=0x02)
+    ),
+    (
+        [
+            0x59,
+            0x04,
+            0x82,
+            0x02, 0x00, 0x03, 0x04, 0x00, 0x00, 0x00,
+            0x05, 0x00, 0x06, 0x07, 0x00, 0x00, 0x00
+        ],
+        make_command(0x59, 'ASSOCIATION_GROUP_INFO_REPORT',
+                     list_mode=True,
+                     dynamic_info=False,
+                     groups=[
+                         make_object(group_id=0x02, profile=make_object(generic=0x03, specific=0x04)),
+                         make_object(group_id=0x05, profile=make_object(generic=0x06, specific=0x07))
+                     ])
+    ),
+    (
+        [0x59, 0x05, 0x80, 0x02],
+        make_command(0x59, 'ASSOCIATION_GROUP_COMMAND_LIST_GET',
+                     allow_cache=True,
+                     group_id=0x02)
+    ),
+    (
+        [0x59, 0x06, 0x01, 0x04, 0x03, 0x04, 0x05, 0x06],
+        make_command(0x59, 'ASSOCIATION_GROUP_COMMAND_LIST_REPORT',
+                     group_id=0x01,
+                     commands=[
+                         make_object(class_id=0x03, command_id=0x04),
+                         make_object(class_id=0x05, command_id=0x06)
+                     ])
+    )
+]
+
 COMMAND_CLASS_MANUFACTURER_SPECIFIC_1 = [
     (
         [0x72, 0x04],
@@ -176,6 +228,7 @@ COMMAND_CLASS_ZWAVEPLUS_INFO_2 = [
 MANAGEMENT = [
     *COMMAND_CLASS_ASSOCIATION_1,
     *COMMAND_CLASS_ASSOCIATION_2,
+    *COMMAND_CLASS_ASSOCIATION_GRP_INFO_1,
     *COMMAND_CLASS_MANUFACTURER_SPECIFIC_1,
     *COMMAND_CLASS_VERSION_1,
     *COMMAND_CLASS_VERSION_2,
