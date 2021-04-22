@@ -81,7 +81,7 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
     def emit(self, command_name: str):
         command_id = CONSTANTS['CommandId'][self.class_name][command_name]
 
-        for node_id, endpoint in self.channel.associations.get_targets(self.class_id, command_id):
+        for node_id, endpoint in self.channel.associations.find_targets(self.class_id, command_id):
             send_report = self.__signals__[command_name]
             send_report(self, Context(node_id=node_id, endpoint=endpoint, secure=self.node.secure))
 

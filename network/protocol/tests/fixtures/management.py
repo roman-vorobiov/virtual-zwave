@@ -3,6 +3,55 @@ from network.protocol import make_command
 from tools import make_object
 
 
+COMMAND_CLASS_ASSOCIATION_1 = [
+    (
+        [0x85, 0x01, 0x01, 0x02, 0x03],
+        make_command(0x85, 'ASSOCIATION_SET', 1,
+                     group_id=0x01,
+                     node_ids=[0x02, 0x03])
+    ),
+    (
+        [0x85, 0x02, 0x01],
+        make_command(0x85, 'ASSOCIATION_GET', 1,
+                     group_id=0x01)
+    ),
+    (
+        [0x85, 0x03, 0x01, 0x02, 0x03, 0x04, 0x05],
+        make_command(0x85, 'ASSOCIATION_REPORT', 1,
+                     group_id=0x01,
+                     max_nodes_supported=0x02,
+                     reports_to_follow=0x03,
+                     node_ids=[0x04, 0x05])
+    ),
+    (
+        [0x85, 0x04, 0x01, 0x02, 0x03],
+        make_command(0x85, 'ASSOCIATION_REMOVE', 1,
+                     group_id=0x01,
+                     node_ids=[0x02, 0x03])
+    ),
+    (
+        [0x85, 0x05],
+        make_command(0x85, 'ASSOCIATION_GROUPINGS_GET', 1)
+    ),
+    (
+        [0x85, 0x06, 0x01],
+        make_command(0x85, 'ASSOCIATION_GROUPINGS_REPORT', 1,
+                     supported_groups=0x01)
+    )
+]
+
+COMMAND_CLASS_ASSOCIATION_2 = [
+    (
+        [0x85, 0x0B],
+        make_command(0x85, 'ASSOCIATION_SPECIFIC_GROUP_GET', 2)
+    ),
+    (
+        [0x85, 0x0C, 0x01],
+        make_command(0x85, 'ASSOCIATION_SPECIFIC_GROUP_REPORT', 2,
+                     group_id=0x01)
+    )
+]
+
 COMMAND_CLASS_MANUFACTURER_SPECIFIC_1 = [
     (
         [0x72, 0x04],
@@ -125,6 +174,8 @@ COMMAND_CLASS_ZWAVEPLUS_INFO_2 = [
 ]
 
 MANAGEMENT = [
+    *COMMAND_CLASS_ASSOCIATION_1,
+    *COMMAND_CLASS_ASSOCIATION_2,
     *COMMAND_CLASS_MANUFACTURER_SPECIFIC_1,
     *COMMAND_CLASS_VERSION_1,
     *COMMAND_CLASS_VERSION_2,

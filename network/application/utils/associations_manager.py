@@ -36,21 +36,39 @@ class AssociationsManager:
 
     def subscribe(self, group_id: int, node_id: int, endpoint=0):
         key = (node_id, endpoint)
-        group = self.groups[group_id]
+        group = self.get_group(group_id)
 
         if key not in group.targets:
             group.targets.append(key)
 
     def unsubscribe(self, group_id: int, node_id: int, endpoint=0):
         key = (node_id, endpoint)
-        group = self.groups[group_id]
+        group = self.get_group(group_id)
 
         try:
             group.targets.remove(key)
         except ValueError:
             pass
 
-    def get_targets(self, class_id: int, command_id: int):
+    def unsubscribe_from_all(self, node_id: int):
+        for idx, _ in enumerate(self.groups):
+            self.unsubscribe(idx + 1, node_id)
+
+    def clear_association_in_group(self, group_id: int):
+        self.get_group(group_id).targets.clear()
+
+    def clear_all(self):
+        for group in self.groups:
+            group.targets.clear()
+
+    def get_destinations(self, group_id: int) -> List[int]:
+        group = self.get_group(group_id)
+        return [node_id for node_id, _ in group.targets]
+
+    def get_group(self, group_id: int) -> AssociationGroup:
+        return self.groups[group_id - 1]
+
+    def find_targets(self, class_id: int, command_id: int):
         for group in self.groups:
             if (class_id, command_id) in group.commands:
                 yield from group.targets

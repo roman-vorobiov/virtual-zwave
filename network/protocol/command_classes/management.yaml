@@ -2,6 +2,62 @@
 
 #==============================================================================#
 
+COMMAND_CLASS_ASSOCIATION_1: &COMMAND_CLASS_ASSOCIATION_1
+  ASSOCIATION_SET:
+    - 0x85
+    - 0x01
+    - group_id
+    - node_ids[]
+
+  ASSOCIATION_GET:
+    - 0x85
+    - 0x02
+    - group_id
+
+  ASSOCIATION_REPORT:
+    - 0x85
+    - 0x03
+    - group_id
+    - max_nodes_supported
+    - reports_to_follow
+    - node_ids[]
+
+  ASSOCIATION_REMOVE:
+    - 0x85
+    - 0x04
+    - group_id
+    - node_ids[]
+
+  ASSOCIATION_GROUPINGS_GET:
+    - 0x85
+    - 0x05
+
+  ASSOCIATION_GROUPINGS_REPORT:
+    - 0x85
+    - 0x06
+    - supported_groups
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_ASSOCIATION_2: &COMMAND_CLASS_ASSOCIATION_2
+  <<: *COMMAND_CLASS_ASSOCIATION_1
+
+  ASSOCIATION_SPECIFIC_GROUP_GET:
+    - 0x85
+    - 0x0B
+
+  ASSOCIATION_SPECIFIC_GROUP_REPORT:
+    - 0x85
+    - 0x0C
+    - group_id
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_ASSOCIATION_3:
+  <<: *COMMAND_CLASS_ASSOCIATION_2
+
+#==============================================================================#
+
 COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
   MANUFACTURER_SPECIFIC_GET:
     - 0x72
