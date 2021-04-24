@@ -148,6 +148,66 @@ COMMAND_CLASS_MANUFACTURER_SPECIFIC_1:
 
 #==============================================================================#
 
+_MultiChannelDestination: &MultiChannelDestination
+  - node_id
+  - 0b10000000: { name: bit_address, type: bool }
+    0b01111111: endpoint
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_2: &COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_2
+  MULTI_CHANNEL_ASSOCIATION_SET:
+    - 0x8E
+    - 0x01
+    - group_id
+    - node_ids[]
+    - { marker: 0x00 }
+    - { name: "multi_channel_destinations[]", schema: *MultiChannelDestination }
+
+  MULTI_CHANNEL_ASSOCIATION_GET:
+    - 0x8E
+    - 0x02
+    - group_id
+
+  MULTI_CHANNEL_ASSOCIATION_REPORT:
+    - 0x8E
+    - 0x03
+    - group_id
+    - max_nodes_supported
+    - reports_to_follow
+    - node_ids[]
+    - { marker: 0x00 }
+    - { name: "multi_channel_destinations[]", schema: *MultiChannelDestination }
+
+  MULTI_CHANNEL_ASSOCIATION_REMOVE:
+    - 0x8E
+    - 0x04
+    - group_id
+    - node_ids[]
+    - { marker: 0x00 }
+    - { name: "multi_channel_destinations[]", schema: *MultiChannelDestination }
+
+  MULTI_CHANNEL_ASSOCIATION_GROUPINGS_GET:
+    - 0x8E
+    - 0x05
+
+  MULTI_CHANNEL_ASSOCIATION_GROUPINGS_REPORT:
+    - 0x8E
+    - 0x06
+    - supported_groups
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_3: &COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_3
+  <<: *COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_2
+
+#------------------------------------------------------------------------------#
+
+COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_4:
+  <<: *COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_3
+
+#==============================================================================#
+
 _MajorMinor: &MajorMinor
   - major
   - minor

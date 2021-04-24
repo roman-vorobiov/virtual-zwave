@@ -1,2 +1,2 @@
-from .field_length_getter import FieldLengthGetter
-from .schema_validator import SchemaValidator
+from .marker_resolver import MarkerResolver
+from .ranged_fields_resolver import RangedFieldsResolver

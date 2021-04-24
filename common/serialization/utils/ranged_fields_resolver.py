@@ -1,5 +1,5 @@
 from .field_length_getter import FieldLengthGetter, UNSPECIFIED
-from ..schema import Schema, ListField, StringField
+from ..schema import Schema, ListField
 from ..exceptions import SerializationError
 
 from tools import RangeIterator, Visitor, visit
@@ -7,8 +7,8 @@ from tools import RangeIterator, Visitor, visit
 from typing import Union
 
 
-class SchemaValidator(Visitor):
-    def validate_schema(self, schema: Schema):
+class RangedFieldsResolver(Visitor):
+    def resolve_ranged_fields(self, schema: Schema):
         getter = FieldLengthGetter(schema.fields)
 
         it = RangeIterator(schema.fields)
@@ -24,10 +24,6 @@ class SchemaValidator(Visitor):
 
         self.visit(field, stop)
 
-    @visit(StringField)
-    def set_string_stop(self, field: StringField, stop: int):
-        field.stop = stop
-
     @visit(ListField)
     def set_list_stop(self, field: ListField, stop: int):
         if FieldLengthGetter([]).get_field_length(field.element_type) is UNSPECIFIED:
@@ -38,4 +34,4 @@ class SchemaValidator(Visitor):
     @visit(Schema)
     def set_schema_stop(self, field: Schema, stop: int):
         field.stop = stop
-        self.validate_schema(field)
+        self.resolve_ranged_fields(field)

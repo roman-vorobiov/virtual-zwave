@@ -14,6 +14,11 @@ class ConstField(Field):
 
 
 @dataclass
+class MarkerField(ConstField):
+    separated_field_name: str
+
+
+@dataclass
 class ReferenceField(Field):
     field_name: str
 
@@ -45,8 +50,7 @@ class IntField(NamedField):
 
 @dataclass
 class StringField(NamedField):
-    length: Optional[int] = None
-    stop: Optional[int] = None
+    null_terminated: bool
 
 
 @dataclass
@@ -59,6 +63,7 @@ class ListField(NamedField):
     element_type: Field = field(default_factory=lambda: IntField(name="_"))
     length: Optional[int] = None
     stop: Optional[int] = None
+    stop_mark: Optional[int] = None
 
 
 @dataclass

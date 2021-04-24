@@ -1,6 +1,7 @@
 from .schema import (
     Schema,
     ConstField,
+    MarkerField,
     IntField,
     BoolField,
     StringField,
@@ -29,6 +30,11 @@ class ObjectToBytesConverter(Visitor):
     def visit_const_field(self, field: ConstField, obj: Object):
         yield field.value
 
+    @visit(MarkerField)
+    def visit_marker_field(self, field: MarkerField, obj: Object):
+        if len(getattr(obj, field.separated_field_name)) > 0:
+            yield field.value
+
     @visit(IntField)
     def visit_int_field(self, field: IntField, obj: Object):
         yield from getattr(obj, field.name).to_bytes(field.size, byteorder='big')
@@ -36,6 +42,8 @@ class ObjectToBytesConverter(Visitor):
     @visit(StringField)
     def visit_string_field(self, field: StringField, obj: Object):
         yield from getattr(obj, field.name).encode('utf-8')
+        if field.null_terminated:
+            yield 0
 
     @visit(BoolField)
     def visit_bool_field(self, field: BoolField, obj: Object):

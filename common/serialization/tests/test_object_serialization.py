@@ -3,6 +3,7 @@ from ..object_to_bytes_converter import ObjectToBytesConverter
 from ..schema import (
     Schema,
     ConstField,
+    MarkerField,
     IntField,
     BoolField,
     StringField,
@@ -67,8 +68,18 @@ def test_int_field_with_size(from_bytes_converter, to_bytes_converter):
 
 
 def test_str_field(from_bytes_converter, to_bytes_converter):
-    schema = Schema("", [StringField(name="hello")])
+    schema = Schema("", [StringField(name="hello", null_terminated=False)])
     data = list(b'hello world')
+
+    packet = from_bytes_converter.convert(schema, data)
+    assert packet.hello == "hello world"
+
+    assert to_bytes_converter.convert(schema, packet) == data
+
+
+def test_null_terminated_str_field(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [StringField(name="hello", null_terminated=True)])
+    data = list(b'hello world\0')
 
     packet = from_bytes_converter.convert(schema, data)
     assert packet.hello == "hello world"
@@ -174,6 +185,51 @@ def test_list_field_with_length(from_bytes_converter, to_bytes_converter):
     assert packet.command1 == [0x01, 0x02]
     assert packet.command2 == [0x03]
     assert packet.command3 == [0x04, 0x05, 0x06]
+
+    assert to_bytes_converter.convert(schema, packet) == data
+
+
+def test_list_field_with_stop_marker(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [
+        ListField(name="head", stop_mark=0x00),
+        MarkerField(value=0x00, separated_field_name="tail"),
+        ListField(name="tail")
+    ])
+    data = [0x01, 0x02, 0x00, 0x04, 0x05, 0x06]
+
+    packet = from_bytes_converter.convert(schema, data)
+    assert packet.head == [0x01, 0x02]
+    assert packet.tail == [0x04, 0x05, 0x06]
+
+    assert to_bytes_converter.convert(schema, packet) == data
+
+
+def test_list_field_with_stop_marker_at_the_front(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [
+        ListField(name="head", stop_mark=0x00),
+        MarkerField(value=0x00, separated_field_name="tail"),
+        ListField(name="tail")
+    ])
+    data = [0x00, 0x04, 0x05, 0x06]
+
+    packet = from_bytes_converter.convert(schema, data)
+    assert packet.head == []
+    assert packet.tail == [0x04, 0x05, 0x06]
+
+    assert to_bytes_converter.convert(schema, packet) == data
+
+
+def test_list_field_with_stop_marker_at_the_end(from_bytes_converter, to_bytes_converter):
+    schema = Schema("", [
+        ListField(name="head", stop_mark=0x00),
+        MarkerField(value=0x00, separated_field_name="tail"),
+        ListField(name="tail")
+    ])
+    data = [0x01, 0x02]
+
+    packet = from_bytes_converter.convert(schema, data)
+    assert packet.head == [0x01, 0x02]
+    assert packet.tail == []
 
     assert to_bytes_converter.convert(schema, packet) == data
 

@@ -130,6 +130,52 @@ COMMAND_CLASS_MANUFACTURER_SPECIFIC_1 = [
     )
 ]
 
+COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_2 = [
+    (
+        [0x8E, 0x01, 0x01, 0x02, 0x03, 0x00, 0x04, 0x85, 0x06, 0x07],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_SET', 2,
+                     group_id=0x01,
+                     node_ids=[0x02, 0x03],
+                     multi_channel_destinations=[
+                         make_object(node_id=0x04, endpoint=0x05, bit_address=True),
+                         make_object(node_id=0x06, endpoint=0x07, bit_address=False)
+                     ])
+    ),
+    (
+        [0x8E, 0x02, 0x01],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_GET', 2,
+                     group_id=0x01)
+    ),
+    (
+        [0x8E, 0x03, 0x01, 0x02, 0x03, 0x04, 0x05],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_REPORT', 2,
+                     group_id=0x01,
+                     max_nodes_supported=0x02,
+                     reports_to_follow=0x03,
+                     node_ids=[0x04, 0x05],
+                     multi_channel_destinations=[])
+    ),
+    (
+        [0x8E, 0x04, 0x01, 0x00, 0x02, 0x83, 0x04, 0x05],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_REMOVE', 2,
+                     group_id=0x01,
+                     node_ids=[],
+                     multi_channel_destinations=[
+                         make_object(node_id=0x02, endpoint=0x03, bit_address=True),
+                         make_object(node_id=0x04, endpoint=0x05, bit_address=False)
+                     ])
+    ),
+    (
+        [0x8E, 0x05],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_GROUPINGS_GET', 2)
+    ),
+    (
+        [0x8E, 0x06, 0x01],
+        make_command(0x8E, 'MULTI_CHANNEL_ASSOCIATION_GROUPINGS_REPORT', 2,
+                     supported_groups=0x01)
+    )
+]
+
 COMMAND_CLASS_VERSION_1 = [
     (
         [0x86, 0x11],
@@ -230,6 +276,7 @@ MANAGEMENT = [
     *COMMAND_CLASS_ASSOCIATION_2,
     *COMMAND_CLASS_ASSOCIATION_GRP_INFO_1,
     *COMMAND_CLASS_MANUFACTURER_SPECIFIC_1,
+    *COMMAND_CLASS_MULTI_CHANNEL_ASSOCIATION_2,
     *COMMAND_CLASS_VERSION_1,
     *COMMAND_CLASS_VERSION_2,
     *COMMAND_CLASS_VERSION_3,

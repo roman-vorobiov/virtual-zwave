@@ -1,6 +1,7 @@
 from ..schema import (
     Field,
     Schema,
+    MarkerField,
     IntField,
     StringField,
     ListField,
@@ -59,6 +60,12 @@ class FieldLengthGetter(Visitor):
             if FieldLengthGetter([]).get_field_length(field.element_type) is not UNSPECIFIED:
                 return DYNAMIC
 
+        # Consume packet until the marker
+        next_field = self.get_next_field(field)
+        if isinstance(next_field, MarkerField):
+            field.stop_mark = next_field.value
+            return DYNAMIC
+
         return UNSPECIFIED
 
     @visit(Schema)
@@ -87,13 +94,23 @@ class FieldLengthGetter(Visitor):
 
     @visit(StringField)
     def get_string_length(self, field: StringField):
+        if field.null_terminated:
+            return DYNAMIC
+
         if self.find_reference_field(field.name) is not None:
             return DYNAMIC
-        else:
-            return UNSPECIFIED
+
+        return UNSPECIFIED
 
     def visit_default(self, field: Schema, *args, **kwargs):
         return 1
 
     def find_reference_field(self, field_name: str) -> Optional[ReferenceField]:
         return next(filter(lambda f: isinstance(f, ReferenceField) and f.field_name == field_name, self.fields), None)
+
+    def get_next_field(self, field: Field) -> Optional[Field]:
+        try:
+            idx = self.fields.index(field)
+            return self.fields[idx + 1]
+        except IndexError:
+            pass

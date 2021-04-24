@@ -1,8 +1,10 @@
+from .schema_post_processor import SchemaPostProcessor
 from .schema import (
     Field,
     NamedField,
     Schema,
     ConstField,
+    MarkerField,
     IntField,
     BoolField,
     StringField,
@@ -12,7 +14,6 @@ from .schema import (
     CopyOfField,
     MaskedField
 )
-from .utils import SchemaValidator
 
 from typing import Dict, Any
 
@@ -22,11 +23,11 @@ from pampy import _
 
 class SchemaBuilder:
     def __init__(self):
-        self.validator = SchemaValidator()
+        self.post_processor = SchemaPostProcessor()
 
     def create_schema(self, name: str, data: list) -> Schema:
         schema = Schema(name, [self.create_field(field) for field in data])
-        self.validator.validate_schema(schema)
+        self.post_processor.process(schema)
         return schema
 
     def create_field(self, field: Any) -> Field:
@@ -42,6 +43,9 @@ class SchemaBuilder:
             Dict[int, Any],
             lambda _: MaskedField(fields={mask: self.create_field(subfield) for mask, subfield in field.items()}),
 
+            {'marker': _},
+            lambda marker: MarkerField(value=marker, separated_field_name=""),
+
             {'length_of': _},
             lambda length_of: LengthOfField(field_name=length_of, offset=field.get('offset', 0)),
 
@@ -55,7 +59,7 @@ class SchemaBuilder:
             lambda schema, name: self.make_named_field(self.create_schema(name, schema)),
 
             {'type': 'str', 'name': _},
-            lambda name: StringField(name=name),
+            lambda name: StringField(name=name, null_terminated=field.get('null_terminated', False)),
 
             {'type': 'bool', 'name': _},
             lambda name: BoolField(name=name),
