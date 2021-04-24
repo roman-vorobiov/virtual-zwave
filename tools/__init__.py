@@ -1,4 +1,4 @@
-from .bit_utils import each_bit
+from .bit_utils import each_bit, create_mask
 from .checksum import calculate_lrc
 from .encryption import ecb_encrypt, ofb_encrypt, ofb_decrypt, cbc_encrypt
 from .iterator_utils import RangeIterator, empty_async_generator

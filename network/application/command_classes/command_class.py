@@ -81,9 +81,10 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
     def emit(self, command_name: str):
         command_id = CONSTANTS['CommandId'][self.class_name][command_name]
 
-        for node_id, endpoint in self.channel.associations.find_targets(self.class_id, command_id):
+        for node_id, endpoints in self.channel.associations.find_targets(self.class_id, command_id):
             send_report = self.__signals__[command_name]
-            send_report(self, Context(node_id=node_id, endpoint=endpoint, secure=self.node.secure))
+            for endpoint in endpoints:
+                send_report(self, Context(node_id=node_id, endpoint=endpoint, secure=self.node.secure))
 
     def on_state_change(self):
         self.node.save()

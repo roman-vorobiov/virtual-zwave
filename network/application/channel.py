@@ -68,7 +68,7 @@ class Channel(Serializable):
         log_command(self.node.node_id, self.endpoint, context.node_id, context.endpoint, command)
         data = self.node.serializer.to_bytes(command)
 
-        if self.endpoint == 0:
+        if self.endpoint == 0 and context.endpoint == 0:
             self.node.send_command(data, context)
         else:
             multi_channel_cc = self.node.channels[0].get_multi_channel_command_class()

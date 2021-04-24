@@ -1,8 +1,9 @@
 from tools import Serializable
 
+from collections import defaultdict
 from enum import IntEnum
 from dataclasses import dataclass, field
-from typing import List, Tuple, Iterator
+from typing import List, Set, Tuple, Iterator
 
 
 class AgiProfile(IntEnum):
@@ -19,15 +20,20 @@ class AssociationGroup(Serializable):
     name: str
     profile: Tuple[AgiProfile, int]
     commands: List[Tuple[int, int]]
-    targets: List[Tuple[int, int]] = field(default_factory=list)
+    targets: defaultdict[int, Set[int]] = field(default_factory=lambda: defaultdict(set))
 
     def __getstate__(self):
         return {
             'name': self.name,
             'profile': self.profile,
             'commands': self.commands,
-            'targets': self.targets
+            'targets': dict(self.sorted_targets)
         }
+
+    @property
+    def sorted_targets(self) -> Iterator[Tuple[int, List[int]]]:
+        for node_id, endpoints in self.targets.items():
+            yield node_id, sorted(endpoints)
 
 
 class AssociationsManager:
@@ -38,32 +44,28 @@ class AssociationsManager:
     def group_ids(self) -> Iterator[int]:
         return range(1, len(self.groups) + 1)
 
-    def get_destinations(self, group_id: int) -> List[int]:
-        group = self.get_group(group_id)
-        return [node_id for node_id, _ in group.targets]
+    def get_destinations(self, group_id: int) -> Iterator[Tuple[int, List[int]]]:
+        yield from self.get_group(group_id).sorted_targets
 
     def get_group(self, group_id: int) -> AssociationGroup:
         return self.groups[group_id - 1]
 
-    def subscribe(self, group_id: int, node_id: int, endpoint=0):
-        key = (node_id, endpoint)
+    def subscribe(self, group_id: int, node_id: int, endpoints=None):
         group = self.get_group(group_id)
 
-        if key not in group.targets:
-            group.targets.append(key)
+        group.targets[node_id].update(endpoints or [0])
 
-    def unsubscribe(self, group_id: int, node_id: int, endpoint=0):
-        key = (node_id, endpoint)
+    def unsubscribe(self, group_id: int, node_id: int, endpoints=None):
         group = self.get_group(group_id)
 
-        try:
-            group.targets.remove(key)
-        except ValueError:
-            pass
+        group.targets[node_id].difference_update(endpoints or [0])
 
-    def unsubscribe_from_all(self, node_id: int):
+        if len(group.targets[node_id]) == 0:
+            del group.targets[node_id]
+
+    def unsubscribe_from_all(self, node_id: int, endpoints=None):
         for group_id in self.group_ids:
-            self.unsubscribe(group_id, node_id)
+            self.unsubscribe(group_id, node_id, endpoints)
 
     def clear_association_in_group(self, group_id: int):
         self.get_group(group_id).targets.clear()
@@ -72,7 +74,7 @@ class AssociationsManager:
         for group in self.groups:
             group.targets.clear()
 
-    def find_targets(self, class_id: int, command_id: int):
+    def find_targets(self, class_id: int, command_id: int) -> Iterator[Tuple[int, List[int]]]:
         for group in self.groups:
             if (class_id, command_id) in group.commands:
-                yield from group.targets
+                yield from group.sorted_targets

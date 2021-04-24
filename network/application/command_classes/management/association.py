@@ -31,11 +31,13 @@ class Association1(CommandClass):
         self.send_groupings_report(context)
 
     def send_report(self, context: Context, group_id: int):
+        node_ids = [node_id for node_id, _ in self.channel.associations.get_destinations(group_id)]
+
         self.send_command(context, 'ASSOCIATION_REPORT',
                           group_id=group_id,
                           max_nodes_supported=0xFF,
                           reports_to_follow=0,
-                          node_ids=self.channel.associations.get_destinations(group_id))
+                          node_ids=node_ids)
 
     def send_groupings_report(self, context: Context):
         self.send_command(context, 'ASSOCIATION_GROUPINGS_REPORT',

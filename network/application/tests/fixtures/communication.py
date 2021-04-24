@@ -26,14 +26,14 @@ def rx(controller, node, command_class, command_class_serializer):
 
 @pytest.fixture
 def tx(controller, command_class, command_class_serializer):
-    def inner(name: str, class_id=None, /, **kwargs):
+    def inner(name: str, class_id=None, destination_id=1, /, **kwargs):
         command = make_command(class_id or command_class.class_id, name, command_class.class_version, **kwargs)
         data = command_class_serializer.to_bytes(command)
 
         assert controller.pop() == {
             'messageType': 'APPLICATION_COMMAND',
             'message': {
-                'destination': {'homeId': 123, 'nodeId': 1},
+                'destination': {'homeId': 123, 'nodeId': destination_id},
                 'source': {'homeId': 123, 'nodeId': 2},
                 'command': data
             }
