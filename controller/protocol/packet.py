@@ -11,3 +11,6 @@ def make_packet(name: str, /, **kwargs) -> Packet:
 class PacketVisitor(Visitor):
     def visit(self, packet: Packet, *args, **kwargs):
         return self.visit_as(packet, packet.get_meta('name'), *args, **kwargs)
+
+    def visit_default(self, packet: Packet, packet_name: str):
+        raise KeyError(packet_name)

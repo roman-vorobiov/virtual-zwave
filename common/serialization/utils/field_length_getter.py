@@ -10,7 +10,7 @@ from ..schema import (
 
 from tools import Visitor, visit
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Type
 
 
 class Unspecified:
@@ -102,7 +102,7 @@ class FieldLengthGetter(Visitor):
 
         return UNSPECIFIED
 
-    def visit_default(self, field: Schema, *args, **kwargs):
+    def visit_default(self, field: Field, field_type: Type[Field]):
         return 1
 
     def find_reference_field(self, field_name: str) -> Optional[ReferenceField]:

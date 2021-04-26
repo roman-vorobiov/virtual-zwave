@@ -18,7 +18,7 @@ class NodeBuilder:
         node.__setstate__(node_info)
 
         for channel_info in node_info['channels']:
-            association_groups = [AssociationGroup(**group) for group in channel_info['association_groups']]
+            association_groups = [AssociationGroup.from_dict(group) for group in channel_info['association_groups']]
             channel = node.add_channel(channel_info['generic'], channel_info['specific'], association_groups)
 
             for class_info in channel_info['command_classes']:

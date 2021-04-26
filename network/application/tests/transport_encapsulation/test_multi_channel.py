@@ -39,11 +39,11 @@ class TestMultiChannel1:
 
     @pytest.fixture(scope='class')
     def binary_switch1(self, endpoint1):
-        yield endpoint1.add_command_class(BinarySwitch1, value=10)
+        yield endpoint1.add_command_class(BinarySwitch1, value=True)
 
     @pytest.fixture(scope='class')
     def binary_switch2(self, endpoint2):
-        yield endpoint2.add_command_class(BinarySwitch1, value=20)
+        yield endpoint2.add_command_class(BinarySwitch1, value=False)
 
     @pytest.fixture(scope='class', autouse=True)
     def command_class(self, channel, version, binary_switch1, binary_switch2):
@@ -96,7 +96,7 @@ class TestMultiChannel1:
            source_endpoint=1,
            bit_address=False,
            destination=0,
-           command=[0x25, 0x03, 0x0A])
+           command=[0x25, 0x03, 0xFF])
 
     def test_receive_encapsulated_command_mask(self, rx, tx):
         rx('MULTI_CHANNEL_CMD_ENCAP',
@@ -108,9 +108,9 @@ class TestMultiChannel1:
            source_endpoint=1,
            bit_address=False,
            destination=0,
-           command=[0x25, 0x03, 0x0A])
+           command=[0x25, 0x03, 0xFF])
         tx('MULTI_CHANNEL_CMD_ENCAP',
            source_endpoint=2,
            bit_address=False,
            destination=0,
-           command=[0x25, 0x03, 0x14])
+           command=[0x25, 0x03, 0x00])

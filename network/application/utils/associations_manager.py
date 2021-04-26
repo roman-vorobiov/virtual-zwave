@@ -22,6 +22,13 @@ class AssociationGroup(Serializable):
     commands: List[Tuple[int, int]]
     targets: defaultdict[int, Set[int]] = field(default_factory=lambda: defaultdict(set))
 
+    @classmethod
+    def from_dict(cls, data: dict) -> 'AssociationGroup':
+        return AssociationGroup(name=data['name'],
+                                profile=tuple(data['profile']),
+                                commands=[tuple(command) for command in data['commands']],
+                                targets=defaultdict(set, data.get('targets', {})))
+
     def __getstate__(self):
         return {
             'name': self.name,
@@ -54,6 +61,10 @@ class AssociationsManager:
         group = self.get_group(group_id)
 
         group.targets[node_id].update(endpoints or [0])
+
+    def subscribe_to_all(self, node_id: int, endpoints=None):
+        for group in self.groups:
+            group.targets[node_id].update(endpoints or [0])
 
     def unsubscribe(self, group_id: int, node_id: int, endpoints=None):
         group = self.get_group(group_id)

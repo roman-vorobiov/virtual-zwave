@@ -18,7 +18,7 @@ class Controller {
 
     resetNetwork() {
         this.backend.sendData({
-            messageType: "RESET",
+            messageType: "RESET_NETWORK",
             message: {}
         });
     }
@@ -27,7 +27,28 @@ class Controller {
         this.backend.sendData({
             messageType: "SEND_NIF",
             message: {
-                id: nodeId
+                nodeId: nodeId
+            }
+        });
+    }
+
+    updateNode(nodeId, channelId, classId, state) {
+        this.backend.sendData({
+            messageType: "UPDATE_NODE",
+            message: {
+                nodeId: nodeId,
+                channelId: channelId,
+                classId: classId,
+                state: state
+            }
+        });
+    }
+
+    resetNode(nodeId) {
+        this.backend.sendData({
+            messageType: "RESET_NODE",
+            message: {
+                nodeId: nodeId
             }
         });
     }

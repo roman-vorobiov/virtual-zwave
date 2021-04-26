@@ -29,16 +29,6 @@ def test_get_nodes(rx_client, tx_client, included_node):
     })
 
 
-def test_send_nif(rx_client, tx_client, tx_controller, node):
-    rx_client('SEND_NIF', {
-        'id': node.id
-    })
-    tx_controller('APPLICATION_NODE_INFORMATION', {
-        'source': {'homeId': node.home_id, 'nodeId': node.node_id},
-        'nodeInfo': node.get_node_info().to_json()
-    })
-
-
 def test_create_node(rx_client, tx_client, tx_controller, nodes, node_info):
     assert len(nodes.all()) == 0
 
@@ -54,8 +44,49 @@ def test_create_node(rx_client, tx_client, tx_controller, nodes, node_info):
 def test_reset(rx_client, tx_client, tx_controller, nodes, node):
     assert len(nodes.all()) == 1
 
-    rx_client('RESET', {})
+    rx_client('RESET_NETWORK', {})
     tx_client('NODES_LIST', {
         'nodes': []
     })
     assert len(nodes.all()) == 0
+
+
+def test_send_nif(rx_client, tx_client, tx_controller, node):
+    rx_client('SEND_NIF', {
+        'nodeId': node.id
+    })
+    tx_controller('APPLICATION_NODE_INFORMATION', {
+        'source': {'homeId': node.home_id, 'nodeId': node.node_id},
+        'nodeInfo': node.get_node_info().to_json()
+    })
+
+
+def test_update_node(rx_client, tx_client, tx_controller, node):
+    command_class = node.root_channel.get_command_class(0x25)
+    assert command_class.value is False
+
+    rx_client('UPDATE_NODE', {
+        'nodeId': node.id,
+        'channelId': node.root_channel.endpoint,
+        'classId': 0x25,
+        'state': {
+            'value': True
+        }
+    })
+    tx_client('NODE_UPDATED', {
+        'node': node.to_json()
+    })
+    assert command_class.value is True
+
+
+def test_reset_node(rx_client, tx_client, tx_controller, node):
+    command_class = node.root_channel.get_command_class(0x25)
+    command_class.value = True
+
+    rx_client('RESET_NODE', {
+        'nodeId': node.id
+    })
+    tx_client('NODE_UPDATED', {
+        'node': node.to_json()
+    })
+    assert command_class.value is False

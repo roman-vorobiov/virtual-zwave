@@ -3,7 +3,7 @@ from ..exceptions import SerializationError
 
 from tools import Visitor, visit
 
-from typing import Optional
+from typing import Optional, Type
 
 
 class MarkerResolver(Visitor):
@@ -28,7 +28,7 @@ class MarkerResolver(Visitor):
     def visit_schema(self, field: Schema, schema: Schema):
         self.resolve_marker_fields(field)
 
-    def visit_default(self, field: Field, *args, **kwargs):
+    def visit_default(self, field: Field, field_type: Type[Field]):
         pass
 
     @classmethod

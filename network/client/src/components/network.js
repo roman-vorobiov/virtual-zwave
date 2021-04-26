@@ -8,7 +8,7 @@ export default {
             <button v-on:click="generateNode()">Generate</button>
             <button v-on:click="resetNetwork()">Reset</button>
         </div>
-        <node v-for="node in nodes" :node-id="node[0]"></node>
+        <node v-for="node in nodes" :node="node[1]"></node>
     `,
 
     components: {

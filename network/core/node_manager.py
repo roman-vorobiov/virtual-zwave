@@ -43,6 +43,11 @@ class NodeManager:
         self.put_node_in_default_home(node)
         return node
 
+    def reset_node(self, id: str):
+        node = self.get_node(id)
+        node.reset()
+        self.put_node_in_default_home(node)
+
     def add_to_network(self, node: Node, home_id: int, node_id: int):
         node.add_to_network(home_id, node_id)
         node.save()

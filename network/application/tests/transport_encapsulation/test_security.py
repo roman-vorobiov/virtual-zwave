@@ -95,7 +95,7 @@ class TestSecurity1:
 
         # Check after bootstrap encrypted
         rx_encrypted('SWITCH_BINARY_GET', BinarySwitch1.class_id)
-        await tx_encrypted('SWITCH_BINARY_REPORT', BinarySwitch1.class_id, value=0xFE)
+        await tx_encrypted('SWITCH_BINARY_REPORT', BinarySwitch1.class_id, value=0x00)
 
     async def test_secure_command_class_highest_granted(self, rx, tx, rx_encrypted, tx_encrypted, bootstrap):
         # Check before bootstrap

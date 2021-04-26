@@ -39,6 +39,7 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
     def __getstate__(self):
         return {
             'class_id': self.class_id,
+            'class_name': self.class_name,
             'version': self.class_version,
             'required_security': self.required_security,
             'state': self.__getstate_impl__()
@@ -90,8 +91,8 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
         self.node.save()
         self.node.notify_updated()
 
-    def visit_default(self, command: Command, *args, **kwargs):
-        log_warning(f"Unhandled command: {command.get_meta('name')}")
+    def visit_default(self, command: Command, command_name: str):
+        log_warning(f"Unhandled command: {command_name}")
 
     @classmethod
     def make_command(cls, command_name: str, **kwargs) -> Command:

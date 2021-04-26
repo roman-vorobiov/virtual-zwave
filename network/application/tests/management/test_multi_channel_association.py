@@ -46,7 +46,7 @@ class TestAssociation1:
     def command_class(self, channel, binary_switch):
         yield channel.add_command_class(MultiChannelAssociation2)
 
-    def test_set(self, rx, tx, lifeline, association_group_2):
+    def test_set(self, rx, tx, tx_client, node, lifeline, association_group_2):
         rx('MULTI_CHANNEL_ASSOCIATION_SET',
            group_id=1,
            node_ids=[4, 5],
@@ -54,6 +54,9 @@ class TestAssociation1:
                make_object(node_id=3, bit_address=False, endpoint=4),
                make_object(node_id=5, bit_address=True, endpoint=0b00000101)
            ])
+        tx_client('NODE_UPDATED', {
+            'node': node.to_json()
+        })
 
         assert lifeline.targets == {1: {0, 1}, 3: {1, 2, 4}, 4: {0, 3}, 5: {0, 1, 3}}
         assert association_group_2.targets == {3: {0, 1}, 4: {1, 2}, 5: {8}}
@@ -71,42 +74,54 @@ class TestAssociation1:
                make_object(node_id=5, endpoint=8, bit_address=False)
            ])
 
-    def test_remove_from_all_groups(self, rx, tx, lifeline, association_group_2):
+    def test_remove_from_all_groups(self, rx, tx, tx_client, node, lifeline, association_group_2):
         rx('MULTI_CHANNEL_ASSOCIATION_REMOVE',
            group_id=0,
            node_ids=[3],
            multi_channel_destinations=[
                make_object(node_id=4, endpoint=0b00000011, bit_address=True)
            ])
+        tx_client('NODE_UPDATED', {
+            'node': node.to_json()
+        })
 
         assert lifeline.targets == {1: {0, 1}, 3: {1, 2}, 4: {3}}
         assert association_group_2.targets == {3: {1}, 5: {8}}
 
-    def test_remove_from_group(self, rx, tx, lifeline, association_group_2):
+    def test_remove_from_group(self, rx, tx, tx_client, node, lifeline, association_group_2):
         rx('MULTI_CHANNEL_ASSOCIATION_REMOVE',
            group_id=1,
            node_ids=[1],
            multi_channel_destinations=[
                make_object(node_id=4, endpoint=3, bit_address=False)
            ])
+        tx_client('NODE_UPDATED', {
+            'node': node.to_json()
+        })
 
         assert lifeline.targets == {1: {1}, 3: {1, 2}}
         assert association_group_2.targets == {3: {0, 1}, 4: {1, 2}, 5: {8}}
 
-    def test_remove_all_nodes_from_all_groups(self, rx, tx, lifeline, association_group_2):
+    def test_remove_all_nodes_from_all_groups(self, rx, tx, tx_client, node, lifeline, association_group_2):
         rx('MULTI_CHANNEL_ASSOCIATION_REMOVE',
            group_id=0,
            node_ids=[],
            multi_channel_destinations=[])
+        tx_client('NODE_UPDATED', {
+            'node': node.to_json()
+        })
 
         assert lifeline.targets == {}
         assert association_group_2.targets == {}
 
-    def test_remove_all_nodes_from_group(self, rx, tx, lifeline, association_group_2):
+    def test_remove_all_nodes_from_group(self, rx, tx, tx_client, node, lifeline, association_group_2):
         rx('MULTI_CHANNEL_ASSOCIATION_REMOVE',
            group_id=1,
            node_ids=[],
            multi_channel_destinations=[])
+        tx_client('NODE_UPDATED', {
+            'node': node.to_json()
+        })
 
         assert lifeline.targets == {}
         assert association_group_2.targets == {3: {0, 1}, 4: {1, 2}, 5: {8}}

@@ -31,6 +31,7 @@ class Channel(Serializable):
 
     def __getstate__(self):
         return {
+            'endpoint': self.endpoint,
             'generic': self.generic,
             'specific': self.specific,
             'association_groups': self.associations.groups,
@@ -46,23 +47,26 @@ class Channel(Serializable):
         self.command_classes[cc.class_id] = cc
         return cc
 
+    def get_command_class(self, class_id) -> Optional['CommandClass']:
+        return self.command_classes.get(class_id)
+
     def get_multi_channel_command_class(self) -> Optional['MultiChannel3']:
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_MULTI_CHANNEL']
-        return self.command_classes.get(class_id)
+        return self.get_command_class(class_id)
 
     def get_security_command_class(self) -> Optional['Security1']:
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_SECURITY']
-        return self.command_classes.get(class_id)
+        return self.get_command_class(class_id)
 
     def handle_command(self, data: List[int], context: Context):
         class_id = data[0]
 
-        if (command_class := self.command_classes.get(class_id)) is not None:
+        if (command_class := self.get_command_class(class_id)) is not None:
             command = self.node.serializer.from_bytes(data, command_class.class_version)
             log_command(context.node_id, context.endpoint, self.node.node_id, self.endpoint, command)
             command_class.handle_command(command, context)
         else:
-            log_warning(f"Channel does not support command class {class_id}")
+            log_warning("Channel does not support command class 0x{:02X}".format(class_id))
 
     def send_command(self, command: Command, context: Context):
         log_command(self.node.node_id, self.endpoint, context.node_id, context.endpoint, command)

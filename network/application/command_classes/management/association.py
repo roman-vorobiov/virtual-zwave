@@ -15,6 +15,8 @@ class Association1(CommandClass):
         for node_id in command.node_ids:
             self.channel.associations.subscribe(command.group_id, node_id)
 
+        self.on_state_change()
+
     @visit('ASSOCIATION_GET')
     def handle_get(self, command: Command, context: Context):
         self.send_report(context, group_id=command.group_id)
@@ -25,6 +27,8 @@ class Association1(CommandClass):
             self.remove_associations_from_all_groups(command.node_ids)
         else:
             self.remove_associations_from_group(command.group_id, command.node_ids)
+
+        self.on_state_change()
 
     @visit('ASSOCIATION_GROUPINGS_GET')
     def handle_groupings_get(self, command: Command, context: Context):
