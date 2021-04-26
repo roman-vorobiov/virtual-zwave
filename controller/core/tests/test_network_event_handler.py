@@ -1,5 +1,4 @@
-from controller.tests.fixtures.components import *
-from .fixtures.communication import *
+from .fixtures import *
 
 from controller.core.network_event_handler import NetworkEventHandler
 
@@ -25,6 +24,18 @@ async def test_application_command(rx_network, tx_network, tx_req):
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
     await tx_req('APPLICATION_COMMAND_HANDLER', rx_status=0, rx_type=0, source_node=2, command=[0x20, 0x01, 123])
+
+
+@pytest.mark.asyncio
+async def test_application_command_to_other_node(rx_network, tx_network, tx_req):
+    message = 'APPLICATION_COMMAND', {
+        'source': {'homeId': 0xC0000000, 'nodeId': 2},
+        'destination': {'homeId': 0xC0000000, 'nodeId': 3},
+        'command': [0x20, 0x01, 123]
+    }
+
+    rx_network(*message)
+    tx_network(*message)
 
 
 @pytest.mark.asyncio

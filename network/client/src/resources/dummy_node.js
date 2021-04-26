@@ -3,6 +3,15 @@ export default {
         {
             generic: 0x10,
             specific: 0x01,
+            associationGroups: [
+                {
+                    name: "Lifeline",
+                    profile: [0x00, 0x01],
+                    commands: [
+                        [0x25, 0x03] // SWITCH_BINARY_REPORT
+                    ]
+                }
+            ],
             commandClasses: [
                 {
                     class_id: 0x72, // COMMAND_CLASS_MANUFACTURER_SPECIFIC
@@ -35,19 +44,25 @@ export default {
                 },
                 {
                     class_id: 0x20, // COMMAND_CLASS_BASIC
-                    version: 1,
-                    state: {}
+                    version: 1
                 },
                 {
-                    class_id: 0x20, // COMMAND_CLASS_SWITCH_BINARY
+                    class_id: 0x25, // COMMAND_CLASS_SWITCH_BINARY
                     version: 1,
-                    required_security: 'HIGHEST_GRANTED',
-                    state: {}
+                    required_security: 'HIGHEST_GRANTED'
+                },
+                // Note: Uncomment to make this node secure
+                // {
+                //     class_id: 0x98, // COMMAND_CLASS_SECURITY
+                //     version: 1
+                // },
+                {
+                    class_id: 0x85, // COMMAND_CLASS_ASSOCIATION
+                    version: 2
                 },
                 {
-                    class_id: 0x98, // COMMAND_CLASS_SECURITY
-                    version: 1,
-                    state: {}
+                    class_id: 0x59, // COMMAND_CLASS_ASSOCIATION_GRP_INFO
+                    version: 3
                 }
             ]
         }

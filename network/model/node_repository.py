@@ -10,7 +10,7 @@ class NodeRepository(ABC):
         pass
 
     @abstractmethod
-    def remove(self, home_id: int, node_id: int) -> Optional[Node]:
+    def remove(self, id: str):
         pass
 
     @abstractmethod

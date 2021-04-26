@@ -23,21 +23,30 @@ class SequencedMock(unittest.mock.Mock):
     def assert_called_first_with(self, *args, **kwargs):
         assert self.called
 
-        actual = self.mock_calls[0]
+        actual = self.pop_first_call()
         expected = unittest.mock.call(*args, **kwargs)
 
         assert actual == expected
 
-    def pop_first_call(self):
-        self.mock_calls.pop(0)
+    def pop_first_call(self) -> unittest.mock.call:
+        call = self.mock_calls.pop(0)
         self.call_args_list.pop(0)
         self.call_count -= 1
         if self.call_count == 0:
             self.called = False
 
+        return call
+
 
 class Mock(SequencedMock, EventMock):
-    def pop_first_call(self):
-        super().pop_first_call()
+    def pop_first_call(self) -> unittest.mock.call:
+        call = super().pop_first_call()
+
         if not self.called:
             self.event.clear()
+
+        return call
+
+    def assert_methods_not_called(self):
+        for method in self._mock_children.values():
+            method.assert_not_called()

@@ -1,26 +1,25 @@
 from .channel import Channel
 from .request_context import Context
-from .utils import SecurityUtils
-from .command_classes import SecurityLevel
+from .utils import SecurityUtils, AssociationGroup
 
-from network.client import Client
+from network.client import StateObserver
 from network.protocol import CommandClassSerializer
 
 from common import RemoteInterface, BaseNode, Model
 
-from tools import Object, make_object, Serializable
+from tools import Object, make_object
 
 import humps
 from typing import List, Optional
 
 
-class Node(Serializable, Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer):
+class Node(Model, BaseNode):
+    def __init__(self, controller: RemoteInterface, state_observer: StateObserver, serializer: CommandClassSerializer):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
-        self.client = client
         self.serializer = serializer
+        self.state_observer = state_observer
         self.security_utils = SecurityUtils()
 
         self.home_id: Optional[int] = None
@@ -32,59 +31,69 @@ class Node(Serializable, Model, BaseNode):
         self.secure = False
 
     def __getstate__(self):
-        state = self.__dict__.copy()
-        state['network_key'] = self.security_utils.network_key
-        del state['remote_interface']
-        del state['client']
-        del state['serializer']
-        del state['security_utils']
-        del state['repository']
-        return state
+        return {
+            **Model.__getstate__(self),
+            'home_id': self.home_id,
+            'node_id': self.node_id,
+            'suc_node_id': self.suc_node_id,
+            'channels': self.channels,
+            'network_key': (self.secure and self.security_utils.network_key) or None
+        }
 
     def __setstate__(self, state: dict):
-        if (network_key := state.get('network_key')) is not None:
-            self.security_utils.set_network_key(network_key)
-
         self.node_id = state.get('node_id')
         self.home_id = state.get('home_id')
         self.suc_node_id = state.get('suc_node_id')
 
-        self.secure = state.get('secure', False)
+        if (network_key := state.get('network_key')) is not None:
+            self.security_utils.set_network_key(network_key)
+            self.secure = True
 
     def to_json(self):
         return humps.camelize(self.to_dict())
 
-    def add_channel(self, generic: int, specific: int) -> Channel:
-        channel = Channel(self, generic, specific)
+    def reset(self, home_id: int, node_id: int, suc_node_id=None):
+        self.home_id = home_id
+        self.node_id = node_id
+        self.suc_node_id = suc_node_id
+        self.secure = False
+        self.security_utils.reset()
+
+        for channel in self.channels:
+            channel.reset()
+
+    def add_channel(self, generic: int, specific: int, association_groups: List[AssociationGroup] = None) -> Channel:
+        channel = Channel(self, generic, specific, association_groups or [])
         self.channels.append(channel)
         return channel
+
+    def get_channel(self, channel_id: int):
+        return self.channels[channel_id]
+
+    @property
+    def root_channel(self):
+        return self.get_channel(0)
 
     def add_to_network(self, home_id: int, node_id: int):
         self.node_id = node_id
         self.home_id = home_id
         self.suc_node_id = None
-        self.secure = False
-        self.security_utils.reset()
-
-        for channel in self.channels:
-            for cc in channel.command_classes.values():
-                cc.reset_state()
+        self.save()
 
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id
+        self.save()
 
     def handle_command(self, source_id: int, command: List[int]):
         self.send_message_in_current_network(source_id, 'ACK', {})
 
-        self.channels[0].handle_command(command, Context(node_id=source_id))
+        self.root_channel.handle_command(command, Context(node_id=source_id))
 
     def get_node_info(self) -> Object:
-        root_channel = self.channels[0]
-
         return make_object(
-            generic=root_channel.generic,
-            specific=root_channel.specific,
-            command_class_ids=[cc.class_id for cc in root_channel.command_classes.values()
+            generic=self.root_channel.generic,
+            specific=self.root_channel.specific,
+            command_class_ids=[cc.class_id for cc in self.root_channel.command_classes.values()
                                if cc.advertise_in_nif and cc.supported_non_securely]
         )
 
@@ -92,12 +101,16 @@ class Node(Serializable, Model, BaseNode):
         if (queue := context.multi_cmd_response_queue) is not None:
             queue.append(command)
         elif context.secure:
-            security_cc = self.channels[0].get_security_command_class()
+            security_cc = self.root_channel.get_security_command_class()
             security_cc.send_encapsulated_command(context, command)
         else:
             self.send_message_in_current_network(context.node_id, 'APPLICATION_COMMAND', {
                 'command': command
             })
+
+    def on_state_change(self):
+        self.save()
+        self.state_observer.on_node_updated(self)
 
     def send_node_information(self, home_id: int, node_id: int):
         self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {
@@ -107,9 +120,4 @@ class Node(Serializable, Model, BaseNode):
     def broadcast_node_information(self):
         self.broadcast_message('APPLICATION_NODE_INFORMATION', {
             'nodeInfo': self.get_node_info().to_json()
-        })
-
-    def notify_updated(self):
-        self.client.send_message('NODE_UPDATED', {
-            'node': humps.camelize(self.to_dict())
         })

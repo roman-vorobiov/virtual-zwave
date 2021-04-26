@@ -1,7 +1,6 @@
-from ..fixtures import *
-
 from network.application.command_classes.transport_encapsulation import Security1
 from network.protocol import make_command
+from network.resources import CONSTANTS
 
 from tools import Object, make_object
 
@@ -71,8 +70,7 @@ def rx_nonce(generate_nonce, rx):
 @pytest.fixture
 def rx_payload(rx, command_class_serializer, security_utils, generate_nonce, get_last_nonce):
     def inner(command_name: str, payload: Object):
-        header = {'SECURITY_MESSAGE_ENCAPSULATION': 0x81,
-                  'SECURITY_MESSAGE_ENCAPSULATION_NONCE_GET': 0xC1}[command_name]
+        header = CONSTANTS['CommandId']['COMMAND_CLASS_SECURITY'][command_name]
 
         payload_data = command_class_serializer.from_object('EncryptedPayload', payload)
 
@@ -200,7 +198,7 @@ def tx_encrypted_long(tx, rx_nonce, tx_payload):
 
 
 @pytest.fixture
-def bootstrap(rx, tx, rx_encrypted, tx_encrypted, node, security_utils, network_key):
+def bootstrap(rx, tx, rx_encrypted, tx_encrypted, assert_observed, node, security_utils, network_key, state_observer):
     async def inner():
         assert not node.secure
 
@@ -210,12 +208,12 @@ def bootstrap(rx, tx, rx_encrypted, tx_encrypted, node, security_utils, network_
         rx_encrypted('NETWORK_KEY_SET', network_key=network_key)
         security_utils.set_network_key(network_key)
         await tx_encrypted('NETWORK_KEY_VERIFY')
+        assert_observed(node)
 
         assert node.secure
 
     yield inner
 
-    node.add_to_network(home_id=123, node_id=2)
-    node.set_suc_node_id(1)
+    node.reset(home_id=123, node_id=2, suc_node_id=1)
 
     security_utils.reset()

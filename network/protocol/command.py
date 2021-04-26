@@ -14,6 +14,9 @@ class CommandVisitor(Visitor):
     def visit(self, command: Command, *args, **kwargs):
         return self.visit_as(command, command.get_meta('name'), *args, **kwargs)
 
+    def visit_default(self, command: Command, command_name: str):
+        raise KeyError(command_name)
+
 
 def log_command(sender_id: int, sender_endpoint: int, receiver_id: int, receiver_endpoint: int, command: Command):
     command_json = command.to_json()

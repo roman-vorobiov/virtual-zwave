@@ -5,6 +5,7 @@ from ...request_context import Context
 from ...utils import InternalNonce, ExternalNonce
 
 from network.protocol import Command
+from network.resources import CONSTANTS
 
 from tools import Object, make_object, visit, log_warning
 
@@ -64,6 +65,8 @@ class Security1(CommandClass):
         self.node.secure = True
         self.node.security_utils.set_network_key(command.network_key)
         self.send_network_key_verify(context)
+
+        self.node.on_state_change()
 
     @visit('SECURITY_NONCE_GET')
     def handle_nonce_get(self, command: Command, context: Context):
@@ -154,10 +157,8 @@ class Security1(CommandClass):
 
     async def encrypt_and_send(self, context: Context, payload: Object, nonce: List[int]):
         if payload.sequenced and not payload.second:
-            header = 0xC1
             command_name = 'SECURITY_MESSAGE_ENCAPSULATION_NONCE_GET'
         else:
-            header = 0x81
             command_name = 'SECURITY_MESSAGE_ENCAPSULATION'
 
         initialization_vector = self.generate_nonce()
@@ -166,7 +167,7 @@ class Security1(CommandClass):
             payload=self.node.serializer.from_object('EncryptedPayload', payload),
             sender_nonce=initialization_vector,
             receiver_nonce=nonce,
-            header=header,
+            header=CONSTANTS['CommandId']['COMMAND_CLASS_SECURITY'][command_name],
             sender=self.node.node_id,
             receiver=context.node_id
         )

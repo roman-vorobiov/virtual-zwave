@@ -29,7 +29,7 @@ class MultiChannel3(CommandClass):
     def handle_encapsulated_command(self, command: Command, context: Context):
         def each_channel() -> Iterator[Channel]:
             if command.bit_address:
-                for channel_id in each_bit(command.destination):
+                for channel_id in each_bit(command.destination, start=1):
                     yield self.node.channels[channel_id]
             else:
                 yield self.node.channels[command.destination]
@@ -42,7 +42,7 @@ class MultiChannel3(CommandClass):
         self.send_command(context, 'MULTI_CHANNEL_END_POINT_REPORT',
                           dynamic=False,
                           identical=self.check_identical_channels(),
-                          endpoints=len(self.node.channels))
+                          endpoints=len(self.node.channels) - 1)
 
     def send_capability_report(self, context: Context, endpoint: int):
         channel = self.node.channels[endpoint]
@@ -74,11 +74,11 @@ class MultiChannel3(CommandClass):
                 if channel.generic == generic and channel.specific == specific]
 
     def check_identical_channels(self) -> bool:
-        prototype = self.node.channels[0]
+        prototype = self.node.channels[1]
 
         def key(channel):
             return channel.generic == prototype.generic and \
                    channel.specific == prototype.specific and \
                    channel.command_classes == prototype.command_classes
 
-        return all(key(channel) for channel in self.node.channels[1:])
+        return all(key(channel) for channel in self.node.channels[2:])

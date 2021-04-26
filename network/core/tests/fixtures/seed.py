@@ -5,13 +5,22 @@ from tools import Mock
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def node_info():
     yield {
         'channels': [
             {
                 'generic': 0x10,
                 'specific': 0x01,
+                'associationGroups': [
+                    {
+                        'name': "Lifeline",
+                        'profile': (0x00, 0x01),
+                        'commands': [
+                            (0x25, 0x03)
+                        ]
+                    }
+                ],
                 'commandClasses': [
                     {
                         'class_id': 0x72,  # COMMAND_CLASS_MANUFACTURER_SPECIFIC
@@ -43,9 +52,8 @@ def node_info():
                         }
                     },
                     {
-                        'class_id': 0x20,  # COMMAND_CLASS_BASIC
-                        'version': 1,
-                        'state': {}
+                        'class_id': 0x25,  # COMMAND_CLASS_SWITCH_BINARY
+                        'version': 1
                     }
                 ]
             }
@@ -53,7 +61,7 @@ def node_info():
     }
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def disable_node_command_handling():
     Node.handle_command = Mock()
 
@@ -66,7 +74,6 @@ def node(node_manager, client, node_info):
 
 
 @pytest.fixture
-def included_node(node, node_manager, client):
-    node_manager.add_to_network(node, 0xC0000000, 2)
-    client.send_message.reset_mock()
+def included_node(node):
+    node.add_to_network(0xC0000000, 2)
     yield node

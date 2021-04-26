@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, TypeVar, Generic
+from typing import List, Optional, TypeVar, Generic, Callable, Iterator
 
 
 T = TypeVar('T')
@@ -19,29 +19,41 @@ class RangeIterator(Generic[T]):
         return self
 
     def __next__(self) -> T:
-        value = self.current()
+        if self.exhausted:
+            raise StopIteration()
+
+        value = self.data[self.state.idx]
         self.state.idx += 1
         return value
 
     def current(self) -> T:
-        if self.state.idx >= self.stop:
-            raise StopIteration()
+        if self.exhausted:
+            raise IndexError()
 
         return self.data[self.state.idx]
 
     @property
     def exhausted(self) -> bool:
-        return self.state.idx == self.stop
+        return self.state.idx >= self.stop
 
-    def slice(self, stop: Optional[T]) -> 'RangeIterator':
+    def slice(self, stop: Optional[int]) -> 'RangeIterator[T]':
         if stop is None:
             stop = self.stop
         elif stop >= 0:
-            stop += self.state.idx
+            stop = min(self.state.idx + stop, self.stop)
         else:
-            stop += self.stop
+            stop = max(self.stop + stop, self.state.idx)
 
         return RangeIterator(self.data, stop, self.state)
+
+    def takewhile(self, predicate: Callable[[T], bool], peek_last=False) -> Iterator[T]:
+        for item in self:
+            if predicate(item):
+                yield item
+            else:
+                if peek_last:
+                    self.state.idx -= 1
+                break
 
 
 def empty_async_generator(fn):

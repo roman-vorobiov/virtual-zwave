@@ -1,5 +1,3 @@
-from network.tests.fixtures.components import *
-
 import pytest
 
 
@@ -12,15 +10,6 @@ def tx_controller(controller):
         }]
 
     yield inner
-
-
-@pytest.fixture
-def tx_client(client):
-    def inner(message_type: str, message: dict):
-        client.send_message.assert_called_first_with(message_type, message)
-        client.send_message.pop_first_call()
-
-    return inner
 
 
 @pytest.fixture(autouse=True)

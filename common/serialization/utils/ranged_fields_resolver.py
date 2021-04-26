@@ -7,8 +7,8 @@ from tools import RangeIterator, Visitor, visit
 from typing import Union
 
 
-class SchemaValidator(Visitor):
-    def validate_schema(self, schema: Schema):
+class RangedFieldsResolver(Visitor):
+    def resolve_ranged_fields(self, schema: Schema):
         getter = FieldLengthGetter(schema.fields)
 
         it = RangeIterator(schema.fields)
@@ -34,4 +34,4 @@ class SchemaValidator(Visitor):
     @visit(Schema)
     def set_schema_stop(self, field: Schema, stop: int):
         field.stop = stop
-        self.validate_schema(field)
+        self.resolve_ranged_fields(field)

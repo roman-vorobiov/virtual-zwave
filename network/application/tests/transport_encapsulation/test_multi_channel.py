@@ -1,6 +1,6 @@
 from ..fixtures import *
 
-from network.application.command_classes.application import Basic1
+from network.application.command_classes.application import BinarySwitch1
 from network.application.command_classes.management import ManufacturerSpecific1
 from network.application.command_classes.management import Version1
 from network.application.command_classes.management import ZWavePlusInfo2
@@ -11,11 +11,11 @@ import pytest
 
 class TestMultiChannel1:
     @pytest.fixture(scope='class')
-    def channel2(self, node, channel):
+    def endpoint1(self, node, channel):
         yield node.add_channel(generic=3, specific=4)
 
     @pytest.fixture(scope='class')
-    def channel3(self, node, channel2):
+    def endpoint2(self, node, endpoint1):
         yield node.add_channel(generic=5, specific=6)
 
     @pytest.fixture(scope='class')
@@ -38,20 +38,20 @@ class TestMultiChannel1:
                                         protocol_library_type=0x06, protocol_version=(1, 2), application_version=(3, 4))
 
     @pytest.fixture(scope='class')
-    def basic2(self, channel2):
-        yield channel2.add_command_class(Basic1, value=10)
+    def binary_switch1(self, endpoint1):
+        yield endpoint1.add_command_class(BinarySwitch1)
 
     @pytest.fixture(scope='class')
-    def basic3(self, channel3):
-        yield channel3.add_command_class(Basic1, value=20)
+    def binary_switch2(self, endpoint2):
+        yield endpoint2.add_command_class(BinarySwitch1)
 
     @pytest.fixture(scope='class', autouse=True)
-    def command_class(self, channel, version, basic2, basic3):
+    def command_class(self, channel, version, binary_switch1, binary_switch2):
         yield channel.add_command_class(MultiChannel3)
 
     def test_endpoint_get(self, rx, tx):
         rx('MULTI_CHANNEL_END_POINT_GET')
-        tx('MULTI_CHANNEL_END_POINT_REPORT', dynamic=False, identical=False, endpoints=3)
+        tx('MULTI_CHANNEL_END_POINT_REPORT', dynamic=False, identical=False, endpoints=2)
 
     def test_capability_get(self, rx, tx):
         rx('MULTI_CHANNEL_CAPABILITY_GET', endpoint=0)
@@ -68,7 +68,7 @@ class TestMultiChannel1:
            endpoint=1,
            generic_device_class=3,
            specific_device_class=4,
-           command_class_ids=[])
+           command_class_ids=[0x25])
 
     def test_endpoint_find_existent(self, rx, tx):
         rx('MULTI_CHANNEL_END_POINT_FIND', generic_device_class=3, specific_device_class=4)
@@ -91,26 +91,28 @@ class TestMultiChannel1:
            source_endpoint=0,
            bit_address=False,
            destination=1,
-           command=[0x20, 0x02])
+           command=[0x25, 0x02])
         tx('MULTI_CHANNEL_CMD_ENCAP',
            source_endpoint=1,
            bit_address=False,
            destination=0,
-           command=[0x20, 0x03, 0x0A])
+           command=[0x25, 0x03, 0x00])
 
-    def test_receive_encapsulated_command_mask(self, rx, tx):
+    def test_receive_encapsulated_command_mask(self, rx, tx, binary_switch1):
+        binary_switch1.value = True
+
         rx('MULTI_CHANNEL_CMD_ENCAP',
            source_endpoint=0,
            bit_address=True,
-           destination=0b00000110,
-           command=[0x20, 0x02])
+           destination=0b00000011,
+           command=[0x25, 0x02])
         tx('MULTI_CHANNEL_CMD_ENCAP',
            source_endpoint=1,
            bit_address=False,
            destination=0,
-           command=[0x20, 0x03, 0x0A])
+           command=[0x25, 0x03, 0xFF])
         tx('MULTI_CHANNEL_CMD_ENCAP',
            source_endpoint=2,
            bit_address=False,
            destination=0,
-           command=[0x20, 0x03, 0x14])
+           command=[0x25, 0x03, 0x00])

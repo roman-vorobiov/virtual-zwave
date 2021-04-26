@@ -1,5 +1,4 @@
-from controller.tests.fixtures.components import *
-from .fixtures.communication import *
+from .fixtures import *
 
 from controller.core.command_handler import CommandHandler
 

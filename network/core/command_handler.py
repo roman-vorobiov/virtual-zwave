@@ -28,19 +28,29 @@ class CommandHandler(RemoteMessageVisitor):
             'nodes': self.node_manager.get_nodes_as_json()
         })
 
-    @visit('SEND_NIF')
-    def handle_send_nif(self, message: dict):
-        self.node_manager.get_node(message['id']).broadcast_node_information()
-
     @visit('CREATE_NODE')
     def handle_create_node(self, message: dict):
         self.node_manager.generate_new_node(message['node'])
 
-    @visit('RESET')
-    def handle_reset(self, message: dict):
+    @visit('REMOVE_NODE')
+    def handle_remove_node(self, message: dict):
+        self.node_manager.remove_node(message['nodeId'])
+
+    @visit('RESET_NETWORK')
+    def handle_reset_network(self, message: dict):
         self.node_manager.reset()
 
-        # Todo
-        self.client.send_message('NODES_LIST', {
-            'nodes': []
-        })
+    @visit('SEND_NIF')
+    def handle_send_nif(self, message: dict):
+        self.node_manager.get_node(message['nodeId']).broadcast_node_information()
+
+    @visit('UPDATE_COMMAND_CLASS')
+    def handle_update_node(self, message: dict):
+        node = self.node_manager.get_node(message['nodeId'])
+        channel = node.get_channel(message['channelId'])
+        command_class = channel.get_command_class(message['classId'])
+        command_class.update_state(**message['state'])
+
+    @visit('RESET_NODE')
+    def handle_reset_node(self, message: dict):
+        self.node_manager.reset_node(message['nodeId'])

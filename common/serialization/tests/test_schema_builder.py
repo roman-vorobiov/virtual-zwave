@@ -3,6 +3,7 @@ from ..exceptions import SerializationError
 from ..schema import (
     Schema,
     ConstField,
+    MarkerField,
     IntField,
     BoolField,
     StringField,
@@ -38,7 +39,12 @@ def test_int_field(factory):
 
 def test_str_field(factory):
     schema = factory.create_schema("", [{'name': "hello", 'type': 'str'}])
-    assert schema.fields == [StringField(name="hello")]
+    assert schema.fields == [StringField(name="hello", null_terminated=False)]
+
+
+def test_null_terminated_str_field(factory):
+    schema = factory.create_schema("", [{'name': "hello", 'type': 'str', 'null_terminated': True}])
+    assert schema.fields == [StringField(name="hello", null_terminated=True)]
 
 
 def test_bool_field(factory):
@@ -94,6 +100,15 @@ def test_nested_list_field(factory):
     ]
 
 
+def test_list_with_stop_mark(factory):
+    schema = factory.create_schema("", ["head[]", {'marker': 123}, "tail[]"])
+    assert schema.fields == [
+        ListField(name="head", stop_mark=123),
+        MarkerField(value=123, separated_field_name="tail"),
+        ListField(name="tail")
+    ]
+
+
 def test_length_of_field(factory):
     schema = factory.create_schema("", [{'length_of': "hello"}])
     assert schema.fields == [LengthOfField(field_name="hello")]
@@ -131,7 +146,7 @@ def test_masked_field(factory):
     ]
 
 
-def test_composite_field_1(factory):
+def test_composite_field_with_list_at_the_end(factory):
     schema = factory.create_schema("", [
         "a",
         {
@@ -150,7 +165,7 @@ def test_composite_field_1(factory):
     ]
 
 
-def test_composite_field_2(factory):
+def test_composite_field__with_list_at_the_front(factory):
     schema = factory.create_schema("", [
         "a",
         {
@@ -167,6 +182,14 @@ def test_composite_field_2(factory):
         ]),
         IntField(name="c")
     ]
+
+
+def test_multiple_composite_fields_with_lists(factory):
+    with pytest.raises(SerializationError):
+        factory.create_schema("", [
+            {'name': "a", 'schema': ["a1[]"]},
+            {'name': "b", 'schema': ["b1[]"]}
+        ])
 
 
 def test_multiple_fields(factory):

@@ -8,7 +8,7 @@ SEND_DATA:
 
 VERSION:
   - 0x15
-  - { name: buffer, type: str }
+  - { name: buffer, type: str, null_terminated: true }
   - library_type
 
 MEMORY_GET_ID:

@@ -1,5 +1,3 @@
-from network.tests.fixtures.components import *
-
 from network.application import NodeBuilder
 
 import pytest

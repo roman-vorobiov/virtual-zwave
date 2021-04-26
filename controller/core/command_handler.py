@@ -138,5 +138,5 @@ class CommandHandler(PacketVisitor):
         self.request_manager.send_response('NVR_GET_VALUE',
                                            data=data)
 
-    def visit_default(self, packet: Packet, *args, **kwargs):
+    def visit_default(self, packet: Packet, packet_name: str):
         log_warning(str(packet))

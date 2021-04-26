@@ -1,5 +1,3 @@
-from controller.tests.fixtures.components import *
-
 from controller.protocol import make_packet
 
 import pytest
@@ -20,7 +18,6 @@ def tx_req(request_manager):
     async def inner(name: str, **kwargs):
         await request_manager.send_request.wait_until_called(timeout=2)
         request_manager.send_request.assert_called_first_with(name, **kwargs)
-        request_manager.send_request.pop_first_call()
 
     yield inner
 
@@ -29,7 +26,6 @@ def tx_req(request_manager):
 def tx_res(request_manager, command_handler, responses_to_host_serializer):
     def inner(name: str, **kwargs):
         request_manager.send_response.assert_called_first_with(name, **kwargs)
-        request_manager.send_response.pop_first_call()
 
     yield inner
 
@@ -40,8 +36,8 @@ def rx_network(network_event_handler):
         network_event_handler.process_message(json.dumps({
             'messageType': message_type,
             'message': {
-                **message,
-                'destination': {'homeId': 0xC0000000, 'nodeId': 1}
+                'destination': {'homeId': 0xC0000000, 'nodeId': 1},
+                **message
             }
         }))
 

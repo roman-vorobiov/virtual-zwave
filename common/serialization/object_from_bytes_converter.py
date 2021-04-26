@@ -1,6 +1,7 @@
 from .schema import (
     Schema,
     ConstField,
+    MarkerField,
     IntField,
     BoolField,
     StringField,
@@ -36,9 +37,16 @@ class ObjectFromBytesConverter(Visitor):
             yield from self.visit(field, it, context)
 
     @visit(ConstField, CopyOfField)
-    def visit_const_field(self, field: ConstField, it: RangeIterator[int], context: Context):
+    def visit_ignored_field(self, field: Union[ConstField, CopyOfField], it: RangeIterator[int], context: Context):
         next(it)
         yield from []
+
+    @visit(MarkerField)
+    def visit_marker_field(self, field: MarkerField, it: RangeIterator[int], context: Context):
+        try:
+            next(it)
+        except StopIteration:
+            yield from []
 
     @visit(IntField)
     def visit_int_field(self, field: IntField, it: RangeIterator[int], context: Context):
@@ -47,7 +55,10 @@ class ObjectFromBytesConverter(Visitor):
 
     @visit(StringField)
     def visit_string_field(self, field: StringField, it: RangeIterator[int], context: Context):
-        data = bytes(itertools.takewhile(lambda byte: byte != 0, it))
+        if field.null_terminated:
+            it = itertools.takewhile(lambda byte: byte != 0, it)
+
+        data = bytes(it)
         yield field.name, data.decode('utf-8')
 
     @visit(BoolField)
@@ -66,8 +77,11 @@ class ObjectFromBytesConverter(Visitor):
 
     @visit(ListField)
     def visit_list_field(self, field: ListField, it: RangeIterator[int], context: Context):
+        def stop_mark_reached():
+            return field.stop_mark is not None and it.current() == field.stop_mark
+
         def elements():
-            while not it.exhausted:
+            while not (it.exhausted or stop_mark_reached()):
                 (_, value), *_ = list(self.visit(field.element_type, it, Context()))
                 yield value
 
