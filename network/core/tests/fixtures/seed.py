@@ -5,7 +5,7 @@ from tools import Mock
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def node_info():
     yield {
         'channels': [
@@ -61,7 +61,7 @@ def node_info():
     }
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def disable_node_command_handling():
     Node.handle_command = Mock()
 
@@ -74,7 +74,6 @@ def node(node_manager, client, node_info):
 
 
 @pytest.fixture
-def included_node(node, node_manager, client):
-    node_manager.add_to_network(node, 0xC0000000, 2)
-    client.send_message.reset_mock()
+def included_node(node):
+    node.add_to_network(0xC0000000, 2)
     yield node

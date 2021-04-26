@@ -25,7 +25,7 @@ class MultiChannelAssociation2(CommandClass):
         for destination in command.multi_channel_destinations:
             self.channel.associations.subscribe(command.group_id, destination.node_id, get_channels(destination))
 
-        self.on_state_change()
+        self.channel.on_state_change()
 
     @visit('MULTI_CHANNEL_ASSOCIATION_GET')
     def handle_get(self, command: Command, context: Context):
@@ -38,7 +38,7 @@ class MultiChannelAssociation2(CommandClass):
         else:
             self.remove_associations_from_group(command.group_id, command.node_ids, command.multi_channel_destinations)
 
-        self.on_state_change()
+        self.channel.on_state_change()
 
     @visit('MULTI_CHANNEL_ASSOCIATION_GROUPINGS_GET')
     def handle_groupings_get(self, command: Command, context: Context):

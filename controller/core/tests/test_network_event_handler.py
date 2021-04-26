@@ -1,5 +1,4 @@
-from controller.tests.fixtures.components import *
-from .fixtures.communication import *
+from .fixtures import *
 
 from controller.core.network_event_handler import NetworkEventHandler
 

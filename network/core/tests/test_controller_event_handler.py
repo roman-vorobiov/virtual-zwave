@@ -27,9 +27,12 @@ def rx_controller(controller_event_handler):
 
 @pytest.fixture
 def tx_client_node_updated_broadcast(nodes, tx_client):
-    def inner(home_id: int, node_id: int):
+    def inner(node):
+        data = node.to_json()
+        del data['channels']
+
         tx_client('NODE_UPDATED', {
-            'node': nodes.find(home_id, node_id).to_json()
+            'node': data
         })
 
     return inner
@@ -42,7 +45,7 @@ def test_add_to_network(rx_controller, tx_controller, tx_client_node_updated_bro
         'destination': {'homeId': 0, 'nodeId': 1},
         'newNodeId': 2
     })
-    tx_client_node_updated_broadcast(0xC0000000, 2)
+    tx_client_node_updated_broadcast(node)
     assert nodes.find(0xC0000000, 2) == node
 
 
@@ -52,7 +55,7 @@ def test_remove_from_network(rx_controller, tx_controller, tx_client_node_update
     rx_controller('REMOVE_FROM_NETWORK', {
         'destination': {'homeId': 0xC0000000, 'nodeId': 2}
     })
-    tx_client_node_updated_broadcast(0, 1)
+    tx_client_node_updated_broadcast(included_node)
     assert nodes.find(0, 1) == included_node
 
 
@@ -63,7 +66,7 @@ def test_assign_suc_return_route(rx_controller, tx_controller, tx_client_node_up
         'destination': {'homeId': 0xC0000000, 'nodeId': 2},
         'sucNodeId': 1
     })
-    tx_client_node_updated_broadcast(0xC0000000, 2)
+    tx_client_node_updated_broadcast(included_node)
     assert nodes.find(0xC0000000, 2).suc_node_id == 1
 
 

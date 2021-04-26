@@ -23,12 +23,9 @@ class NodeDatabase(NodeRepository):
         self.table.insert(node.to_dict())
         self.cache[node.id] = node
 
-    def remove(self, home_id: int, node_id: int) -> Optional[Node]:
-        node = self.find(home_id, node_id)
-
-        if node is not None:
-            self.table.remove(where(id=node.id))
-            return self.cache.pop(node.id)
+    def remove(self, id: str):
+        self.table.remove(where(id=id))
+        del self.cache[id]
 
     def update(self, node: Node):
         self.table.update(node.to_dict(), where(id=node.id))

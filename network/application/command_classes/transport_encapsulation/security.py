@@ -66,7 +66,7 @@ class Security1(CommandClass):
         self.node.security_utils.set_network_key(command.network_key)
         self.send_network_key_verify(context)
 
-        self.on_state_change()
+        self.node.on_state_change()
 
     @visit('SECURITY_NONCE_GET')
     def handle_nonce_get(self, command: Command, context: Context):

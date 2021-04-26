@@ -3,6 +3,7 @@ from .in_memory_repository_provider import InMemoryRepositoryProvider
 from network.core.node_manager import NodeManager
 from network.application import NodeFactory
 
+from network.client import StateObserver
 from network.protocol import CommandClassSerializer
 
 from common.tests import FakeRemoteInterface
@@ -38,8 +39,13 @@ def client():
 
 
 @pytest.fixture(scope='session')
-def node_factory(controller, client, command_class_serializer):
-    yield NodeFactory(controller, client, command_class_serializer)
+def state_observer(client):
+    yield StateObserver(client)
+
+
+@pytest.fixture(scope='session')
+def node_factory(controller, state_observer, command_class_serializer):
+    yield NodeFactory(controller, state_observer, command_class_serializer)
 
 
 @pytest.fixture
@@ -53,5 +59,5 @@ def nodes(repository_provider):
 
 
 @pytest.fixture
-def node_manager(client, node_factory, nodes):
-    yield NodeManager(client, node_factory, nodes)
+def node_manager(state_observer, node_factory, nodes):
+    yield NodeManager(state_observer, node_factory, nodes)

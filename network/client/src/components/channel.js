@@ -1,9 +1,13 @@
 import BinarySwitch from "./command_classes/application/binary_switch.js";
 
+import controller from "../services/controller.js";
+import { updateObject } from "../services/utils.js";
+
 export default {
     template: `
         <div>
-            <component v-for="cc in channel.commandClasses" :is="cc.className" :data="cc"></component>
+            <span>Channel {{channel.endpoint}}: </span>
+            <component v-for="cc in channel.commandClasses" :is="cc.className" :commandClass="cc"></component>
         </div>
     `,
 
@@ -18,6 +22,16 @@ export default {
     computed: {
         node() {
             return this.$parent.node;
+        }
+    },
+
+    mounted() {
+        controller.onChannelUpdated(this.onChannelUpdated, this.node.id, this.channel.endpoint);
+    },
+
+    methods: {
+        onChannelUpdated(channel) {
+            updateObject(this.channel, channel);
         }
     }
 };

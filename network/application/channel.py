@@ -42,6 +42,12 @@ class Channel(Serializable):
     def endpoint(self):
         return self.node.channels.index(self)
 
+    def reset(self):
+        self.associations.clear_all()
+
+        for cc in self.command_classes.values():
+            cc.reset_state()
+
     def add_command_class(self, cls: Type[T], required_security=SecurityLevel.NONE, /, **kwargs) -> T:
         cc = cls(self, required_security, **kwargs)
         self.command_classes[cc.class_id] = cc
@@ -77,3 +83,7 @@ class Channel(Serializable):
         else:
             multi_channel_cc = self.node.channels[0].get_multi_channel_command_class()
             multi_channel_cc.send_encapsulated_command(context, self.endpoint, data)
+
+    def on_state_change(self):
+        self.node.save()
+        self.node.state_observer.on_channel_updated(self)

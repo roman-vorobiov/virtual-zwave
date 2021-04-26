@@ -32,20 +32,19 @@ class CommandHandler(RemoteMessageVisitor):
     def handle_create_node(self, message: dict):
         self.node_manager.generate_new_node(message['node'])
 
+    @visit('REMOVE_NODE')
+    def handle_remove_node(self, message: dict):
+        self.node_manager.remove_node(message['nodeId'])
+
     @visit('RESET_NETWORK')
     def handle_reset_network(self, message: dict):
         self.node_manager.reset()
-
-        # Todo: maybe individual 'NODE_REMOVED' messages are better?
-        self.client.send_message('NODES_LIST', {
-            'nodes': []
-        })
 
     @visit('SEND_NIF')
     def handle_send_nif(self, message: dict):
         self.node_manager.get_node(message['nodeId']).broadcast_node_information()
 
-    @visit('UPDATE_NODE')
+    @visit('UPDATE_COMMAND_CLASS')
     def handle_update_node(self, message: dict):
         node = self.node_manager.get_node(message['nodeId'])
         channel = node.get_channel(message['channelId'])

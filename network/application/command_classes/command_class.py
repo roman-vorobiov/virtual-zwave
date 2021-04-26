@@ -46,7 +46,10 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
         }
 
     def __getstate_impl__(self) -> dict:
-        return {key: value for key, value in self.__dict__.items() if key not in {'channel', 'required_security'}}
+        state = self.__dict__.copy()
+        del state['channel']
+        del state['required_security']
+        return state
 
     def reset_state(self):
         pass
@@ -89,7 +92,7 @@ class CommandClass(Serializable, CommandVisitor, metaclass=CommandClassMeta):
 
     def on_state_change(self):
         self.node.save()
-        self.node.notify_updated()
+        self.node.state_observer.on_command_class_updated(self)
 
     def visit_default(self, command: Command, command_name: str):
         log_warning(f"Unhandled command: {command_name}")

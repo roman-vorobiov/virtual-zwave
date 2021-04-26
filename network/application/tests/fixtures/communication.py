@@ -1,8 +1,7 @@
-from network.tests.fixtures.components import *
-from .seed import *
-
+from network.application import Node, Channel, CommandClass
 from network.protocol import make_command
 
+import pampy
 import pytest
 
 
@@ -43,16 +42,21 @@ def tx(controller, command_class, command_class_serializer):
 
 
 @pytest.fixture
-def tx_client(client):
-    def inner(name: str, message):
-        client.send_message.assert_called_first_with(name, message)
-        client.send_message.pop_first_call()
+def assert_observed(state_observer):
+    def inner(obj):
+        mock = pampy.match(obj,
+                           Node, lambda _: state_observer.on_node_updated,
+                           Channel, lambda _: state_observer.on_channel_updated,
+                           CommandClass, lambda _: state_observer.on_command_class_updated)
 
-    yield inner
+        mock.assert_called_first_with(obj)
+
+    return inner
 
 
 @pytest.fixture(autouse=True)
-def check_communication(controller, client):
+def check_communication(controller, client, state_observer):
     yield
     assert controller.free_buffer() == []
     client.send_message.assert_not_called()
+    state_observer.assert_methods_not_called()

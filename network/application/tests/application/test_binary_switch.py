@@ -14,11 +14,9 @@ class TestBinarySwitch1:
         rx('SWITCH_BINARY_GET')
         tx('SWITCH_BINARY_REPORT', value=0x00)
 
-    def test_switch_binary_set(self, rx, tx, tx_client, node, command_class):
+    def test_switch_binary_set(self, rx, tx, assert_observed, command_class):
         assert not command_class.value
 
         rx('SWITCH_BINARY_SET', value=0XFF)
-        tx_client('NODE_UPDATED', {
-            'node': node.to_json()
-        })
+        assert_observed(command_class)
         assert command_class.value

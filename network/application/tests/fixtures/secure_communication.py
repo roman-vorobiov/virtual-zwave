@@ -1,5 +1,3 @@
-from ..fixtures import *
-
 from network.application.command_classes.transport_encapsulation import Security1
 from network.protocol import make_command
 from network.resources import CONSTANTS
@@ -200,7 +198,7 @@ def tx_encrypted_long(tx, rx_nonce, tx_payload):
 
 
 @pytest.fixture
-def bootstrap(rx, tx, rx_encrypted, tx_encrypted, tx_client, node, security_utils, network_key):
+def bootstrap(rx, tx, rx_encrypted, tx_encrypted, assert_observed, node, security_utils, network_key, state_observer):
     async def inner():
         assert not node.secure
 
@@ -210,16 +208,12 @@ def bootstrap(rx, tx, rx_encrypted, tx_encrypted, tx_client, node, security_util
         rx_encrypted('NETWORK_KEY_SET', network_key=network_key)
         security_utils.set_network_key(network_key)
         await tx_encrypted('NETWORK_KEY_VERIFY')
-        tx_client('NODE_UPDATED', {
-            'node': node.to_json()
-        })
+        assert_observed(node)
 
         assert node.secure
 
     yield inner
 
-    node.reset()
-    node.add_to_network(home_id=123, node_id=2)
-    node.set_suc_node_id(1)
+    node.reset(home_id=123, node_id=2, suc_node_id=1)
 
     security_utils.reset()

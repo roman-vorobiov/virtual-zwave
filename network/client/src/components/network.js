@@ -8,7 +8,7 @@ export default {
             <button v-on:click="generateNode()">Generate</button>
             <button v-on:click="resetNetwork()">Reset</button>
         </div>
-        <node v-for="node in nodes" :node="node[1]"></node>
+        <node v-for="[nodeId, node] in nodes" :node="node"></node>
     `,
 
     components: {
@@ -22,8 +22,9 @@ export default {
     },
 
     mounted() {
-        controller.onNodeUpdated(this.onNodeUpdated);
         controller.onNodesList(this.onNodesList);
+        controller.onNodeAdded(this.onNodeAdded);
+        controller.onNodeRemoved(this.onNodeRemoved);
     },
 
     methods: {
@@ -33,15 +34,15 @@ export default {
         resetNetwork() {
             controller.resetNetwork();
         },
-        onNodeUpdated(node) {
-            this.nodes.set(node.id, node);
-        },
         onNodesList(nodes) {
             this.nodes.clear();
-
-            nodes.forEach(node => {
-                this.nodes.set(node.id, node);
-            });
+            nodes.forEach(this.onNodeAdded);
+        },
+        onNodeAdded(node) {
+            this.nodes.set(node.id, node);
+        },
+        onNodeRemoved(nodeId) {
+            this.nodes.delete(nodeId);
         }
     }
 };

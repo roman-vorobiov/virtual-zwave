@@ -16,6 +16,15 @@ class Controller {
         });
     }
 
+    removeNode(nodeId) {
+        this.backend.sendData({
+            messageType: "REMOVE_NODE",
+            message: {
+                nodeId: nodeId
+            }
+        });
+    }
+
     resetNetwork() {
         this.backend.sendData({
             messageType: "RESET_NETWORK",
@@ -32,9 +41,9 @@ class Controller {
         });
     }
 
-    updateNode(nodeId, channelId, classId, state) {
+    updateCommandClass(nodeId, channelId, classId, state) {
         this.backend.sendData({
-            messageType: "UPDATE_NODE",
+            messageType: "UPDATE_COMMAND_CLASS",
             message: {
                 nodeId: nodeId,
                 channelId: channelId,
@@ -53,15 +62,64 @@ class Controller {
         });
     }
 
-    onNodeUpdated(callback) {
-        this.backend.subscribe("NODE_UPDATED", (message) => {
+    onNodeAdded(callback) {
+        this.backend.subscribe("NODE_ADDED", (message) => {
             callback(message.node);
+        });
+    }
+
+    onNodeRemoved(callback) {
+        this.backend.subscribe("NODE_REMOVED", (message) => {
+            callback(message.nodeId);
         });
     }
 
     onNodesList(callback) {
         this.backend.subscribe("NODES_LIST", (message) => {
             callback(message.nodes);
+        });
+    }
+
+    onNodeReset(callback, nodeIdFilter) {
+        this.backend.subscribe("NODE_RESET", (message) => {
+            let node = message.node;
+
+            if (node.id === nodeIdFilter) {
+                callback(node);
+            }
+        });
+    }
+
+    onNodeUpdated(callback, nodeIdFilter) {
+        this.backend.subscribe("NODE_UPDATED", (message) => {
+            let node = message.node;
+
+            if (node.id === nodeIdFilter) {
+                callback(node);
+            }
+        });
+    }
+
+    onChannelUpdated(callback, nodeIdFilter, channelIdFilter) {
+        this.backend.subscribe("CHANNEL_UPDATED", (message) => {
+            let nodeId = message.nodeId;
+            let channel = message.channel;
+
+            if (nodeId === nodeIdFilter && channel.endpoint === channelIdFilter) {
+                callback(channel);
+            }
+        });
+    }
+
+    onCommandClassUpdated(callback, nodeIdFilter, channelIdFilter, classIdFilter) {
+        this.backend.subscribe("COMMAND_CLASS_UPDATED", (message) => {
+            let nodeId = message.nodeId;
+            let channelId = message.channelId;
+            let commandClass = message.commandClass;
+
+            if (nodeId === nodeIdFilter && channelId === channelIdFilter && commandClass.classId === classIdFilter) {
+                callback(commandClass);
+            }
         });
     }
 };

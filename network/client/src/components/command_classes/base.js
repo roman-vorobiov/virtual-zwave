@@ -1,8 +1,9 @@
 import controller from "../../../services/controller.js";
+import { updateObject } from "../../../services/utils.js";
 
 export let Base = {
     props: {
-        data: Object
+        commandClass: Object
     },
 
     computed: {
@@ -12,12 +13,27 @@ export let Base = {
         channel() {
             return this.$parent.channel;
         }
+    },
+
+    mounted() {
+        controller.onCommandClassUpdated(
+            this.onCommandClassUpdated,
+            this.node.id,
+            this.channel.endpoint,
+            this.commandClass.classId
+        );
+    },
+
+    methods: {
+        onCommandClassUpdated(commandClass) {
+            updateObject(this.commandClass, commandClass);
+        }
     }
 };
 
 export let createStateWatcher = (propertyName) => {
     return function (newValue, oldValue) {
-        controller.updateNode(this.node.id, this.channel.endpoint, this.data.classId, {
+        controller.updateCommandClass(this.node.id, this.channel.endpoint, this.commandClass.classId, {
             [propertyName]: this[propertyName]
         });
     };

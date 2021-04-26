@@ -4,7 +4,7 @@ from .command_handler import CommandHandler
 
 from network.application import NodeFactory
 from network.model.tinydb import DatabaseProvider
-from network.client import Client
+from network.client import Client, StateObserver
 from network.protocol import CommandClassSerializer
 
 from common import RemoteInterfaceImpl
@@ -33,10 +33,14 @@ class Core:
             connection=connection
         )
 
+        self.state_observer = StateObserver(
+            client=client
+        )
+
         # Todo: let's pretend that RemoteInterface is not a service and isn't used in the data layer :)
         self.node_factory = NodeFactory(
             controller=self.controller,
-            client=client,
+            state_observer=self.state_observer,
             serializer=self.command_class_serializer
         )
 
@@ -46,7 +50,7 @@ class Core:
         self.nodes = self.repository_provider.get_nodes()
 
         self.node_manager = NodeManager(
-            client=client,
+            state_observer=self.state_observer,
             node_factory=self.node_factory,
             nodes=self.nodes
         )

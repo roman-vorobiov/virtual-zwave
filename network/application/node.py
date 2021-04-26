@@ -2,7 +2,7 @@ from .channel import Channel
 from .request_context import Context
 from .utils import SecurityUtils, AssociationGroup
 
-from network.client import Client
+from network.client import StateObserver
 from network.protocol import CommandClassSerializer
 
 from common import RemoteInterface, BaseNode, Model
@@ -14,12 +14,12 @@ from typing import List, Optional
 
 
 class Node(Model, BaseNode):
-    def __init__(self, controller: RemoteInterface, client: Client, serializer: CommandClassSerializer):
+    def __init__(self, controller: RemoteInterface, state_observer: StateObserver, serializer: CommandClassSerializer):
         Model.__init__(self)
         BaseNode.__init__(self, controller)
 
-        self.client = client
         self.serializer = serializer
+        self.state_observer = state_observer
         self.security_utils = SecurityUtils()
 
         self.home_id: Optional[int] = None
@@ -52,16 +52,15 @@ class Node(Model, BaseNode):
     def to_json(self):
         return humps.camelize(self.to_dict())
 
-    def reset(self):
-        self.node_id = None
-        self.home_id = None
-        self.suc_node_id = None
+    def reset(self, home_id: int, node_id: int, suc_node_id=None):
+        self.home_id = home_id
+        self.node_id = node_id
+        self.suc_node_id = suc_node_id
         self.secure = False
         self.security_utils.reset()
 
         for channel in self.channels:
-            for cc in channel.command_classes.values():
-                cc.reset_state()
+            channel.reset()
 
     def add_channel(self, generic: int, specific: int, association_groups: List[AssociationGroup] = None) -> Channel:
         channel = Channel(self, generic, specific, association_groups or [])
@@ -79,9 +78,11 @@ class Node(Model, BaseNode):
         self.node_id = node_id
         self.home_id = home_id
         self.suc_node_id = None
+        self.save()
 
     def set_suc_node_id(self, node_id: int):
         self.suc_node_id = node_id
+        self.save()
 
     def handle_command(self, source_id: int, command: List[int]):
         self.send_message_in_current_network(source_id, 'ACK', {})
@@ -107,6 +108,10 @@ class Node(Model, BaseNode):
                 'command': command
             })
 
+    def on_state_change(self):
+        self.save()
+        self.state_observer.on_node_updated(self)
+
     def send_node_information(self, home_id: int, node_id: int):
         self.send_message(home_id, node_id, 'APPLICATION_NODE_INFORMATION', {
             'nodeInfo': self.get_node_info().to_json()
@@ -115,9 +120,4 @@ class Node(Model, BaseNode):
     def broadcast_node_information(self):
         self.broadcast_message('APPLICATION_NODE_INFORMATION', {
             'nodeInfo': self.get_node_info().to_json()
-        })
-
-    def notify_updated(self):
-        self.client.send_message('NODE_UPDATED', {
-            'node': humps.camelize(self.to_dict())
         })

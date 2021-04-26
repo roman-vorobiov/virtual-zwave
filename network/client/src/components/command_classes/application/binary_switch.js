@@ -5,17 +5,14 @@ export default {
 
     template: `
         <div>
-            <input type="checkbox" v-model="data.state.value">
+            <span>{{commandClass.className}}: </span>
+            <input type="checkbox" v-model="commandClass.state.value">
         </div>
     `,
 
-    props: {
-        data: Object
-    },
-
     computed: {
         value() {
-            return this.data.state.value;
+            return this.commandClass.state.value;
         }
     },
 
