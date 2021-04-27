@@ -44,7 +44,14 @@ export default {
                 },
                 {
                     class_id: 0x20, // COMMAND_CLASS_BASIC
-                    version: 1
+                    version: 1,
+                    state: {
+                        mapping: {
+                            BASIC_GET: [0x25, 'SWITCH_BINARY_GET', {}],
+                            BASIC_SET: [0x25, 'SWITCH_BINARY_SET', { value: '$value' }],
+                            BASIC_REPORT: [0x25, 'SWITCH_BINARY_REPORT', { value: '$value' }],
+                        }
+                    }
                 },
                 {
                     class_id: 0x25, // COMMAND_CLASS_SWITCH_BINARY

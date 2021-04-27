@@ -1,6 +1,6 @@
 from ..fixtures import *
 
-from network.application.command_classes.application import Basic1
+from network.application.command_classes.application import BinarySwitch1
 from network.application.command_classes.management import Version1, Version2, Version3
 
 from tools import make_object
@@ -30,10 +30,10 @@ class TestVersion1:
         tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x84, version=0)
 
     def test_version_command_class_get_other_channel(self, rx, tx, node):
-        node.add_channel(0x10, 0x01).add_command_class(Basic1)
+        node.add_channel(0x10, 0x01).add_command_class(BinarySwitch1)
 
-        rx('VERSION_COMMAND_CLASS_GET', class_id=0x20)
-        tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x20, version=1)
+        rx('VERSION_COMMAND_CLASS_GET', class_id=0x25)
+        tx('VERSION_COMMAND_CLASS_REPORT', class_id=0x25, version=1)
 
 
 class TestVersion2:

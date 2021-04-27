@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Type, TypeVar
 
 if TYPE_CHECKING:
     from .node import Node
+    from .command_classes.application import Basic1
     from .command_classes.transport_encapsulation import MultiChannel3
     from .command_classes.transport_encapsulation import Security1
 
@@ -56,6 +57,10 @@ class Channel(Serializable):
     def get_command_class(self, class_id) -> Optional['CommandClass']:
         return self.command_classes.get(class_id)
 
+    def get_basic_command_class(self) -> Optional['Basic1']:
+        class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_BASIC']
+        return self.get_command_class(class_id)
+
     def get_multi_channel_command_class(self) -> Optional['MultiChannel3']:
         class_id = CONSTANTS['CommandClassId']['COMMAND_CLASS_MULTI_CHANNEL']
         return self.get_command_class(class_id)
@@ -78,7 +83,9 @@ class Channel(Serializable):
         log_command(self.node.node_id, self.endpoint, context.node_id, context.endpoint, command)
         data = self.node.serializer.to_bytes(command)
 
-        if self.endpoint == 0 and context.endpoint == 0:
+        if context.respond_with_basic:
+            self.get_basic_command_class().send_report(context, command)
+        elif self.endpoint == 0 and context.endpoint == 0:
             self.node.send_command(data, context)
         else:
             multi_channel_cc = self.node.channels[0].get_multi_channel_command_class()
