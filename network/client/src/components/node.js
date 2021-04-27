@@ -5,12 +5,24 @@ import { updateObject } from "../services/utils.js";
 
 export default {
     template: `
-        <div>
-            <span>Home ID: {{node.homeId}}, Node ID: {{node.nodeId}}</span><br>
-            <button v-on:click="remove()">Remove</button>
-            <button v-on:click="sendNif()">Send NIF</button>
-            <button v-on:click="reset()">Reset</button>
-            <channel v-for="channel in node.channels" :channel="channel"></channel>
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <div>Home ID: {{node.homeId}}, Node ID: {{node.nodeId}}</div>
+                        <div>
+                            <button type="button" class="btn-util btn-play shadow-none" @click="sendNif()"></button>
+                            <button type="button" class="btn-util btn-reset shadow-none" @click="reset()"></button>
+                            <button type="button" class="btn-util btn-close shadow-none" @click="remove()"></button>
+                        </div>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item" v-for="channel in node.channels">
+                        <channel :channel="channel"></channel>
+                    </li>
+                </ul>
+            </div>
         </div>
     `,
 
@@ -29,10 +41,10 @@ export default {
 
     methods: {
         onNodeReset(node) {
-            updateObject(this.node, node);
+            this.node = node;
         },
         onNodeUpdated(node) {
-            this.node = node;
+            updateObject(this.node, node);
         },
         sendNif() {
             controller.sendNif(this.node.id);

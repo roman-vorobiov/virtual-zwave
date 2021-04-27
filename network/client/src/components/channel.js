@@ -6,7 +6,6 @@ import { updateObject } from "../services/utils.js";
 export default {
     template: `
         <div>
-            <span>Channel {{channel.endpoint}}: </span>
             <component v-for="cc in channel.commandClasses" :is="cc.className" :commandClass="cc"></component>
         </div>
     `,

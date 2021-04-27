@@ -4,11 +4,25 @@ import controller from "../services/controller.js";
 
 export default {
     template: `
-        <div>
-            <button v-on:click="generateNode()">Generate</button>
-            <button v-on:click="resetNetwork()">Reset</button>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <span class="navbar-brand">ZWave</span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-content">
+                    <span class="navbar-toggler-icon text-white"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar-content">
+                    <div class="navbar-nav">
+                        <button class="btn shadow-none" type="button" @click="generateNode()">Generate</button>
+                        <button class="btn shadow-none" type="button" @click="resetNetwork()">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <div class="container-fluid p-3">
+            <div class="row row-cols-auto g-3">
+                <node v-for="[nodeId, node] in nodes" :node="node"></node>
+            </div>
         </div>
-        <node v-for="[nodeId, node] in nodes" :node="node"></node>
     `,
 
     components: {
