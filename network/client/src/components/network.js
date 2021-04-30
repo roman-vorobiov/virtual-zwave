@@ -2,6 +2,7 @@ import Node from "./node.js";
 import NodeWizard from "./wizards/node_wizard.js";
 
 import controller from "../services/controller.js";
+import { updateObject } from "../services/utils.js";
 
 export default {
     template: `
@@ -46,6 +47,7 @@ export default {
         controller.onNodesList(this.onNodesList);
         controller.onNodeAdded(this.onNodeAdded);
         controller.onNodeRemoved(this.onNodeRemoved);
+        controller.onNodeReset(this.onNodeReset);
     },
 
     methods: {
@@ -64,6 +66,9 @@ export default {
         },
         onNodeRemoved(nodeId) {
             this.nodes.delete(nodeId);
+        },
+        onNodeReset(node) {
+            this.nodes.set(node.id, node);
         }
     }
 };

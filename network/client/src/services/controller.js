@@ -78,13 +78,9 @@ class Controller {
         });
     }
 
-    onNodeReset(callback, nodeIdFilter) {
+    onNodeReset(callback) {
         this.backend.subscribe("NODE_RESET", (message) => {
-            let node = message.node;
-
-            if (node.id === nodeIdFilter) {
-                callback(node);
-            }
+            callback(message.node);
         });
     }
 

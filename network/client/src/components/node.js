@@ -33,14 +33,10 @@ export default {
     },
 
     mounted() {
-        controller.onNodeReset(this.onNodeReset, this.node.id);
         controller.onNodeUpdated(this.onNodeUpdated, this.node.id);
     },
 
     methods: {
-        onNodeReset(node) {
-            this.node = node;
-        },
         onNodeUpdated(node) {
             updateObject(this.node, node);
         },
