@@ -4,9 +4,9 @@ export default {
     mixins: [Base],
 
     template: `
-        <div>
-            <span>{{commandClass.className}}: </span>
-            <input type="checkbox" v-model="commandClass.state.value">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" v-model="commandClass.state.value">
+            <span>{{commandClass.className}}</span>
         </div>
     `,
 

@@ -1,0 +1,5 @@
+BasicMappings:
+  COMMAND_CLASS_SWITCH_BINARY:
+    BASIC_GET: ['SWITCH_BINARY_GET', {}]
+    BASIC_SET: ['SWITCH_BINARY_SET', { value: '$value' }]
+    BASIC_REPORT: ['SWITCH_BINARY_REPORT', { value: '$value' }]
