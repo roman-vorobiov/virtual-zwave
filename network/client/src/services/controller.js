@@ -1,17 +1,15 @@
 import Backend from "./backend.js";
 
-import dummyNode from "../resources/dummy_node.js";
-
 class Controller {
     constructor() {
         this.backend = new Backend("ws://localhost:7654");
     }
 
-    createDummyNode() {
+    createNode(nodeInfo) {
         this.backend.sendData({
             messageType: "CREATE_NODE",
             message: {
-                node: dummyNode
+                node: nodeInfo
             }
         });
     }

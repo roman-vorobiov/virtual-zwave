@@ -5,24 +5,22 @@ import { updateObject } from "../services/utils.js";
 
 export default {
     template: `
-        <div class="col">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between">
-                        <div>Home ID: {{node.homeId}}, Node ID: {{node.nodeId}}</div>
-                        <div>
-                            <button type="button" class="btn-util btn-play shadow-none" @click="sendNif()"></button>
-                            <button type="button" class="btn-util btn-reset shadow-none" @click="reset()"></button>
-                            <button type="button" class="btn-util btn-close shadow-none" @click="remove()"></button>
-                        </div>
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between">
+                    <div>Home ID: {{node.homeId}}, Node ID: {{node.nodeId}}</div>
+                    <div>
+                        <button type="button" class="btn-util btn-play shadow-none" @click="sendNif()"></button>
+                        <button type="button" class="btn-util btn-reset shadow-none" @click="reset()"></button>
+                        <button type="button" class="btn-util btn-close shadow-none" @click="remove()"></button>
                     </div>
                 </div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item" v-for="channel in node.channels">
-                        <channel :channel="channel"></channel>
-                    </li>
-                </ul>
             </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" v-for="channel in node.channels">
+                    <channel :channel="channel"></channel>
+                </li>
+            </ul>
         </div>
     `,
 
@@ -31,7 +29,7 @@ export default {
     },
 
     props: {
-        node: Object
+        'node': Object
     },
 
     mounted() {

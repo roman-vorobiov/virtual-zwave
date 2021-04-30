@@ -1,4 +1,5 @@
 import Node from "./node.js";
+import NodeWizard from "./wizards/node_wizard.js";
 
 import controller from "../services/controller.js";
 
@@ -12,21 +13,27 @@ export default {
                 </button>
                 <div class="collapse navbar-collapse" id="navbar-content">
                     <div class="navbar-nav">
-                        <button class="btn shadow-none" type="button" @click="generateNode()">Generate</button>
+                        <button class="btn shadow-none" type="button" data-bs-toggle="modal" data-bs-target="#node-wizard">Generate</button>
                         <button class="btn shadow-none" type="button" @click="resetNetwork()">Reset</button>
                     </div>
                 </div>
             </div>
         </nav>
+
         <div class="container-fluid p-3">
             <div class="row row-cols-auto g-3">
-                <node v-for="[nodeId, node] in nodes" :node="node"></node>
+                <div class="col" v-for="[nodeId, node] in nodes">
+                    <node :node="node"></node>
+                </div>
             </div>
         </div>
+
+        <node-wizard></node-wizard>
     `,
 
     components: {
-        'node': Node
+        'node': Node,
+        'node-wizard': NodeWizard
     },
 
     data() {

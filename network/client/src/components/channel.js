@@ -5,9 +5,7 @@ import { updateObject } from "../services/utils.js";
 
 export default {
     template: `
-        <div>
-            <component v-for="cc in channel.commandClasses" :is="cc.className" :commandClass="cc"></component>
-        </div>
+        <component v-for="cc in channel.commandClasses" :is="cc.className" :commandClass="cc"></component>
     `,
 
     components: {
@@ -15,7 +13,7 @@ export default {
     },
 
     props: {
-        channel: Object
+        'channel': Object
     },
 
     computed: {
