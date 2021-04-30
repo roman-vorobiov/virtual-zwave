@@ -59,11 +59,7 @@ def node_info():
                         'class_id': 0x20,  # COMMAND_CLASS_SWITCH_BASIC
                         'version': 1,
                         'state': {
-                            'mapping': {
-                                'BASIC_GET': (0x25, 'SWITCH_BINARY_GET', {}),
-                                'BASIC_SET': (0x25, 'SWITCH_BINARY_SET', {'value': '$value'}),
-                                'BASIC_REPORT': (0x25, 'SWITCH_BINARY_REPORT', {'value': '$value'})
-                            }
+                            'mapped_command_class': 'COMMAND_CLASS_SWITCH_BINARY'
                         }
                     }
                 ]

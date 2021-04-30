@@ -8,4 +8,5 @@ CONSTANTS = Resources(
     "network/resources/icon_types.yaml",
     "network/resources/node_types.yaml",
     "network/resources/role_types.yaml",
+    "network/resources/basic_mappings.yaml",
 )
